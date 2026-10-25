@@ -1,59 +1,67 @@
 <resources>
-    <string name="app_name">AppProtocolos_EQ014</string>
+    <!-- Nombre de la App -->
+    <string name="app_name">Induztek Protocolos</string>
 
-    <string name="titulo_formulario">Crear cuenta</string>
-    <string name="banner_titulo">Únete a la comunidad</string>
-    <string name="banner_subtitulo">Completa tus datos en menos de un minuto</string>
-    <string name="seccion_datos">Datos personales</string>
-    <string name="seccion_preferencias">Preferencias</string>
-    <string name="campo_nombre">Nombre completo</string>
+    <!-- Login -->
+    <string name="login_trabajo_terreno">TRABAJO EN TERRENO</string>
+    <string name="login_bienvenido">Bienvenido</string>
+    <string name="login_subtitulo">Registra pruebas incluso sin conexión.</string>
     <string name="campo_correo">Correo electrónico</string>
     <string name="campo_contrasena">Contraseña</string>
-    <string name="campo_ciudad">Ciudad</string>
-    <string name="etiqueta_nivel">Nivel de experiencia</string>
-    <string name="opcion_noticias">Recibir novedades por correo</string>
-    <string name="opcion_terminos">Acepto los términos y condiciones</string>
-    <string name="btn_limpiar">Limpiar</string>
-    <string name="btn_registrar">Registrarme</string>
-    <string name="registro_exitoso">¡Registro exitoso! Bienvenido/a, %1$s</string>
+    <string name="btn_ingresar">Ingresar</string>
+    <string name="olvido_contrasena">¿Olvidaste tu contraseña?</string>
 
-    <string name="titulo_perfil">Mi perfil</string>
-    <string name="seccion_sobre_mi">Sobre mí</string>
-    <string name="seccion_intereses">Intereses</string>
-    <string name="btn_seguir">Seguir</string>
-    <string name="btn_siguiendo">Siguiendo</string>
+    <!-- Navegación Inferior (Bottom Navigation) -->
+    <string name="nav_inicio">Inicio</string>
+    <string name="nav_visitas">Visitas</string>
+    <string name="nav_equipos">Equipos</string>
+    <string name="nav_perfil">Perfil</string>
 
+    <!-- Inicio / Dashboard Jefe Técnico -->
     <string name="saludo">Hola, %1$s</string>
-    <string name="menu_mi_perfil">Mi perfil</string>
-    <string name="menu_ver_usuarios">Ver usuarios</string>
-    <string name="titulo_usuarios">Usuarios registrados</string>
+    <string name="estado_sin_conexion">Sin conexión · Perfil %1$s</string>
+    <string name="datos_guardados">Datos guardados en el equipo</string>
+    <string name="titulo_gestion_usuarios">Gestión de usuarios</string>
+    <string name="titulo_instrumentos">Instrumentos</string>
+    <string name="titulo_visitas_hoy">Visitas de hoy</string>
+    <string name="btn_nuevo_protocolo">+ Nuevo protocolo</string>
+    <string name="etiqueta_en_curso">En curso</string>
+    <string name="etiqueta_programada">Programada</string>
 
-    <string name="titulo_editar">Editar usuario</string>
-    <string name="menu_cerrar_sesion">Cerrar sesión</string>
-    <string name="dialogo_titulo">¿Cerrar sesión?</string>
-    <string name="dialogo_mensaje">Tendrás que registrarte de nuevo para ver tu perfil.</string>
-    <string name="dialogo_cancelar">Cancelar</string>
-    <string name="snackbar_sesion_cerrada">Sesión cerrada</string>
+    <!-- Equipos e Historial -->
+    <string name="titulo_mis_equipos">Mis equipos</string>
+    <string name="subtitulo_consulta">Consulta de protocolos y resultados</string>
+    <string name="campo_buscar_tag">Buscar por TAG (ej.: TR-01)</string>
+    <string name="titulo_historial_equipo">Historial del equipo</string>
+    <string name="seccion_protocolos">Protocolos</string>
+    <string name="seccion_comparacion">Comparación de resultados</string>
 
-    <string name="cd_banner">Ilustración de un formulario</string>
-    <string name="cd_portada">Paisaje de montañas al atardecer</string>
-    <string name="cd_avatar">Foto de perfil</string>
+    <!-- Estados de Protocolo -->
+    <string name="estado_pendiente">Pendiente de formalización</string>
+    <string name="estado_formalizado">Formalizado</string>
+    <string name="estado_observado">Observado</string>
+    <string name="estado_aprobado">Aprobado</string>
+    <string name="estado_reemplazado">Reemplazado por nº %1$s</string>
+    <string name="estado_registrado_terreno">Registrado en terreno</string>
+
+    <!-- Gestión de Usuarios -->
+    <string name="tab_personal_induztek">Personal Induztek</string>
+    <string name="tab_usuarios_cliente">Usuarios cliente</string>
+    <string name="btn_agregar_usuario">+ Agregar usuario</string>
+    <string name="estado_activo">Activo</string>
+
+    <!-- Accesibilidad (Content Descriptions) -->
+    <string name="cd_logo_induztek">Logo Induztek</string>
     <string name="cd_mostrar_contrasena">Mostrar contraseña</string>
     <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
-    <string name="cd_volver">Volver</string>
-    <string name="cd_menu">Abrir menú</string>
-    <string name="cd_guardar">Guardar cambios</string>
+    <string name="cd_volver">Volver atrás</string>
+    <string name="cd_avatar_usuario">Avatar del usuario %1$s</string>
 
-    <!-- NUEVO (Buscar) -->
-    <string name="campo_buscar">Buscar por nombre o correo</string>
-    <string name="lista_vacia">No se encontraron usuarios</string>
-
-    <!-- NUEVO (Rol) -->
-    <string name="campo_rol">Rol</string>
-
-    <!-- NUEVO (Eliminar) -->
-    <string name="cd_eliminar">Eliminar usuario</string>
-    <string name="dialogo_eliminar_titulo">¿Eliminar usuario?</string>
-    <string name="dialogo_eliminar_mensaje">Se eliminará a %1$s de la base de datos.</string>
-    <string name="btn_eliminar">Eliminar</string>
+    <!-- Mensajes de Sistema y Errores -->
+    <string name="error_campo_obligatorio">Este campo es obligatorio</string>
+    <string name="error_correo_invalido">Ingresa un correo válido</string>
+    <string name="menu_cerrar_sesion">Cerrar sesión</string>
+    <string name="dialogo_titulo_salir">¿Cerrar sesión?</string>
+    <string name="dialogo_mensaje_salir">Deberás ingresar tus credenciales nuevamente para acceder.</string>
+    <string name="dialogo_cancelar">Cancelar</string>
 </resources>
