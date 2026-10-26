@@ -8,7 +8,7 @@ class InduztekDbHelper (context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
     companion object {
         private const val NOMBRE_BD = "induztek.db"
-        private const val VERSION_BD = 1
+        private const val VERSION_BD = 2
 
         // Tablas padre
         private const val SQL_CREAR_ROL = """
@@ -89,6 +89,8 @@ class InduztekDbHelper (context: Context) :
                 giro TEXT,
                 contacto_nombre TEXT,
                 contacto_cargo TEXT,
+                pregunta_seguridad TEXT,
+                respuesta_seguridad TEXT,
                 FOREIGN KEY (id_rol) REFERENCES ROL(id_rol) ON DELETE RESTRICT
             )
         """
@@ -214,7 +216,7 @@ class InduztekDbHelper (context: Context) :
 
         private const val SQL_CREAR_PROTOCOLO = """
             CREATE TABLE PROTOCOLO (
-                id_protocolo INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_protocolo TEXT PRIMARY KEY NOT NULL,
                 numero TEXT UNIQUE NOT NULL,
                 id_visita INTEGER NOT NULL,
                 id_equipo INTEGER NOT NULL,
@@ -284,36 +286,96 @@ class InduztekDbHelper (context: Context) :
 
         // Carga de datos
         private const val SQL_PRECARGAR_ROLES = """
-            INSERT INTO ROL (codigo, nombre) VALUES 
-            ('TECNICO', 'Técnico de terreno'),
-            ('INGENIERO', 'Ingeniero de pruebas'),
-            ('JEFE_TECNICO', 'Jefe técnico'),
-            ('CLIENTE', 'Usuario cliente')
-        """
-
-        private const val SQL_PRECARGAR_TIPOS_EQUIPO = """
-            INSERT INTO TIPO_EQUIPO (nombre, clasificacion) VALUES 
-            ('Transformador', 'PRIMARIO'),
-            ('Interruptor', 'PRIMARIO'),
-            ('Celda MT', 'PRIMARIO'),
-            ('Cable de poder', 'PRIMARIO'),
-            ('Relé de protección', 'SECUNDARIO')
+            INSERT INTO ROL (id_rol, codigo, nombre) VALUES 
+            (1, 'TECNICO', 'Técnico de terreno'),
+            (2, 'INGENIERO', 'Ingeniero de pruebas'),
+            (3, 'JEFE_TECNICO', 'Jefe técnico'),
+            (4, 'CLIENTE', 'Usuario cliente');
         """
 
         private const val SQL_PRECARGAR_ESTADOS = """
-            INSERT INTO ESTADO_PROTOCOLO (codigo) VALUES 
-            ('BORRADOR'),
-            ('REGISTRADO_TERRENO'),
-            ('OBSERVADO'),
-            ('FORMALIZADO'),
-            ('ANULADO')
+            INSERT INTO ESTADO_PROTOCOLO (id_estado, codigo) VALUES 
+            (1, 'BORRADOR'), (2, 'REGISTRADO_TERRENO'), (3, 'OBSERVADO'), (4, 'FORMALIZADO'), (5, 'ANULADO');
         """
 
         private const val SQL_PRECARGAR_RESULTADOS = """
-            INSERT INTO RESULTADO (codigo) VALUES 
-            ('APROBADO'),
-            ('OBSERVADO'),
-            ('RECHAZADO')
+            INSERT INTO RESULTADO (id_resultado, codigo) VALUES 
+            (1, 'APROBADO'), (2, 'OBSERVADO'), (3, 'RECHAZADO');
+        """
+
+        private const val SQL_PRECARGAR_TIPOS_EQUIPO = """
+            INSERT INTO TIPO_EQUIPO (id_tipo_equipo, nombre, clasificacion) VALUES 
+            (1, 'Transformador', 'PRIMARIO'),
+            (2, 'Interruptor', 'PRIMARIO'),
+            (3, 'Celda MT', 'PRIMARIO'),
+            (4, 'Cable de poder', 'PRIMARIO'),
+            (5, 'Relé de protección', 'SECUNDARIO');
+        """
+
+        private const val SQL_PRECARGAR_REGIONES = """
+            INSERT INTO REGION (id_region, nombre) VALUES (13, 'Región Metropolitana');
+        """
+
+        private const val SQL_PRECARGAR_COMUNAS = """
+            INSERT INTO COMUNA (id_comuna, id_region, nombre) VALUES 
+            (1, 13, 'Lampa'), (2, 13, 'San Bernardo'), (3, 13, 'Til Til'), 
+            (4, 13, 'La Florida'), (5, 13, 'Puente Alto'), (6, 13, 'Huechuraba');
+        """
+        private const val SQL_PRECARGAR_INSTRUMENTOS = """
+            INSERT INTO INSTRUMENTO (id_instrumento, nombre_tipo, marca, modelo, numero_serie) VALUES
+            (1, 'Megóhmetro 5 kV', 'Megger', 'MIT525', 'MIT-0045821'),
+            (2, 'Megóhmetro 10 kV', 'Megger', 'MIT1025', 'MIT-0071233'),
+            (3, 'Medidor de relación (TTR)', 'Megger', 'TTR300', 'TTR-30044'),
+            (4, 'Micro-ohmímetro', 'Megger', 'DLRO10X', 'DLR-108822'),
+            (5, 'Equipo de inyección secundaria', 'Omicron', 'CMC 356', 'CMC-HB411');
+        """
+
+        // Usuarios (Personal y Clientes)
+        private const val SQL_PRECARGAR_USUARIOS = """
+            INSERT INTO USUARIO (id_usuario, id_rol, rut, nombre, correo, telefono, password_hash, activo, giro, contacto_nombre, contacto_cargo, pregunta_seguridad, respuesta_seguridad) VALUES
+            -- Personal Induztek (Rol 1=Técnico, 2=Ingeniero, 3=Jefe)
+            (1, 1, '17.284.519-3', 'Matías Godoy Herrera', 'mgodoy@induztek.ejemplo', '+56900000101', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'firulais'),
+            (2, 1, '19.412.087-7', 'Javiera Tapia Muñoz', 'jtapia@induztek.ejemplo', '+56900000102', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'santiago'),
+            (3, 1, '26.104.583-4', 'Carlos Rondón Pérez', 'crdon@induztek.ejemplo', '+56900000103', '123456', 1, NULL, NULL, NULL, '¿Cuál es tu comida favorita?', 'pizza'),
+            (4, 1, '20.137.648-3', 'Diego Valenzuela Ríos', 'dvalenzuela@induztek.ejemplo', '+56900000104', '123456', 1, NULL, NULL, NULL, '¿Cuál fue el modelo de tu primer auto?', 'toyota'),
+            (5, 2, '15.906.334-8', 'Andrea Contreras Silva', 'acontreras@induztek.ejemplo', '+56900000105', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'pedro'),
+            (6, 2, '16.553.270-8', 'Sebastián Morales Gutiérrez', 'smorales@induztek.ejemplo', '+56900000106', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'rocky'),
+            (7, 3, '13.871.905-7', 'Ricardo Espinoza Lagos', 'respinoza@induztek.ejemplo', '+56900000107', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'valparaiso'),
+            
+            -- Usuarios Clientes (Rol 4=Cliente)
+            (8, 4, '76.482.915-8', 'Envasadora del Pacífico S.A.', 'mfuentes@envpacifico.ejemplo', '+56900000108', '123456', 1, 'Agroindustria', 'Marcela Fuentes Rojas', 'Jefa de Mantenimiento', '¿Cuál es tu comida favorita?', 'sushi'),
+            (9, 4, '96.731.540-0', 'Sanitaria Valle Central S.A.', 'jarancibia@svcentral.ejemplo', '+56900000109', '123456', 1, 'Servicios sanitarios', 'Jorge Arancibia Leiva', 'Jefe de Planta', '¿Cuál fue el modelo de tu primer auto?', 'nissan'),
+            (10, 4, '77.105.362-9', 'Minera Cerro Alto SpA', 'pnavarro@cerroalto.ejemplo', '+56900000110', '123456', 1, 'Minería', 'Patricio Navarro Soto', 'Jefe de Mantenimiento Eléctrico', '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'juan'),
+            (11, 4, '76.903.218-5', 'Clínica Los Aromos Ltda.', 'cmendez@losaromos.ejemplo', '+56900000111', '123456', 1, 'Salud', 'Carolina Méndez Pizarro', 'Supervisora', '¿Cuál es el nombre de tu primera mascota?', 'luna');
+        """
+
+        // Instalaciones, Equipos, Visitas y Protocolos históricos
+        private const val SQL_PRECARGAR_OPERATIVO = """
+            INSERT INTO INSTALACION (id_instalacion, id_usuario_cliente, nombre, ubicacion, id_comuna, observaciones_acceso) VALUES
+            (1, 8, 'Planta Lampa', 'Sector industrial', 1, 'Inducción obligatoria de 30 min'),
+            (2, 9, 'Planta Elevadora Sur', 'Sector rural poniente', 2, 'Sala eléctrica subterránea, sin señal'),
+            (3, 10, 'Faena Til Til', 'Acceso por Ruta 5 Norte', 3, 'Sin señal en toda la faena'),
+            (4, 11, 'Edificio Clínico', 'Zona urbana', 4, 'Cortes solo domingos 06:00-10:00');
+        """
+        private const val SQL_PRECARGAR_EQUIPO = """
+            INSERT INTO EQUIPO (id_equipo, id_instalacion, tag, id_tipo_equipo, marca, modelo, numero_serie, potencia_kva, tensiones, corriente, max_contactos_uohm) VALUES
+            (1, 1, 'TR-01', 1, 'Rhona', 'RH-18733', 'RH-18733', 1500, 12.0, 72.0, NULL),
+            (2, 1, 'TR-02', 1, 'Rhona', 'RH-21904', 'RH-21904', 1000, 12.0, 48.0, NULL),
+            (3, 2, 'TR-A', 1, 'Tusan', 'TS-5521', 'TS-5521', 2500, 23.0, 62.0, NULL),
+            (4, 4, 'CEL-MT-03', 3, 'Ormazabal', 'OR-77812', 'OR-77812', NULL, 12.0, 630.0, 60.0),
+            (5, 3, 'INT-52-1', 2, 'Schneider', 'SE-449021', 'SE-449021', NULL, 23.0, 1250.0, 45.0);
+        """
+        private const val SQL_PRECARGAR_VISITA = """
+            INSERT INTO VISITA (id_visita, numero_ot, id_instalacion, fecha, tipo_visita, id_ingeniero_cargo) VALUES
+            (1, 'OT-2026-1187', 1, '2026-09-26', 'SOLO_PRUEBAS', 5),
+            (2, 'OT-2026-1154', 4, '2026-09-20', 'PRUEBAS_Y_MANT', 6);
+        """
+        private const val SQL_PRECARGAR_PROTOCOLO = """
+            INSERT INTO PROTOCOLO (id_protocolo, numero, id_visita, id_equipo, id_usuario_registra, fecha_hora_prueba, temperatura_c, humedad_pct, descripcion_mantenimiento, observaciones, id_estado, id_protocolo_reemplazado) VALUES
+            ('PT-2024-0312', 'PT-2024-0312', 1, 1, 1, '2024-09-14 10:00:00', 18.0, 55.0, NULL, 'Prueba de rutina', 4, NULL),
+            ('PT-2025-0288', 'PT-2025-0288', 1, 1, 2, '2025-09-13 09:30:00', 21.0, 48.0, NULL, 'Prueba anual', 4, NULL),
+            ('PT-2026-0401', 'PT-2026-0401', 1, 1, 1, '2026-09-26 09:40:00', 19.0, 60.0, 'Limpieza de aisladores BT', 'IP bajo en AT-T, revisar', 2, NULL),
+            ('PT-2026-0389', 'PT-2026-0389', 2, 4, 3, '2026-09-20 11:00:00', 22.0, 45.0, NULL, 'Falta n° de serie instrumento', 3, NULL);
         """
     }
 
@@ -353,6 +415,17 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_CREAR_HISTORIAL_ESTADO)
         db.execSQL(SQL_CREAR_PRUEBA)
         db.execSQL(SQL_CREAR_MEDICION)
+
+        // carga de datos en tablas
+        db.execSQL(SQL_PRECARGAR_ROLES)
+        db.execSQL(SQL_PRECARGAR_ESTADOS)
+        db.execSQL(SQL_PRECARGAR_RESULTADOS)
+        db.execSQL(SQL_PRECARGAR_TIPOS_EQUIPO)
+        db.execSQL(SQL_PRECARGAR_REGIONES)
+        db.execSQL(SQL_PRECARGAR_COMUNAS)
+        db.execSQL(SQL_PRECARGAR_INSTRUMENTOS)
+        db.execSQL(SQL_PRECARGAR_USUARIOS)
+        db.execSQL(SQL_PRECARGAR_OPERATIVO)
 
     }
 
