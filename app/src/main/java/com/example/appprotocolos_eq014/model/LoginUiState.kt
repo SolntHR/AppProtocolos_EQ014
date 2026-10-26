@@ -7,5 +7,6 @@ data class LoginUiState(
     val contrasenaVisible: Boolean = false,
     val errorCorreo: String? = null,
     val errorContrasena: String? = null,
+    val isLoading: Boolean = false,
     val loginExitoso: Boolean = false
 )

@@ -1,13 +1,20 @@
 package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.LoginUiState
+import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val usuarioRepository: UsuarioRepository,
+    private val sesionPreferencias: SesionPreferencias
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
@@ -23,7 +30,8 @@ class LoginViewModel : ViewModel() {
         _uiState.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
     }
 
-    fun onIngresar(): Boolean {
+    // Evento de inicio de sesión
+    fun onIngresar() {
         val estado = _uiState.value
 
         val errorCorreo = if (!estado.correo.contains("@") || !estado.correo.contains("."))
@@ -31,18 +39,31 @@ class LoginViewModel : ViewModel() {
         val errorContrasena = if (estado.contrasena.isEmpty())
             "La contraseña es obligatoria" else null
 
-        val hayErrores = listOf(errorCorreo, errorContrasena).any { it != null }
-
-        _uiState.update {
-            it.copy(
-                errorCorreo = errorCorreo,
-                errorContrasena = errorContrasena,
-                loginExitoso = !hayErrores
-            )
+        if (errorCorreo != null || errorContrasena != null) {
+            _uiState.update { it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena) }
+            return
         }
 
-        return !hayErrores
-    }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorCorreo = null, errorContrasena = null) }
+            val usuario = usuarioRepository.login(estado.correo, estado.contrasena)
+            if (usuario != null) {
+                if (usuario.activo) {
+                    // Login exitoso: Guardamos en preferencias
+                    sesionPreferencias.guardarSesion(
+                        idUsuario = usuario.id.toLong(),
+                        codigoRol = usuario.idRol.codigo // Asumiendo que aplicaste el Enum
+                    )
+                    _uiState.update { it.copy(isLoading = false, loginExitoso = true) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, errorCorreo = "Usuario desactivado") }
+                }
+            } else {
+                // Credenciales incorrectas
+                _uiState.update { it.copy(isLoading = false, errorContrasena = "Correo o contraseña incorrectos") }
+            }
+            }
+        }
 
     fun onLimpiar() {
         _uiState.value = LoginUiState()
