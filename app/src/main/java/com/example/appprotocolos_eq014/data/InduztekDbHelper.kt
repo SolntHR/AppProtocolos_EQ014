@@ -8,7 +8,7 @@ class InduztekDbHelper (context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
     companion object {
         private const val NOMBRE_BD = "induztek.db"
-        private const val VERSION_BD = 4
+        private const val VERSION_BD = 5
 
         // Tablas padre
         private const val SQL_CREAR_ROL = """
@@ -332,8 +332,51 @@ class InduztekDbHelper (context: Context) :
             (1, 'Megóhmetro 5 kV', 'Megger', 'MIT525', 'MIT-0045821'),
             (2, 'Megóhmetro 10 kV', 'Megger', 'MIT1025', 'MIT-0071233'),
             (3, 'Medidor de relación (TTR)', 'Megger', 'TTR300', 'TTR-30044'),
-            (4, 'Micro-ohmímetro', 'Megger', 'DLRO10X', 'DLR-108822'),
+            (4, 'Micro-ohmímetro', 'Megger', 'DLRO10X', 'DLR-10882'),
             (5, 'Equipo de inyección secundaria', 'Omicron', 'CMC 356', 'CMC-HB411');
+        """
+
+        private const val SQL_PRECARGAR_CALIBRACIONES = """
+            INSERT INTO CALIBRACION (id_calibracion, id_instrumento, fecha_calibracion, fecha_vencimiento) VALUES
+            (1, 1, '2026-03-15', '2027-03-15'),
+            (2, 2, '2025-10-10', '2026-10-10'),
+            (3, 3, '2026-06-02', '2027-06-02'),
+            (4, 4, '2025-08-20', '2026-08-20'),
+            (5, 5, '2026-01-05', '2027-01-05');
+        """
+
+        private const val SQL_PRECARGAR_TIPOS_PRUEBA = """
+            INSERT INTO TIPO_PRUEBA (id_tipo_prueba, codigo, nombre) VALUES
+            (1, 'AISLACION', 'Resistencia de aislación'),
+            (2, 'TTR', 'Relación de transformación'),
+            (3, 'DEVANADOS', 'Resistencia de devanados'),
+            (4, 'CONTACTOS', 'Resistencia de contactos'),
+            (5, 'OPERACION_RELE', 'Prueba de operación (inyección secundaria)');
+        """
+
+        private const val SQL_PRECARGAR_TIPO_EQUIPO_PRUEBA = """
+            INSERT INTO TIPO_EQUIPO_PRUEBA (id_tipo_equipo, id_tipo_prueba) VALUES
+            (1, 1), (1, 2), (1, 3),
+            (2, 1), (2, 4),
+            (3, 1), (3, 4),
+            (4, 1),
+            (5, 5);
+        """
+
+        private const val SQL_PRECARGAR_PARAMETROS = """
+            INSERT INTO PARAMETRO (id_parametro, id_tipo_prueba, codigo, nombre, unidad) VALUES
+            (1, 1, 'LECTURA_1MIN', 'Lectura a 1 min', 'MΩ'),
+            (2, 1, 'LECTURA_10MIN', 'Lectura a 10 min', 'MΩ'),
+            (3, 1, 'TENSION_PRUEBA', 'Tensión de prueba', 'kV'),
+            (4, 2, 'RELACION_TEORICA', 'Relación teórica', '-'),
+            (5, 2, 'RELACION_MEDIDA', 'Relación medida', '-'),
+            (6, 2, 'POSICION_TAP', 'Posición del cambiador de derivaciones', '-'),
+            (7, 3, 'RESISTENCIA_FASE', 'Resistencia por fase', 'mΩ'),
+            (8, 4, 'RESISTENCIA_POLO', 'Resistencia por polo', 'µΩ'),
+            (9, 5, 'CORRIENTE_AJUSTE', 'Ajuste de corriente de operación', 'A'),
+            (10, 5, 'CORRIENTE_MEDIDA', 'Corriente medida de operación', 'A'),
+            (11, 5, 'TIEMPO_ESPERADO', 'Tiempo esperado', 'ms'),
+            (12, 5, 'TIEMPO_MEDIDO', 'Tiempo medido', 'ms');
         """
 
         // Usuarios (Personal y Clientes)
@@ -435,6 +478,10 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_PRECARGAR_REGIONES)
         db.execSQL(SQL_PRECARGAR_COMUNAS)
         db.execSQL(SQL_PRECARGAR_INSTRUMENTOS)
+        db.execSQL(SQL_PRECARGAR_CALIBRACIONES)
+        db.execSQL(SQL_PRECARGAR_TIPOS_PRUEBA)
+        db.execSQL(SQL_PRECARGAR_TIPO_EQUIPO_PRUEBA)
+        db.execSQL(SQL_PRECARGAR_PARAMETROS)
         db.execSQL(SQL_PRECARGAR_USUARIOS)
         db.execSQL(SQL_PRECARGAR_OPERATIVO)
         db.execSQL(SQL_PRECARGAR_EQUIPO)
