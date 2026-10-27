@@ -3,6 +3,7 @@ package com.example.appprotocolos_eq014.model
 data class Usuario(
     val id: Int,
     val idRol: Int,
+    val rolCodigo: String,
     val rut: String,
     val nombre: String,
     val correo: String,

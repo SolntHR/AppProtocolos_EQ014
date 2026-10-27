@@ -52,7 +52,7 @@ class LoginViewModel(
                     // Login exitoso: Guardamos en preferencias
                     sesionPreferencias.guardarSesion(
                         idUsuario = usuario.id.toLong(),
-                        codigoRol = usuario.idRol.codigo // Asumiendo que aplicaste el Enum
+                        codigoRol = usuario.rolCodigo
                     )
                     _uiState.update { it.copy(isLoading = false, loginExitoso = true) }
                 } else {

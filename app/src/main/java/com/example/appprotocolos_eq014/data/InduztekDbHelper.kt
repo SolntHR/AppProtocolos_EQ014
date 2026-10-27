@@ -8,7 +8,7 @@ class InduztekDbHelper (context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
     companion object {
         private const val NOMBRE_BD = "induztek.db"
-        private const val VERSION_BD = 2
+        private const val VERSION_BD = 3
 
         // Tablas padre
         private const val SQL_CREAR_ROL = """
@@ -169,8 +169,10 @@ class InduztekDbHelper (context: Context) :
                 marca TEXT,
                 modelo TEXT,
                 numero_serie TEXT,
+                anio INTEGER,
+                observaciones TEXT,
                 potencia_kva REAL,
-                tensiones REAL,
+                tensiones TEXT,
                 corriente REAL,
                 max_contactos_uohm REAL,
                 UNIQUE(id_instalacion, tag),
@@ -227,7 +229,7 @@ class InduztekDbHelper (context: Context) :
                 descripcion_mantenimiento TEXT,
                 observaciones TEXT,
                 id_estado INTEGER NOT NULL,
-                id_protocolo_reemplazado INTEGER,
+                id_protocolo_reemplazado TEXT,
                 UNIQUE(id_visita, id_equipo),
                 FOREIGN KEY (id_visita) REFERENCES VISITA(id_visita) ON DELETE CASCADE,
                 FOREIGN KEY (id_equipo) REFERENCES EQUIPO(id_equipo) ON DELETE RESTRICT,
@@ -240,7 +242,7 @@ class InduztekDbHelper (context: Context) :
         private const val SQL_CREAR_HISTORIAL_ESTADO = """
             CREATE TABLE HISTORIAL_ESTADO (
                 id_historial INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_protocolo INTEGER NOT NULL,
+                id_protocolo TEXT NOT NULL,
                 id_estado_anterior INTEGER,
                 id_estado_nuevo INTEGER NOT NULL,
                 id_usuario INTEGER NOT NULL,
@@ -256,7 +258,7 @@ class InduztekDbHelper (context: Context) :
         private const val SQL_CREAR_PRUEBA = """
             CREATE TABLE PRUEBA (
                 id_prueba INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_protocolo INTEGER NOT NULL,
+                id_protocolo TEXT NOT NULL,
                 id_tipo_prueba INTEGER NOT NULL,
                 elemento TEXT NOT NULL,
                 momento TEXT,
@@ -265,6 +267,7 @@ class InduztekDbHelper (context: Context) :
                 id_instrumento INTEGER,
                 id_resultado INTEGER,
                 comentario TEXT,
+                ingresado_manualmente INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (id_protocolo) REFERENCES PROTOCOLO(id_protocolo) ON DELETE CASCADE,
                 FOREIGN KEY (id_tipo_prueba) REFERENCES TIPO_PRUEBA(id_tipo_prueba) ON DELETE RESTRICT,
                 FOREIGN KEY (id_instrumento) REFERENCES INSTRUMENTO(id_instrumento) ON DELETE RESTRICT,
@@ -277,7 +280,10 @@ class InduztekDbHelper (context: Context) :
                 id_medicion INTEGER PRIMARY KEY AUTOINCREMENT,
                 id_prueba INTEGER NOT NULL,
                 id_parametro INTEGER NOT NULL,
+                elemento TEXT,
                 valor REAL NOT NULL,
+                unidad TEXT NOT NULL,            
+                orden INTEGER DEFAULT 0,
                 UNIQUE(id_prueba, id_parametro),
                 FOREIGN KEY (id_prueba) REFERENCES PRUEBA(id_prueba) ON DELETE CASCADE,
                 FOREIGN KEY (id_parametro) REFERENCES PARAMETRO(id_parametro) ON DELETE RESTRICT
