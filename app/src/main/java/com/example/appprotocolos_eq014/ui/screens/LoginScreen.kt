@@ -16,7 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.appprotocolos_eq014.ui.theme.AppProtocolos_EQ014Theme
 import com.example.appprotocolos_eq014.model.LoginUiState
 
-// 1. Pantalla principal (Stateful)
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
@@ -39,7 +38,6 @@ fun LoginScreen(
     )
 }
 
-// 2. Contenido de la interfaz (Stateless) - Esta es la que se renderiza en el Preview
 @Composable
 fun LoginContent(
     uiState: LoginUiState,

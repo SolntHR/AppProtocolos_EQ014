@@ -28,7 +28,6 @@ fun InicioJefeTecnico(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Pestañas (Tabs)[cite: 20]
             TabRow(
                 selectedTabIndex = tabSeleccionado,
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -50,17 +49,13 @@ fun InicioJefeTecnico(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contenido de la pestaña
             if (tabSeleccionado == 0) {
-                // Aquí irá el LazyColumn con uiState.personalInduztek
                 Text("Cargando lista de personal...", style = MaterialTheme.typography.bodyMedium)
             } else {
-                // Aquí irá el LazyColumn con uiState.usuariosCliente
                 Text("Cargando usuarios cliente...", style = MaterialTheme.typography.bodyMedium)
             }
         }
 
-        // Botón agregar anclado abajo a la derecha[cite: 20]
         BotonPrincipal(
             texto = "+ Agregar usuario",
             onClick = onAgregarUsuarioClick,

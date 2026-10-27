@@ -32,12 +32,10 @@ class InicioViewModel(
         viewModelScope.launch {
             when (rol) {
                 "CLIENTE" -> {
-                    // Llamamos a tu nueva función del repositorio
                     val equipos = catalogoRepository.obtenerEquiposPorCliente(idUsuario)
                     _uiState.update { it.copy(equiposCliente = equipos, isLoading = false) }
                 }
                 "TECNICO", "INGENIERO" -> {
-                    // Más adelante agregaremos aquí la carga de Visitas
                     _uiState.update { it.copy(isLoading = false) }
                 }
                 else -> {
@@ -49,6 +47,5 @@ class InicioViewModel(
 
     fun onBusquedaCambia(query: String) {
         _uiState.update { it.copy(busqueda = query) }
-        // Aquí podrías agregar lógica para filtrar la lista localmente
     }
 }

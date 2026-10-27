@@ -26,13 +26,8 @@ fun AvatarCircular(
     @DrawableRes imagen: Int,
     descripcion: String,
     modifier: Modifier = Modifier,
-    // NUEVO (Avatar): foto elegida por el usuario. null = usar la imagen de res/drawable.
-    // Con "= null" las llamadas antiguas a AvatarCircular siguen funcionando.
     foto: ImageBitmap? = null
 ) {
-    // NUEVO (Avatar): Painter = "lo que sabe dibujarse" dentro de Image.
-    //  - BitmapPainter    -> dibuja una imagen que está en memoria (la de la BD)
-    //  - painterResource  -> dibuja una imagen de res/drawable (la de siempre)
     val painter = if (foto != null) BitmapPainter(foto) else painterResource(id = imagen)
 
     Image(

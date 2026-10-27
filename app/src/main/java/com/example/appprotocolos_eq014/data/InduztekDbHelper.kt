@@ -10,7 +10,6 @@ class InduztekDbHelper (context: Context) :
         private const val NOMBRE_BD = "induztek.db"
         private const val VERSION_BD = 5
 
-        // Tablas padre
         private const val SQL_CREAR_ROL = """
             CREATE TABLE ROL (
                 id_rol INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,8 +72,6 @@ class InduztekDbHelper (context: Context) :
                 numero_serie TEXT
             )
         """
-
-        // Tablas hijas
 
         private const val SQL_CREAR_USUARIO = """
             CREATE TABLE USUARIO (
@@ -144,8 +141,6 @@ class InduztekDbHelper (context: Context) :
                 FOREIGN KEY (id_instrumento) REFERENCES INSTRUMENTO(id_instrumento) ON DELETE CASCADE
             )
         """
-
-        // Tablas operativas
 
         private const val SQL_CREAR_INSTALACION = """
             CREATE TABLE INSTALACION (
@@ -290,7 +285,6 @@ class InduztekDbHelper (context: Context) :
             )
         """
 
-        // Carga de datos
         private const val SQL_PRECARGAR_ROLES = """
             INSERT INTO ROL (id_rol, codigo, nombre) VALUES 
             (1, 'TECNICO', 'Técnico de terreno'),
@@ -379,10 +373,8 @@ class InduztekDbHelper (context: Context) :
             (12, 5, 'TIEMPO_MEDIDO', 'Tiempo medido', 'ms');
         """
 
-        // Usuarios (Personal y Clientes)
         private const val SQL_PRECARGAR_USUARIOS = """
             INSERT INTO USUARIO (id_usuario, id_rol, rut, nombre, correo, telefono, password_hash, activo, giro, contacto_nombre, contacto_cargo, pregunta_seguridad, respuesta_seguridad) VALUES
-            -- Personal Induztek (Rol 1=Técnico, 2=Ingeniero, 3=Jefe)
             (1, 1, '17.284.519-3', 'Matías Godoy Herrera', 'mgodoy@induztek.ejemplo', '+56900000101', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'firulais'),
             (2, 1, '19.412.087-7', 'Javiera Tapia Muñoz', 'jtapia@induztek.ejemplo', '+56900000102', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'santiago'),
             (3, 1, '26.104.583-4', 'Carlos Rondón Pérez', 'crdon@induztek.ejemplo', '+56900000103', '123456', 1, NULL, NULL, NULL, '¿Cuál es tu comida favorita?', 'pizza'),
@@ -391,14 +383,12 @@ class InduztekDbHelper (context: Context) :
             (6, 2, '16.553.270-8', 'Sebastián Morales Gutiérrez', 'smorales@induztek.ejemplo', '+56900000106', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'rocky'),
             (7, 3, '13.871.905-7', 'Ricardo Espinoza Lagos', 'respinoza@induztek.ejemplo', '+56900000107', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'valparaiso'),
             
-            -- Usuarios Clientes (Rol 4=Cliente)
             (8, 4, '76.482.915-8', 'Envasadora del Pacífico S.A.', 'mfuentes@envpacifico.ejemplo', '+56900000108', '123456', 1, 'Agroindustria', 'Marcela Fuentes Rojas', 'Jefa de Mantenimiento', '¿Cuál es tu comida favorita?', 'sushi'),
             (9, 4, '96.731.540-0', 'Sanitaria Valle Central S.A.', 'jarancibia@svcentral.ejemplo', '+56900000109', '123456', 1, 'Servicios sanitarios', 'Jorge Arancibia Leiva', 'Jefe de Planta', '¿Cuál fue el modelo de tu primer auto?', 'nissan'),
             (10, 4, '77.105.362-9', 'Minera Cerro Alto SpA', 'pnavarro@cerroalto.ejemplo', '+56900000110', '123456', 1, 'Minería', 'Patricio Navarro Soto', 'Jefe de Mantenimiento Eléctrico', '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'juan'),
             (11, 4, '76.903.218-5', 'Clínica Los Aromos Ltda.', 'cmendez@losaromos.ejemplo', '+56900000111', '123456', 1, 'Salud', 'Carolina Méndez Pizarro', 'Supervisora', '¿Cuál es el nombre de tu primera mascota?', 'luna');
         """
 
-        // Instalaciones, Equipos, Visitas y Protocolos históricos
         private const val SQL_PRECARGAR_OPERATIVO = """
             INSERT INTO INSTALACION (id_instalacion, id_usuario_cliente, nombre, ubicacion, id_comuna, observaciones_acceso) VALUES
             (1, 8, 'Planta Lampa', 'Sector industrial', 1, 'Inducción obligatoria de 30 min'),
@@ -433,15 +423,12 @@ class InduztekDbHelper (context: Context) :
         """
     }
 
-    // Habilitar llaves foraneas
     override fun onConfigure(db: SQLiteDatabase) {
         super.onConfigure(db)
         db.setForeignKeyConstraintsEnabled(true)
     }
 
-    // Creamos las tablas de padre a hijos
     override fun onCreate(db: SQLiteDatabase) {
-        // padre
         db.execSQL(SQL_CREAR_ROL)
         db.execSQL(SQL_CREAR_PERMISO)
         db.execSQL(SQL_CREAR_REGION)
@@ -451,7 +438,6 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_CREAR_RESULTADO)
         db.execSQL(SQL_CREAR_INSTRUMENTO)
 
-        // hijos
         db.execSQL(SQL_CREAR_USUARIO)
         db.execSQL(SQL_CREAR_ROL_PERMISO)
         db.execSQL(SQL_CREAR_COMUNA)
@@ -459,7 +445,6 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_CREAR_TIPO_EQUIPO_PRUEBA)
         db.execSQL(SQL_CREAR_CALIBRACION)
 
-        // operativas
         db.execSQL(SQL_CREAR_INSTALACION)
         db.execSQL(SQL_CREAR_EQUIPO)
         db.execSQL(SQL_CREAR_VISITA)
@@ -470,7 +455,6 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_CREAR_PRUEBA)
         db.execSQL(SQL_CREAR_MEDICION)
 
-        // carga de datos en tablas
         db.execSQL(SQL_PRECARGAR_ROLES)
         db.execSQL(SQL_PRECARGAR_ESTADOS)
         db.execSQL(SQL_PRECARGAR_RESULTADOS)
@@ -490,9 +474,7 @@ class InduztekDbHelper (context: Context) :
 
     }
 
-    // Drop
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // De tablas hijas a tabla padre
         db.execSQL("DROP TABLE IF EXISTS MEDICION")
         db.execSQL("DROP TABLE IF EXISTS PRUEBA")
         db.execSQL("DROP TABLE IF EXISTS HISTORIAL_ESTADO")

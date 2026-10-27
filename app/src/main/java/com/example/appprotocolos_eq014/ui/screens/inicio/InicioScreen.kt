@@ -43,7 +43,6 @@ fun InicioScreen(
                 )
             }
             else -> {
-                // Fallback en caso de que el rol no sea válido
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     CircularProgressIndicator()
                 }

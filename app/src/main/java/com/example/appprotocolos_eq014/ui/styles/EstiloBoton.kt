@@ -27,7 +27,6 @@ object EstilosBoton {
         disabledContentColor = Color.White
     )
 
-    // Agregado extra para tus botones naranjas (como el FAB)
     @Composable
     fun coloresAcento(): ButtonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.secondary,
@@ -50,5 +49,4 @@ object EstilosBoton {
     )
 }
 
-// Extensión para fijar la altura estándar
 fun Modifier.estiloAltoBoton(): Modifier = this.height(Dimens.alturaBoton)

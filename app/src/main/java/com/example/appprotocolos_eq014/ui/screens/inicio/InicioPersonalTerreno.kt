@@ -24,7 +24,6 @@ fun InicioPersonalTerreno(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Cabecera Azul[cite: 22]
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -34,18 +33,17 @@ fun InicioPersonalTerreno(
             ) {
                 Column {
                     Text(
-                        text = "SÁBADO, 26 SEP 2026", // Luego lo haremos dinámico
+                        text = "SÁBADO, 26 SEP 2026",
                         color = Color.White.copy(alpha = 0.8f),
                         style = MaterialTheme.typography.labelSmall
                     )
                     Text(
-                        text = "Hola, Equipo", // Luego lo conectaremos al nombre del usuario
+                        text = "Hola, Equipo",
                         color = Color.White,
                         style = MaterialTheme.typography.headlineMedium
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Banner de conexión
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -54,7 +52,6 @@ fun InicioPersonalTerreno(
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Requiere un icono ic_cloud_off en tus drawables
                         Icon(painterResource(android.R.drawable.stat_sys_warning), contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
@@ -65,17 +62,14 @@ fun InicioPersonalTerreno(
                 }
             }
 
-            // Cuerpo: Lista de visitas
             Column(modifier = Modifier.padding(20.dp)) {
                 Text("Visitas de hoy", style = MaterialTheme.typography.titleLarge)
                 Text("Órdenes programadas", style = MaterialTheme.typography.bodyMedium)
 
                 Spacer(modifier = Modifier.height(16.dp))
-                // Aquí irá el LazyColumn iterando sobre uiState.visitasHoy cuando agregues esa capa en el ViewModel
             }
         }
 
-        // Botón flotante naranja anclado abajo[cite: 22]
         BotonPrincipal(
             texto = "+ Nuevo protocolo",
             onClick = onNuevoProtocoloClick,

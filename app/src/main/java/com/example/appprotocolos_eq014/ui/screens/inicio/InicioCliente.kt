@@ -22,7 +22,6 @@ fun InicioCliente(
     onBusquedaCambia: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-        // Encabezado
         Text(text = "PORTAL CLIENTE", style = MaterialTheme.typography.labelSmall)
         Text(
             text = "Mis equipos",
@@ -36,17 +35,15 @@ fun InicioCliente(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Buscador reutilizando tu componente
         CampoTexto(
             valor = uiState.busqueda,
             onValorCambia = onBusquedaCambia,
             etiqueta = "Buscar por TAG (ej.: TR-01)",
-            icono = android.R.drawable.ic_menu_search // O tu propio R.drawable.ic_buscar
+            icono = android.R.drawable.ic_menu_search
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista dinámica de equipos
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
@@ -65,10 +62,8 @@ fun ItemEquipoCliente(equipo: Equipo) {
             text = "${equipo.tipoEquipoNombre} ${equipo.marca ?: ""} · Serie: ${equipo.numeroSerie ?: "N/A"}",
             style = MaterialTheme.typography.bodyMedium
         )
-        // Aquí iteraremos sobre los protocolos de este equipo más adelante
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

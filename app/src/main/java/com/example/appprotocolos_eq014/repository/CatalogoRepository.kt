@@ -8,13 +8,10 @@ import kotlinx.coroutines.withContext
 
 class CatalogoRepository(private val dbHelper: InduztekDbHelper) {
 
-    // Función clave para el Mockup de la vista Cliente
     suspend fun obtenerEquiposPorCliente(idCliente: Long): List<Equipo> = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase
         val equipos = mutableListOf<Equipo>()
 
-        // El INNER JOIN con INSTALACION asegura que solo traiga equipos
-        // cuya instalación pertenezca al id_usuario del cliente (RN-18).
         val query = """
             SELECT e.id_equipo, e.tag, e.marca, e.numero_serie, t.nombre as tipo_nombre 
             FROM EQUIPO e 

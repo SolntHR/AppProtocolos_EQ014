@@ -5,5 +5,5 @@ data class Visita(
     val numeroOt: String,
     val fecha: String,
     val instalacionNombre: String,
-    val receptorNombre: String? = null // Se llena al cerrar la visita
+    val receptorNombre: String? = null
 )

@@ -47,7 +47,6 @@ fun AppProtocolos_EQ014Theme(
 
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-    // barrita android va con la app
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

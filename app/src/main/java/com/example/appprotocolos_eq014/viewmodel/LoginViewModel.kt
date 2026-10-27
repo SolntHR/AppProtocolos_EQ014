@@ -30,7 +30,6 @@ class LoginViewModel(
         _uiState.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
     }
 
-    // Evento de inicio de sesión
     fun onIngresar() {
         val estado = _uiState.value
 
@@ -49,7 +48,6 @@ class LoginViewModel(
             val usuario = usuarioRepository.login(estado.correo, estado.contrasena)
             if (usuario != null) {
                 if (usuario.activo) {
-                    // Login exitoso: Guardamos en preferencias
                     sesionPreferencias.guardarSesion(
                         idUsuario = usuario.id.toLong(),
                         codigoRol = usuario.rolCodigo
@@ -59,7 +57,6 @@ class LoginViewModel(
                     _uiState.update { it.copy(isLoading = false, errorCorreo = "Usuario desactivado") }
                 }
             } else {
-                // Credenciales incorrectas
                 _uiState.update { it.copy(isLoading = false, errorContrasena = "Correo o contraseña incorrectos") }
             }
             }
