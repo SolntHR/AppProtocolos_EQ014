@@ -4,6 +4,7 @@ data class Usuario(
     val id: Int,
     val idRol: Int,
     val rolCodigo: String,
+    val rolNombre: String = "",
     val rut: String,
     val nombre: String,
     val correo: String,

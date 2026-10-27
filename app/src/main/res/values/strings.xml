@@ -40,6 +40,9 @@
     <string name="estado_reemplazado">Reemplazado por nº %1$s</string>
     <string name="estado_registrado_terreno">Registrado en terreno</string>
 
+    <string name="perfil_editar">Editar perfil</string>
+    <string name="perfil_usuario_cliente">Usuario cliente</string>
+    <string name="cd_cambiar_foto">Cambiar foto de perfil</string>
     <string name="tab_personal_induztek">Personal Induztek</string>
     <string name="tab_usuarios_cliente">Usuarios cliente</string>
     <string name="btn_agregar_usuario">+ Agregar usuario</string>

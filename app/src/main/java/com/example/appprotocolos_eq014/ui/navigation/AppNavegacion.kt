@@ -1,49 +1,111 @@
 package com.example.appprotocolos_eq014.ui.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.ui.screens.LoginScreen
 import com.example.appprotocolos_eq014.ui.screens.inicio.InicioScreen
+import com.example.appprotocolos_eq014.ui.screens.perfil.PerfilScreen
 import com.example.appprotocolos_eq014.viewmodel.AppViewModelFactory
 import com.example.appprotocolos_eq014.viewmodel.InicioViewModel
 import com.example.appprotocolos_eq014.viewmodel.LoginViewModel
+import com.example.appprotocolos_eq014.viewmodel.PerfilViewModel
 
 object Rutas {
     const val LOGIN = "login"
     const val INICIO = "inicio"
+    const val PERFIL = "perfil"
 }
+
+private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.PERFIL)
 
 @Composable
 fun AppNavegacion(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+    val entradaActual by navController.currentBackStackEntryAsState()
+    val rutaActual = entradaActual?.destination?.route
+    val contexto = LocalContext.current
+    val esCliente = remember(rutaActual) {
+        SesionPreferencias(contexto).leerRolUsuario() == "CLIENTE"
+    }
 
-    NavHost(
-        navController = navController,
-        startDestination = Rutas.LOGIN,
-        modifier = modifier
-    ) {
-        composable(Rutas.LOGIN) {
-            val loginViewModel: LoginViewModel = viewModel(factory = AppViewModelFactory.Factory)
-            LoginScreen(
-                viewModel = loginViewModel,
-                onLoginExitoso = {
-                    navController.navigate(Rutas.INICIO) {
-                        popUpTo(Rutas.LOGIN) { inclusive = true }
+    Scaffold(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0),
+        bottomBar = {
+            if (rutaActual != null && rutaActual in rutasConBarraInferior) {
+                BarraNavegacionInferior(
+                    destinos = destinosInferiores(esCliente),
+                    rutaActual = rutaActual,
+                    onNavegar = { ruta -> navController.navegarPestana(ruta) }
+                )
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Rutas.LOGIN,
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = { fadeIn() + slideInHorizontally { it / 8 } },
+            exitTransition = { fadeOut() },
+            popEnterTransition = { fadeIn() },
+            popExitTransition = { fadeOut() }
+        ) {
+            composable(Rutas.LOGIN) {
+                val loginViewModel: LoginViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                LoginScreen(
+                    viewModel = loginViewModel,
+                    onLoginExitoso = {
+                        navController.navigate(Rutas.INICIO) {
+                            popUpTo(Rutas.LOGIN) { inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
+            composable(Rutas.INICIO) {
+                val inicioViewModel: InicioViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                InicioScreen(
+                    viewModel = inicioViewModel,
+                    onNavigateToNuevoProtocolo = {},
+                    onNavigateToGestionUsuarios = {}
+                )
+            }
+            composable(Rutas.PERFIL) {
+                val perfilViewModel: PerfilViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                PerfilScreen(
+                    viewModel = perfilViewModel,
+                    onSesionCerrada = {
+                        navController.navigate(Rutas.LOGIN) {
+                            popUpTo(navController.graph.id) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
-        composable(Rutas.INICIO) {
-            val inicioViewModel: InicioViewModel = viewModel(factory = AppViewModelFactory.Factory)
-            InicioScreen(
-                viewModel = inicioViewModel,
-                onNavigateToNuevoProtocolo = {},
-                onNavigateToGestionUsuarios = {}
-            )
-        }
+    }
+}
+
+private fun NavHostController.navegarPestana(ruta: String) {
+    navigate(ruta) {
+        popUpTo(Rutas.INICIO) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }

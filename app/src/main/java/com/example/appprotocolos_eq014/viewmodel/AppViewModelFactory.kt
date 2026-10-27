@@ -35,5 +35,12 @@ object AppViewModelFactory {
                 catalogoRepository = CatalogoRepository(obtenerDbHelper(contexto))
             )
         }
+        initializer {
+            val contexto = contexto()
+            PerfilViewModel(
+                sesionPreferencias = SesionPreferencias(contexto),
+                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto))
+            )
+        }
     }
 }

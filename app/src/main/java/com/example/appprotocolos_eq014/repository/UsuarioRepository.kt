@@ -8,31 +8,42 @@ import kotlinx.coroutines.withContext
 
 class UsuarioRepository(private val dbHelper: InduztekDbHelper) {
 
-    suspend fun login(correo: String, pass: String): Usuario? = withContext(Dispatchers.IO) {
-        val db = dbHelper.readableDatabase
-        val query = """
-            SELECT u.*, r.codigo as rol_codigo 
-            FROM USUARIO u 
-            INNER JOIN ROL r ON u.id_rol = r.id_rol 
-            WHERE u.correo = ? AND u.password_hash = ?
-        """
-        val cursor: Cursor = db.rawQuery(query, arrayOf(correo, pass))
+    private val consultaBase = """
+        SELECT u.*, r.codigo AS rol_codigo, r.nombre AS rol_nombre
+        FROM USUARIO u
+        INNER JOIN ROL r ON u.id_rol = r.id_rol
+    """
 
-        var usuario: Usuario? = null
-        if (cursor.moveToFirst()) {
-            usuario = Usuario(
-                id = cursor.getInt(cursor.getColumnIndexOrThrow("id_usuario")),
-                idRol = cursor.getInt(cursor.getColumnIndexOrThrow("id_rol")),
-                rolCodigo = cursor.getString(cursor.getColumnIndexOrThrow("rol_codigo")),
-                rut = cursor.getString(cursor.getColumnIndexOrThrow("rut")),
-                nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre")),
-                correo = cursor.getString(cursor.getColumnIndexOrThrow("correo")),
-                telefono = cursor.getString(cursor.getColumnIndexOrThrow("telefono")),
-                passwordHash = cursor.getString(cursor.getColumnIndexOrThrow("password_hash")),
-                activo = cursor.getInt(cursor.getColumnIndexOrThrow("activo")) == 1
-            )
-        }
-        cursor.close()
-        usuario
+    suspend fun login(correo: String, pass: String): Usuario? = withContext(Dispatchers.IO) {
+        buscarUno("$consultaBase WHERE u.correo = ? AND u.password_hash = ?", arrayOf(correo, pass))
     }
+
+    suspend fun obtenerPorId(idUsuario: Long): Usuario? = withContext(Dispatchers.IO) {
+        buscarUno("$consultaBase WHERE u.id_usuario = ?", arrayOf(idUsuario.toString()))
+    }
+
+    private fun buscarUno(query: String, argumentos: Array<String>): Usuario? {
+        val cursor = dbHelper.readableDatabase.rawQuery(query, argumentos)
+        val usuario = if (cursor.moveToFirst()) cursor.aUsuario() else null
+        cursor.close()
+        return usuario
+    }
+
+    private fun Cursor.aUsuario(): Usuario = Usuario(
+        id = getInt(getColumnIndexOrThrow("id_usuario")),
+        idRol = getInt(getColumnIndexOrThrow("id_rol")),
+        rolCodigo = getString(getColumnIndexOrThrow("rol_codigo")),
+        rolNombre = getString(getColumnIndexOrThrow("rol_nombre")),
+        rut = getString(getColumnIndexOrThrow("rut")),
+        nombre = getString(getColumnIndexOrThrow("nombre")),
+        correo = getString(getColumnIndexOrThrow("correo")),
+        telefono = getString(getColumnIndexOrThrow("telefono")),
+        passwordHash = getString(getColumnIndexOrThrow("password_hash")),
+        activo = getInt(getColumnIndexOrThrow("activo")) == 1,
+        giro = getString(getColumnIndexOrThrow("giro")),
+        contactoNombre = getString(getColumnIndexOrThrow("contacto_nombre")),
+        contactoCargo = getString(getColumnIndexOrThrow("contacto_cargo")),
+        preguntaSeguridad = getString(getColumnIndexOrThrow("pregunta_seguridad")),
+        respuestaSeguridad = getString(getColumnIndexOrThrow("respuesta_seguridad"))
+    )
 }
