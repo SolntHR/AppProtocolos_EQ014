@@ -1,6 +1,8 @@
 package com.example.appprotocolos_eq014.repository
 
+import android.content.ContentValues
 import android.database.Cursor
+import android.database.sqlite.SQLiteConstraintException
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.Usuario
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +22,37 @@ class UsuarioRepository(private val dbHelper: InduztekDbHelper) {
 
     suspend fun obtenerPorId(idUsuario: Long): Usuario? = withContext(Dispatchers.IO) {
         buscarUno("$consultaBase WHERE u.id_usuario = ?", arrayOf(idUsuario.toString()))
+    }
+
+    suspend fun actualizarPerfil(
+        idUsuario: Long,
+        nombre: String,
+        rut: String,
+        telefono: String,
+        contactoNombre: String?,
+        contactoCargo: String?
+    ): Boolean = withContext(Dispatchers.IO) {
+        val valores = ContentValues().apply {
+            put("nombre", nombre)
+            put("rut", rut)
+            put("telefono", telefono)
+            put("contacto_nombre", contactoNombre)
+            put("contacto_cargo", contactoCargo)
+        }
+        try {
+            dbHelper.writableDatabase.update(
+                "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
+            ) > 0
+        } catch (e: SQLiteConstraintException) {
+            false
+        }
+    }
+
+    suspend fun actualizarFoto(idUsuario: Long, rutaFoto: String?): Boolean = withContext(Dispatchers.IO) {
+        val valores = ContentValues().apply { put("foto_perfil", rutaFoto) }
+        dbHelper.writableDatabase.update(
+            "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
+        ) > 0
     }
 
     private fun buscarUno(query: String, argumentos: Array<String>): Usuario? {
@@ -44,6 +77,7 @@ class UsuarioRepository(private val dbHelper: InduztekDbHelper) {
         contactoNombre = getString(getColumnIndexOrThrow("contacto_nombre")),
         contactoCargo = getString(getColumnIndexOrThrow("contacto_cargo")),
         preguntaSeguridad = getString(getColumnIndexOrThrow("pregunta_seguridad")),
-        respuestaSeguridad = getString(getColumnIndexOrThrow("respuesta_seguridad"))
+        respuestaSeguridad = getString(getColumnIndexOrThrow("respuesta_seguridad")),
+        fotoPerfil = getString(getColumnIndexOrThrow("foto_perfil"))
     )
 }

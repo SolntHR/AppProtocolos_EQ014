@@ -8,7 +8,7 @@ class InduztekDbHelper (context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
     companion object {
         private const val NOMBRE_BD = "induztek.db"
-        private const val VERSION_BD = 5
+        private const val VERSION_BD = 6
 
         private const val SQL_CREAR_ROL = """
             CREATE TABLE ROL (
@@ -88,6 +88,7 @@ class InduztekDbHelper (context: Context) :
                 contacto_cargo TEXT,
                 pregunta_seguridad TEXT,
                 respuesta_seguridad TEXT,
+                foto_perfil TEXT,
                 FOREIGN KEY (id_rol) REFERENCES ROL(id_rol) ON DELETE RESTRICT
             )
         """
@@ -375,18 +376,18 @@ class InduztekDbHelper (context: Context) :
 
         private const val SQL_PRECARGAR_USUARIOS = """
             INSERT INTO USUARIO (id_usuario, id_rol, rut, nombre, correo, telefono, password_hash, activo, giro, contacto_nombre, contacto_cargo, pregunta_seguridad, respuesta_seguridad) VALUES
-            (1, 1, '17.284.519-3', 'Matías Godoy Herrera', 'mgodoy@induztek.ejemplo', '+56900000101', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'firulais'),
-            (2, 1, '19.412.087-7', 'Javiera Tapia Muñoz', 'jtapia@induztek.ejemplo', '+56900000102', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'santiago'),
-            (3, 1, '26.104.583-4', 'Carlos Rondón Pérez', 'crdon@induztek.ejemplo', '+56900000103', '123456', 1, NULL, NULL, NULL, '¿Cuál es tu comida favorita?', 'pizza'),
-            (4, 1, '20.137.648-3', 'Diego Valenzuela Ríos', 'dvalenzuela@induztek.ejemplo', '+56900000104', '123456', 1, NULL, NULL, NULL, '¿Cuál fue el modelo de tu primer auto?', 'toyota'),
-            (5, 2, '15.906.334-8', 'Andrea Contreras Silva', 'acontreras@induztek.ejemplo', '+56900000105', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'pedro'),
-            (6, 2, '16.553.270-8', 'Sebastián Morales Gutiérrez', 'smorales@induztek.ejemplo', '+56900000106', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'rocky'),
-            (7, 3, '13.871.905-7', 'Ricardo Espinoza Lagos', 'respinoza@induztek.ejemplo', '+56900000107', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'valparaiso'),
+            (1, 1, '17.284.519-3', 'Matías Godoy Herrera', 'mgodoy@induztek.ejemplo', '+56 9 8123 4567', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'firulais'),
+            (2, 1, '19.412.087-7', 'Javiera Tapia Muñoz', 'jtapia@induztek.ejemplo', '+56 9 6674 9021', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'santiago'),
+            (3, 1, '26.104.583-4', 'Carlos Rondón Pérez', 'crdon@induztek.ejemplo', '+56 9 5521 7743', '123456', 1, NULL, NULL, NULL, '¿Cuál es tu comida favorita?', 'pizza'),
+            (4, 1, '20.137.648-3', 'Diego Valenzuela Ríos', 'dvalenzuela@induztek.ejemplo', '+56 9 7390 1856', '123456', 1, NULL, NULL, NULL, '¿Cuál fue el modelo de tu primer auto?', 'toyota'),
+            (5, 2, '15.906.334-8', 'Andrea Contreras Silva', 'acontreras@induztek.ejemplo', '+56 9 7456 2210', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'pedro'),
+            (6, 2, '16.553.270-8', 'Sebastián Morales Gutiérrez', 'smorales@induztek.ejemplo', '+56 9 8812 4430', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'rocky'),
+            (7, 3, '13.871.905-7', 'Ricardo Espinoza Lagos', 'respinoza@induztek.ejemplo', '+56 9 9345 1187', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'valparaiso'),
             
-            (8, 4, '76.482.915-8', 'Envasadora del Pacífico S.A.', 'mfuentes@envpacifico.ejemplo', '+56900000108', '123456', 1, 'Agroindustria', 'Marcela Fuentes Rojas', 'Jefa de Mantenimiento', '¿Cuál es tu comida favorita?', 'sushi'),
-            (9, 4, '96.731.540-0', 'Sanitaria Valle Central S.A.', 'jarancibia@svcentral.ejemplo', '+56900000109', '123456', 1, 'Servicios sanitarios', 'Jorge Arancibia Leiva', 'Jefe de Planta', '¿Cuál fue el modelo de tu primer auto?', 'nissan'),
-            (10, 4, '77.105.362-9', 'Minera Cerro Alto SpA', 'pnavarro@cerroalto.ejemplo', '+56900000110', '123456', 1, 'Minería', 'Patricio Navarro Soto', 'Jefe de Mantenimiento Eléctrico', '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'juan'),
-            (11, 4, '76.903.218-5', 'Clínica Los Aromos Ltda.', 'cmendez@losaromos.ejemplo', '+56900000111', '123456', 1, 'Salud', 'Carolina Méndez Pizarro', 'Supervisora', '¿Cuál es el nombre de tu primera mascota?', 'luna');
+            (8, 4, '76.482.915-8', 'Envasadora del Pacífico S.A.', 'mfuentes@envpacifico.ejemplo', '+56 9 6612 3480', '123456', 1, 'Agroindustria', 'Marcela Fuentes Rojas', 'Jefa de Mantenimiento', '¿Cuál es tu comida favorita?', 'sushi'),
+            (9, 4, '96.731.540-0', 'Sanitaria Valle Central S.A.', 'jarancibia@svcentral.ejemplo', '+56 9 4471 2093', '123456', 1, 'Servicios sanitarios', 'Jorge Arancibia Leiva', 'Jefe de Planta', '¿Cuál fue el modelo de tu primer auto?', 'nissan'),
+            (10, 4, '77.105.362-9', 'Minera Cerro Alto SpA', 'pnavarro@cerroalto.ejemplo', '+56 9 3308 6615', '123456', 1, 'Minería', 'Patricio Navarro Soto', 'Jefe de Mantenimiento Eléctrico', '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'juan'),
+            (11, 4, '76.903.218-5', 'Clínica Los Aromos Ltda.', 'cmendez@losaromos.ejemplo', '+56 9 5218 6604', '123456', 1, 'Salud', 'Carolina Méndez Pizarro', 'Supervisora', '¿Cuál es el nombre de tu primera mascota?', 'luna');
         """
 
         private const val SQL_PRECARGAR_OPERATIVO = """

@@ -1,6 +1,19 @@
 package com.example.appprotocolos_eq014.ui.screens.perfil
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -61,10 +74,39 @@ import com.example.appprotocolos_eq014.viewmodel.PerfilViewModel
 fun PerfilScreen(
     viewModel: PerfilViewModel,
     onSesionCerrada: () -> Unit,
-    onEditarPerfil: () -> Unit = {},
-    onCambiarFoto: () -> Unit = {}
+    onEditarPerfil: () -> Unit,
+    perfilActualizado: Boolean = false,
+    onPerfilActualizadoConsumido: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val contexto = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    var mostrarOpcionesFoto by remember { mutableStateOf(false) }
+
+    val lanzadorCamara = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { foto -> viewModel.onFotoCapturada(foto) }
+
+    val lanzadorPermisoCamara = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { concedido ->
+        if (concedido) lanzadorCamara.launch(null) else viewModel.onPermisoCamaraDenegado()
+    }
+
+    val lanzadorGaleria = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> viewModel.onFotoElegida(uri) }
+
+    val tomarFoto = {
+        val permisoConcedido = ContextCompat.checkSelfPermission(
+            contexto, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (permisoConcedido) {
+            lanzadorCamara.launch(null)
+        } else {
+            lanzadorPermisoCamara.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     LaunchedEffect(uiState.sesionCerrada) {
         if (uiState.sesionCerrada) {
@@ -72,12 +114,65 @@ fun PerfilScreen(
         }
     }
 
-    PerfilContent(
-        uiState = uiState,
-        onEditarPerfil = onEditarPerfil,
-        onCerrarSesion = viewModel::onCerrarSesion,
-        onCambiarFoto = onCambiarFoto
-    )
+    LaunchedEffect(perfilActualizado) {
+        if (perfilActualizado) {
+            viewModel.onPerfilActualizado()
+            onPerfilActualizadoConsumido()
+        }
+    }
+
+    val textoMensaje = uiState.mensaje?.let { stringResource(it) }
+    LaunchedEffect(textoMensaje) {
+        if (textoMensaje != null) {
+            snackbarHostState.showSnackbar(textoMensaje)
+            viewModel.onMensajeMostrado()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        PerfilContent(
+            uiState = uiState,
+            onEditarPerfil = onEditarPerfil,
+            onCerrarSesion = viewModel::onCerrarSesion,
+            onCambiarFoto = { mostrarOpcionesFoto = true }
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+    }
+
+    if (mostrarOpcionesFoto) {
+        HojaOpcionesFoto(
+            tieneFoto = uiState.foto != null,
+            onTomarFoto = {
+                mostrarOpcionesFoto = false
+                tomarFoto()
+            },
+            onElegirGaleria = {
+                mostrarOpcionesFoto = false
+                lanzadorGaleria.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+            onEliminarFoto = {
+                mostrarOpcionesFoto = false
+                viewModel.onEliminarFoto()
+            },
+            onCerrar = { mostrarOpcionesFoto = false }
+        )
+    }
+
+    uiState.fotoPendiente?.let { foto ->
+        DialogoVistaPreviaFoto(
+            foto = foto,
+            guardando = uiState.procesandoFoto,
+            onUsar = viewModel::onUsarFoto,
+            onCancelar = viewModel::onCancelarFoto
+        )
+    }
 }
 
 @Composable
@@ -94,6 +189,8 @@ fun PerfilContent(
         return
     }
 
+    val foto = remember(uiState.foto) { uiState.foto?.asImageBitmap() }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -103,6 +200,7 @@ fun PerfilContent(
             nombre = uiState.nombre,
             rol = uiState.rol,
             correo = uiState.correo,
+            foto = foto,
             onCambiarFoto = onCambiarFoto
         )
 
@@ -161,6 +259,7 @@ private fun EncabezadoPerfil(
     nombre: String,
     rol: String,
     correo: String,
+    foto: ImageBitmap?,
     onCambiarFoto: () -> Unit
 ) {
     Column(
@@ -178,6 +277,7 @@ private fun EncabezadoPerfil(
             AvatarIniciales(
                 nombre = nombre,
                 tamano = 96.dp,
+                foto = foto,
                 modifier = Modifier.border(3.dp, Blanco.copy(alpha = 0.85f), CircleShape)
             )
             Box(

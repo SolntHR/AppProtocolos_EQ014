@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
+import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 
 object AppViewModelFactory {
@@ -38,6 +39,14 @@ object AppViewModelFactory {
         initializer {
             val contexto = contexto()
             PerfilViewModel(
+                sesionPreferencias = SesionPreferencias(contexto),
+                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
+                fotoPerfilRepository = FotoPerfilRepository(contexto)
+            )
+        }
+        initializer {
+            val contexto = contexto()
+            EditarPerfilViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
                 usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto))
             )

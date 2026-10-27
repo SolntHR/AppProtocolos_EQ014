@@ -1,8 +1,13 @@
 package com.example.appprotocolos_eq014.ui.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +38,8 @@ fun AvatarIniciales(
     modifier: Modifier = Modifier,
     tamano: Dp = 40.dp,
     colorFondo: Color = FondoAvatar,
-    colorTexto: Color = AzulPrimario
+    colorTexto: Color = AzulPrimario,
+    foto: ImageBitmap? = null
 ) {
     Box(
         modifier = modifier
@@ -42,12 +48,25 @@ fun AvatarIniciales(
             .background(colorFondo),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = inicialesDe(nombre),
-            color = colorTexto,
-            fontSize = (tamano.value * 0.36f).sp,
-            fontWeight = FontWeight.ExtraBold
-        )
+        Crossfade(targetState = foto, label = "foto_avatar") { imagen ->
+            if (imagen != null) {
+                Image(
+                    bitmap = imagen,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = inicialesDe(nombre),
+                        color = colorTexto,
+                        fontSize = (tamano.value * 0.36f).sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+            }
+        }
     }
 }
 

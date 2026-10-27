@@ -21,7 +21,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.ui.screens.LoginScreen
 import com.example.appprotocolos_eq014.ui.screens.inicio.InicioScreen
+import com.example.appprotocolos_eq014.ui.screens.perfil.EditarPerfilScreen
 import com.example.appprotocolos_eq014.ui.screens.perfil.PerfilScreen
+import com.example.appprotocolos_eq014.viewmodel.EditarPerfilViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.viewmodel.AppViewModelFactory
 import com.example.appprotocolos_eq014.viewmodel.InicioViewModel
 import com.example.appprotocolos_eq014.viewmodel.LoginViewModel
@@ -31,7 +34,10 @@ object Rutas {
     const val LOGIN = "login"
     const val INICIO = "inicio"
     const val PERFIL = "perfil"
+    const val EDITAR_PERFIL = "editar_perfil"
 }
+
+private const val CLAVE_PERFIL_ACTUALIZADO = "perfil_actualizado"
 
 private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.PERFIL)
 
@@ -87,14 +93,35 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     onNavigateToGestionUsuarios = {}
                 )
             }
-            composable(Rutas.PERFIL) {
+            composable(Rutas.PERFIL) { entrada ->
                 val perfilViewModel: PerfilViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                val perfilActualizado by entrada.savedStateHandle
+                    .getStateFlow(CLAVE_PERFIL_ACTUALIZADO, false)
+                    .collectAsStateWithLifecycle()
                 PerfilScreen(
                     viewModel = perfilViewModel,
                     onSesionCerrada = {
                         navController.navigate(Rutas.LOGIN) {
                             popUpTo(navController.graph.id) { inclusive = true }
                         }
+                    },
+                    onEditarPerfil = { navController.navigate(Rutas.EDITAR_PERFIL) },
+                    perfilActualizado = perfilActualizado,
+                    onPerfilActualizadoConsumido = {
+                        entrada.savedStateHandle[CLAVE_PERFIL_ACTUALIZADO] = false
+                    }
+                )
+            }
+            composable(Rutas.EDITAR_PERFIL) {
+                val editarPerfilViewModel: EditarPerfilViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                EditarPerfilScreen(
+                    viewModel = editarPerfilViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onGuardado = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(CLAVE_PERFIL_ACTUALIZADO, true)
+                        navController.popBackStack()
                     }
                 )
             }

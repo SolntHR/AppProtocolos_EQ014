@@ -15,5 +15,6 @@ data class Usuario(
     val contactoNombre: String? = null,
     val contactoCargo: String? = null,
     val preguntaSeguridad: String? = null,
-    val respuestaSeguridad: String? = null
+    val respuestaSeguridad: String? = null,
+    val fotoPerfil: String? = null
 )
