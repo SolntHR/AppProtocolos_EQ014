@@ -8,7 +8,7 @@ class InduztekDbHelper (context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
     companion object {
         private const val NOMBRE_BD = "induztek.db"
-        private const val VERSION_BD = 3
+        private const val VERSION_BD = 4
 
         // Tablas padre
         private const val SQL_CREAR_ROL = """
@@ -374,14 +374,19 @@ class InduztekDbHelper (context: Context) :
         private const val SQL_PRECARGAR_VISITA = """
             INSERT INTO VISITA (id_visita, numero_ot, id_instalacion, fecha, tipo_visita, id_ingeniero_cargo) VALUES
             (1, 'OT-2026-1187', 1, '2026-09-26', 'SOLO_PRUEBAS', 5),
-            (2, 'OT-2026-1154', 4, '2026-09-20', 'PRUEBAS_Y_MANT', 6);
+            (2, 'OT-2026-1154', 4, '2026-09-20', 'PRUEBAS_Y_MANT', 6),
+            (3, 'OT-2024-0951', 1, '2024-09-14', 'SOLO_PRUEBAS', 5),
+            (4, 'OT-2025-1032', 1, '2025-09-13', 'SOLO_PRUEBAS', 5),
+            (5, 'OT-2026-1102', 3, '2026-09-08', 'SOLO_PRUEBAS', 6);
         """
         private const val SQL_PRECARGAR_PROTOCOLO = """
             INSERT INTO PROTOCOLO (id_protocolo, numero, id_visita, id_equipo, id_usuario_registra, fecha_hora_prueba, temperatura_c, humedad_pct, descripcion_mantenimiento, observaciones, id_estado, id_protocolo_reemplazado) VALUES
-            ('PT-2024-0312', 'PT-2024-0312', 1, 1, 1, '2024-09-14 10:00:00', 18.0, 55.0, NULL, 'Prueba de rutina', 4, NULL),
-            ('PT-2025-0288', 'PT-2025-0288', 1, 1, 2, '2025-09-13 09:30:00', 21.0, 48.0, NULL, 'Prueba anual', 4, NULL),
+            ('PT-2024-0312', 'PT-2024-0312', 3, 1, 1, '2024-09-14 10:00:00', 18.0, 55.0, NULL, 'Prueba de rutina', 4, NULL),
+            ('PT-2025-0288', 'PT-2025-0288', 4, 1, 2, '2025-09-13 09:30:00', 21.0, 48.0, NULL, 'Prueba anual', 4, NULL),
             ('PT-2026-0401', 'PT-2026-0401', 1, 1, 1, '2026-09-26 09:40:00', 19.0, 60.0, 'Limpieza de aisladores BT', 'IP bajo en AT-T, revisar', 2, NULL),
-            ('PT-2026-0389', 'PT-2026-0389', 2, 4, 3, '2026-09-20 11:00:00', 22.0, 45.0, NULL, 'Falta n° de serie instrumento', 3, NULL);
+            ('PT-2026-0402', 'PT-2026-0402', 1, 2, 1, '2026-09-26 11:15:00', 19.0, 60.0, NULL, NULL, 2, NULL),
+            ('PT-2026-0389', 'PT-2026-0389', 2, 4, 3, '2026-09-20 11:00:00', 22.0, 45.0, NULL, 'Falta n° de serie instrumento', 3, NULL),
+            ('PT-2026-0360', 'PT-2026-0360', 5, 5, 2, '2026-09-08 10:30:00', 27.0, 20.0, NULL, NULL, 4, NULL);
         """
     }
 
@@ -432,6 +437,9 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_PRECARGAR_INSTRUMENTOS)
         db.execSQL(SQL_PRECARGAR_USUARIOS)
         db.execSQL(SQL_PRECARGAR_OPERATIVO)
+        db.execSQL(SQL_PRECARGAR_EQUIPO)
+        db.execSQL(SQL_PRECARGAR_VISITA)
+        db.execSQL(SQL_PRECARGAR_PROTOCOLO)
 
     }
 
