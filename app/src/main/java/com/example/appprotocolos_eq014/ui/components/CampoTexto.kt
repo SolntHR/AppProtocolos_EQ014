@@ -28,7 +28,8 @@ fun CampoTexto(
     @DrawableRes icono: Int,
     modifier: Modifier = Modifier,
     error: String? = null,
-    tipoTeclado: KeyboardType = KeyboardType.Text
+    tipoTeclado: KeyboardType = KeyboardType.Text,
+    iconoFinal: (@Composable () -> Unit)? = null
 ) {
     OutlinedTextField(
         value = valor,
@@ -42,8 +43,13 @@ fun CampoTexto(
                 modifier = Modifier.size(Dimens.tamanoIcono)
             )
         },
+        trailingIcon = iconoFinal,
         isError = error != null,
-        supportingText = { if (error != null) Text(error) },
+        supportingText = if (error != null) {
+            { Text(error) }
+        } else {
+            null
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
             keyboardType = tipoTeclado,

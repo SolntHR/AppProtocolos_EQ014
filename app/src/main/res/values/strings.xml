@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Induztek Protocolos</string>
 
+    <string name="marca_induztek">INDUZTEK</string>
+    <string name="marca_protocolos">PROTOCOLOS</string>
     <string name="login_trabajo_terreno">TRABAJO EN TERRENO</string>
     <string name="login_bienvenido">Bienvenido</string>
     <string name="login_subtitulo">Registra pruebas incluso sin conexión.</string>

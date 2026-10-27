@@ -2,24 +2,25 @@ package com.example.appprotocolos_eq014.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val AzulPrimario = Color(0xFF0F365B)
-val AzulOscuro = Color(0xFF0A243D)
-val NaranjaAcento = Color(0xFFF2701D)
+val AzulPrimario = Color(0xFF0B3C6F)
+val AzulOscuro = Color(0xFF092D52)
+val AzulHover = Color(0xFF082F57)
+val AzulSuave = Color(0xFFDCEAF7)
+val AzulTextoCabecera = Color(0xFFC9D9E8)
+
+val NaranjaAcento = Color(0xFFF28C28)
+val NaranjaSuave = Color(0xFFFFF0DC)
+
 val Blanco = Color.White
+val Superficie = Color(0xFFF5F7F9)
+val SuperficieFuerte = Color(0xFFE8EDF2)
+val TextoPrincipal = Color(0xFF17212B)
+val TextoSecundario = Color(0xFF64717D)
+val Borde = Color(0xFFC7D0D8)
 
-val FondoClaro = Color(0xFFEBEAEF)
-val SuperficieClara = Color(0xFFF5F4F7)
-val BordeClaro = Color(0xFFD1D0D5)
-val TextoPrincipalClaro = Color(0xFF1E1E1E)
-val TextoSecundarioClaro = Color(0xFF6B6A70)
-
-val FondoOscuro = Color(0xFF121212)
-val SuperficieOscura = Color(0xFF1E1E1E)
-val BordeOscuro = Color(0xFF333333)
-val TextoPrincipalOscuro = Color(0xFFF5F5F5)
-val TextoSecundarioOscuro = Color(0xFFA0A0A0)
-
-val VerdeFormalizado = Color(0xFF86E2B5)
-val AmarilloPendiente = Color(0xFFFFD56F)
-val RojoAlerta = Color(0xFFFFA5A5)
-val ErrorRojo = Color(0xFFBA1A1A)
+val VerdeExito = Color(0xFF16794B)
+val VerdeSuave = Color(0xFFDFF3E8)
+val AmarilloAviso = Color(0xFF9A6100)
+val AmarilloSuave = Color(0xFFFFF0C7)
+val RojoError = Color(0xFFBA1A1A)
+val RojoSuave = Color(0xFFFFDAD6)

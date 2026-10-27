@@ -1,63 +1,38 @@
 package com.example.appprotocolos_eq014.ui.theme
 
-import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = AzulOscuro,
-    secondary = NaranjaAcento,
-    background = FondoOscuro,
-    surface = SuperficieOscura,
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onBackground = TextoPrincipalOscuro,
-    onSurface = TextoSecundarioOscuro,
-    outline = BordeOscuro,
-    error = ErrorRojo
-)
-
-private val LightColorScheme = lightColorScheme(
+private val EsquemaInduztek = lightColorScheme(
     primary = AzulPrimario,
+    onPrimary = Blanco,
+    primaryContainer = AzulSuave,
+    onPrimaryContainer = AzulPrimario,
     secondary = NaranjaAcento,
-    background = FondoClaro,
-    surface = SuperficieClara,
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onBackground = TextoPrincipalClaro,
-    onSurface = TextoSecundarioClaro,
-    outline = BordeClaro,
-    error = ErrorRojo
+    onSecondary = Blanco,
+    secondaryContainer = NaranjaSuave,
+    onSecondaryContainer = AmarilloAviso,
+    background = Superficie,
+    onBackground = TextoPrincipal,
+    surface = Blanco,
+    onSurface = TextoPrincipal,
+    surfaceVariant = SuperficieFuerte,
+    onSurfaceVariant = TextoSecundario,
+    outline = Borde,
+    outlineVariant = SuperficieFuerte,
+    error = RojoError,
+    onError = Blanco,
+    errorContainer = RojoSuave,
+    onErrorContainer = RojoError
 )
 
 @Composable
 fun AppProtocolos_EQ014Theme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-        }
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = EsquemaInduztek,
         typography = Typography,
         content = content
     )

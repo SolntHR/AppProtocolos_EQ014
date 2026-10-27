@@ -3,8 +3,8 @@ package com.example.appprotocolos_eq014.ui.theme
 import androidx.compose.ui.unit.dp
 
 object Dimens {
-    val radioCampo = 12.dp
-    val radioBoton = 16.dp
+    val radioCampo = 14.dp
+    val radioBoton = 17.dp
     val radioTarjeta = 20.dp
 
     val alturaBoton = 56.dp

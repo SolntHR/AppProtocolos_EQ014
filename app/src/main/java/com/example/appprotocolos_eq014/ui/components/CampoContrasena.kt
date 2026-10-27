@@ -59,7 +59,11 @@ fun CampoContrasena(
         },
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         isError = error != null,
-        supportingText = { if (error != null) Text(error) },
+        supportingText = if (error != null) {
+            { Text(error) }
+        } else {
+            null
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         shape = EstilosCampo.forma,
