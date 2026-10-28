@@ -338,6 +338,26 @@ private fun TarjetaPrueba(
             }
         }
 
+        // Aclaracion 2: cada prueba queda realizada o No realizada con motivo
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Prueba realizada", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Switch(checked = !seccion.noRealizada, onCheckedChange = { viewModel.onNoRealizada(tipo, !it) })
+        }
+        if (seccion.noRealizada) {
+            OutlinedTextField(
+                value = seccion.motivoNoRealizada,
+                onValueChange = { viewModel.onMotivoNoRealizada(tipo, it) },
+                label = { Text("Motivo por el que no se realizó *") },
+                placeholder = { Text("Ej.: cliente no autorizó desconexión") },
+                isError = seccion.motivoNoRealizada.isBlank(),
+                supportingText = if (seccion.motivoNoRealizada.isBlank()) ({ Text("El motivo es obligatorio") }) else null,
+                minLines = 2,
+                shape = EstilosCampo.forma,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        if (!seccion.noRealizada) {
         // RF-05 / RN-11: instrumento con su vencimiento
         val sugeridos = instrumentos.filter {
             it.nombreTipo.lowercase().contains(ReglasProtocolo.palabraInstrumento(tipo))
@@ -404,6 +424,7 @@ private fun TarjetaPrueba(
                 onOpera = { viewModel.onOperaFila(tipo, indice, it) },
                 onResultadoManual = { viewModel.onResultadoManual(tipo, indice, it) }
             )
+        }
         }
 
         OutlinedTextField(

@@ -34,7 +34,9 @@ data class PruebaAGuardar(
     val resultado: ResultadoPrueba?,
     val comentario: String?,
     val ingresadoManualmente: Boolean,
-    val valores: Map<String, Double> // codigo de PARAMETRO -> valor (solo se guardan los que tienen idParametro)
+    val valores: Map<String, Double>, // codigo de PARAMETRO -> valor (solo se guardan los que tienen idParametro)
+    val realizada: Boolean = true,
+    val motivoNoRealizada: String? = null
 )
 
 data class ProtocoloAGuardar(
@@ -441,7 +443,9 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
 
     suspend fun paraEditar(idProtocolo: String): ProtocoloEditable? = withContext(Dispatchers.IO) {
         val db = helper.readableDatabase
-        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = true).map { it.datos }
+        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map {
+            it.datos.copy(realizada = it.realizada, motivoNoRealizada = it.motivoNoRealizada)
+        }
         db.rawQuery(
             """
             SELECT id_protocolo, numero, id_estado, id_visita, id_equipo, id_usuario_registra,
@@ -489,7 +493,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             require(datos.temperatura != null && datos.humedad != null) {
                 "La temperatura ambiente y la humedad son obligatorias para registrar en terreno."
             }
-            require(datos.pruebas.isNotEmpty()) { "Registra al menos una prueba completa." }
+            require(datos.pruebas.any { it.realizada }) { "Registra al menos una prueba completa." }
         }
 
         val db = helper.writableDatabase
@@ -538,15 +542,16 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 estadoActual = estado
             }
 
-            // Se reemplazan las pruebas realizadas (MEDICION se borra en cascada)
-            db.delete("PRUEBA", "id_protocolo = ? AND realizada = 1", arrayOf(idProtocolo))
+            // Se reemplazan todas las pruebas, realizadas y no realizadas (MEDICION se borra en cascada)
+            db.delete("PRUEBA", "id_protocolo = ?", arrayOf(idProtocolo))
             for (prueba in datos.pruebas) {
                 val idPrueba = db.insertOrThrow("PRUEBA", null, ContentValues().apply {
                     put("id_protocolo", idProtocolo)
                     put("id_tipo_prueba", prueba.tipo.idDb)
                     put("elemento", prueba.elemento)
                     put("momento", "UNICA")
-                    put("realizada", 1)
+                    put("realizada", if (prueba.realizada) 1 else 0)
+                    put("motivo_no_realizada", prueba.motivoNoRealizada)
                     if (prueba.instrumentoId != null) put("id_instrumento", prueba.instrumentoId) else putNull("id_instrumento")
                     if (prueba.resultado != null) put("id_resultado", prueba.resultado.idDb) else putNull("id_resultado")
                     put("comentario", prueba.comentario)

@@ -99,6 +99,9 @@ class FormularioProtocoloViewModel(
         for (prueba in p.pruebas) {
             secciones = secciones.map { s ->
                 if (s.tipo != prueba.tipo) return@map s
+                if (!prueba.realizada) {
+                    return@map s.copy(noRealizada = true, motivoNoRealizada = prueba.motivoNoRealizada.orEmpty())
+                }
                 val comunes = s.comunes.toMutableMap()
                 prueba.valores[Parametros.KV.codigo]?.let { comunes[Parametros.KV.codigo] = it.aTexto() }
                 prueba.valores[Parametros.TAP.codigo]?.let { comunes[Parametros.TAP.codigo] = it.aTexto() }
@@ -260,6 +263,13 @@ class FormularioProtocoloViewModel(
     fun onComentarioSeccion(tipo: TipoPrueba, texto: String) =
         actualizarSeccion(tipo) { it.copy(comentario = texto) }
 
+    // Aclaracion 2: una prueba se marca como No realizada con motivo obligatorio
+    fun onNoRealizada(tipo: TipoPrueba, noRealizada: Boolean) =
+        actualizarSeccion(tipo) { it.copy(noRealizada = noRealizada) }
+
+    fun onMotivoNoRealizada(tipo: TipoPrueba, motivo: String) =
+        actualizarSeccion(tipo) { it.copy(motivoNoRealizada = motivo) }
+
     fun onDescripcionMantenimiento(texto: String) = _uiState.update { it.copy(descripcionMantenimiento = texto) }
     fun onObservaciones(texto: String) = _uiState.update { it.copy(observaciones = texto) }
 
@@ -302,7 +312,7 @@ class FormularioProtocoloViewModel(
         val hayCompletas = filas.any { it.evaluacion.estado == EstadoFila.COMPLETA }
         val instrumento = estado.instrumentos.firstOrNull { it.id == seccion.instrumentoId }
         val errorInstrumento = when {
-            !hayCompletas -> null
+            seccion.noRealizada || !hayCompletas -> null
             instrumento == null -> "Selecciona el instrumento utilizado (RF-05)"
             !instrumento.vigenteEn(estado.fechaHoraPrueba) ->
                 "Calibración vencida el ${Fechas.fecha(instrumento.fechaVencimiento)}. No se puede usar (RN-11)"
@@ -330,9 +340,13 @@ class FormularioProtocoloViewModel(
             s.errorTemperatura != null || s.errorHumedad != null -> "Revisa la temperatura y la humedad."
             registrar && (temperatura == null || humedad == null) ->
                 "La temperatura ambiente y la humedad son obligatorias para registrar en terreno (HU-02)."
-            s.secciones.any { sec -> sec.filas.any { it.evaluacion.estado == EstadoFila.INCOMPLETA || it.evaluacion.estado == EstadoFila.INVALIDA } } ->
+            s.secciones.any { it.filasConProblema } ->
                 "Hay mediciones incompletas o fuera de rango. Revisa las filas marcadas en rojo."
             s.secciones.any { it.errorInstrumento != null } -> "Revisa el instrumento de cada prueba."
+            s.secciones.any { it.noRealizada && it.motivoNoRealizada.isBlank() } ->
+                "Indica el motivo de cada prueba no realizada."
+            registrar && s.secciones.any { !it.todasLasFilasCompletas } ->
+                "Cada prueba debe quedar completa o marcada como No realizada con su motivo."
             registrar && s.secciones.none { it.filasCompletas.isNotEmpty() } ->
                 "Para registrar en terreno se requiere al menos una prueba completa (RN-04)."
             registrar && visita.incluyeMantenimiento && s.descripcionMantenimiento.isBlank() ->
@@ -344,7 +358,20 @@ class FormularioProtocoloViewModel(
             return
         }
 
-        val pruebas = s.secciones.flatMap { sec ->
+        val noRealizadas = s.secciones.filter { it.noRealizada }.map { sec ->
+            PruebaAGuardar(
+                tipo = sec.tipo,
+                elemento = "Todos los elementos",
+                instrumentoId = null,
+                resultado = null,
+                comentario = sec.comentario.ifBlank { null },
+                ingresadoManualmente = false,
+                valores = emptyMap(),
+                realizada = false,
+                motivoNoRealizada = sec.motivoNoRealizada.trim()
+            )
+        }
+        val pruebas = noRealizadas + s.secciones.flatMap { sec ->
             sec.filasCompletas.map { f ->
                 PruebaAGuardar(
                     tipo = sec.tipo,

@@ -19,10 +19,20 @@ data class SeccionPruebaUi(
     val comunes: Map<String, String> = emptyMap(), // tensión de prueba, tap, máximo de placa
     val unidadAislacion: String = "MΩ",
     val comentario: String = "",
-    val errorInstrumento: String? = null
+    val errorInstrumento: String? = null,
+    val noRealizada: Boolean = false,
+    val motivoNoRealizada: String = ""
 ) {
     val filasCompletas: List<FilaPruebaUi>
-        get() = filas.filter { it.evaluacion.estado == EstadoFila.COMPLETA }
+        get() = if (noRealizada) emptyList() else filas.filter { it.evaluacion.estado == EstadoFila.COMPLETA }
+
+    val filasConProblema: Boolean
+        get() = !noRealizada && filas.any {
+            it.evaluacion.estado == EstadoFila.INCOMPLETA || it.evaluacion.estado == EstadoFila.INVALIDA
+        }
+
+    val todasLasFilasCompletas: Boolean
+        get() = noRealizada || filas.all { it.evaluacion.estado == EstadoFila.COMPLETA }
     val resultado: ResultadoPrueba?
         get() = peorResultado(filasCompletas.map { it.evaluacion.resultado })
 }
