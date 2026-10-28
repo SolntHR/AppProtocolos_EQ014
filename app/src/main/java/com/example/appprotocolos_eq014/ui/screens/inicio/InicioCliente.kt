@@ -32,6 +32,8 @@ import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.EquipoCliente
 import com.example.appprotocolos_eq014.model.InicioUiState
 import com.example.appprotocolos_eq014.model.ProtocoloCliente
+import com.example.appprotocolos_eq014.model.VisitaResumen
+import com.example.appprotocolos_eq014.util.Formato
 import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
 import com.example.appprotocolos_eq014.ui.components.TonoEstado
@@ -41,7 +43,8 @@ import com.example.appprotocolos_eq014.ui.theme.AppProtocolos_EQ014Theme
 fun InicioCliente(
     uiState: InicioUiState,
     onBusquedaCambia: (String) -> Unit,
-    onAbrirEquipo: (Long) -> Unit
+    onAbrirEquipo: (Long) -> Unit,
+    onAbrirActa: (Long) -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -94,6 +97,22 @@ fun InicioCliente(
             )
         }
 
+        // RF-15: actas de las visitas cerradas de la empresa
+        item {
+            Column(modifier = Modifier.padding(top = 8.dp)) {
+                Text(text = "Actas de visitas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (uiState.actasCliente.isEmpty()) "Aún no hay visitas cerradas."
+                    else "${uiState.actasCliente.size} actas de prueba en terreno",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        items(uiState.actasCliente, key = { "acta_${it.id}" }) { visita ->
+            TarjetaActaCliente(visita = visita, onClick = { onAbrirActa(visita.id) }, modifier = Modifier.animateItem())
+        }
+
         item {
             Row(
                 modifier = Modifier
@@ -115,6 +134,35 @@ fun InicioCliente(
                     modifier = Modifier.padding(start = 6.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TarjetaActaCliente(visita: VisitaResumen, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(modifier = Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(text = visita.numeroOt, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text(text = visita.instalacion, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "${Formato.fecha(visita.fecha)} · ${visita.totalProtocolos} protocolos",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            // RN-19: formalizadas o pendientes de formalizacion
+            val todosFormalizados = visita.totalProtocolos > 0 && visita.protocolosRegistrados == visita.totalProtocolos
+            EtiquetaEstado(
+                texto = if (todosFormalizados) "Formalizado" else "Pendiente de formalización",
+                tono = if (todosFormalizados) TonoEstado.EXITO else TonoEstado.AVISO
+            )
         }
     }
 }

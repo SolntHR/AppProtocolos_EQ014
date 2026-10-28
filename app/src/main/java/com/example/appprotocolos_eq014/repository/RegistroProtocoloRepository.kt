@@ -69,6 +69,11 @@ data class ProtocoloEditable(
  */
 class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
 
+    suspend fun numeroDe(idProtocolo: String): String = withContext(Dispatchers.IO) {
+        helper.readableDatabase.rawQuery("SELECT numero FROM PROTOCOLO WHERE id_protocolo = ?", arrayOf(idProtocolo))
+            .use { c -> if (c.moveToFirst()) c.getString(0) else idProtocolo }
+    }
+
     suspend fun nombreUsuario(idUsuario: Long): String = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery("SELECT nombre FROM USUARIO WHERE id_usuario = ?", arrayOf(idUsuario.toString()))
             .use { c -> if (c.moveToFirst()) c.getString(0) else "" }
@@ -225,6 +230,18 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
     // Personal Induztek puede consultar cualquier protocolo (tabla de permisos)
     suspend fun todos(): List<ProtocoloListado> = withContext(Dispatchers.IO) {
         consultarListado(helper.readableDatabase, "1 = 1", emptyArray())
+    }
+
+    // RF-21: dias promedio entre la prueba y la formalizacion
+    suspend fun promedioDiasFormalizacion(): Double? = withContext(Dispatchers.IO) {
+        helper.readableDatabase.rawQuery(
+            """
+            SELECT AVG(julianday(h.fecha_hora) - julianday(p.fecha_hora_prueba))
+            FROM HISTORIAL_ESTADO h INNER JOIN PROTOCOLO p ON p.id_protocolo = h.id_protocolo
+            WHERE h.id_estado_nuevo = 4
+            """.trimIndent(),
+            null
+        ).use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getDouble(0) else null }
     }
 
     // ---------------------------------------------------------------

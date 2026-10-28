@@ -39,6 +39,7 @@ import com.example.appprotocolos_eq014.ui.components.MensajeCentradoProtocolo
 import com.example.appprotocolos_eq014.ui.components.TarjetaSeccion
 import com.example.appprotocolos_eq014.ui.styles.EstilosCampo
 import com.example.appprotocolos_eq014.viewmodel.ProtocolosViewModel
+import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 
 // Detalle de un protocolo para el personal Induztek (RF-10, RF-12, RNF-07)
 @Composable
@@ -52,6 +53,7 @@ fun DetalleProtocoloScreen(
     val state by viewModel.detalle.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var accion by remember { mutableStateOf<EstadoProtocolo?>(null) }
+    SolicitarPermisoNotificaciones()
 
     LaunchedEffect(idProtocolo) { viewModel.cargarDetalle(idProtocolo) }
     LaunchedEffect(state.mensaje) {

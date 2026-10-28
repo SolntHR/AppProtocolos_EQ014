@@ -51,6 +51,12 @@ import com.example.appprotocolos_eq014.viewmodel.ProtocolosViewModel
 import com.example.appprotocolos_eq014.ui.screens.protocolo.DetalleProtocoloScreen
 import com.example.appprotocolos_eq014.ui.screens.protocolo.FormularioProtocoloScreen
 import com.example.appprotocolos_eq014.ui.screens.protocolo.ListaProtocolosScreen
+import com.example.appprotocolos_eq014.ui.screens.catalogo.FormularioEquipoScreen
+import com.example.appprotocolos_eq014.ui.screens.catalogo.FormularioInstalacionScreen
+import com.example.appprotocolos_eq014.viewmodel.ARG_ID_INSTALACION
+import com.example.appprotocolos_eq014.viewmodel.SIN_INSTALACION
+import com.example.appprotocolos_eq014.viewmodel.FormularioEquipoViewModel
+import com.example.appprotocolos_eq014.viewmodel.FormularioInstalacionViewModel
 
 object Rutas {
     const val LOGIN = "login"
@@ -70,16 +76,24 @@ object Rutas {
     const val FORMULARIO = "formulario?$ARG_ID_PROTOCOLO={$ARG_ID_PROTOCOLO}"
     const val DETALLE_PROTOCOLO = "protocolo/{$ARG_ID_PROTOCOLO}"
 
+    // Registro de instalaciones y equipos (RF-01, RF-02)
+    const val EQUIPO_NUEVO = "equipo_nuevo?$ARG_ID_INSTALACION={$ARG_ID_INSTALACION}"
+    const val INSTALACION_NUEVA = "instalacion_nueva"
+
     fun fichaUsuario(idUsuario: Long) = "ficha_usuario/$idUsuario"
     fun historial(idEquipo: Long) = "historial/$idEquipo"
     fun acta(idVisita: Long) = "acta/$idVisita"
     fun formulario(idProtocolo: String? = null) =
         if (idProtocolo == null) "formulario" else "formulario?$ARG_ID_PROTOCOLO=$idProtocolo"
     fun detalleProtocolo(idProtocolo: String) = "protocolo/$idProtocolo"
+    fun equipoNuevo(idInstalacion: Long? = null) =
+        if (idInstalacion == null) "equipo_nuevo" else "equipo_nuevo?$ARG_ID_INSTALACION=$idInstalacion"
 }
 
 private const val CLAVE_PERFIL_ACTUALIZADO = "perfil_actualizado"
 private const val CLAVE_USUARIO_GUARDADO = "usuario_guardado"
+private const val CLAVE_EQUIPO_CREADO = "equipo_creado"
+private const val CLAVE_INSTALACION_CREADA = "instalacion_creada"
 
 private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.PROTOCOLOS, Rutas.INSTRUMENTOS, Rutas.PERFIL)
 
@@ -209,7 +223,9 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 ListaProtocolosScreen(
                     viewModel = protocolosViewModel,
                     onAbrirProtocolo = { id -> navController.navigate(Rutas.detalleProtocolo(id)) },
-                    onNuevoProtocolo = { navController.navigate(Rutas.formulario()) }
+                    onNuevoProtocolo = { navController.navigate(Rutas.formulario()) },
+                    onNuevoEquipo = { navController.navigate(Rutas.equipoNuevo()) },
+                    onNuevaInstalacion = { navController.navigate(Rutas.INSTALACION_NUEVA) }
                 )
             }
             composable(
@@ -221,7 +237,13 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 })
             ) { entrada ->
                 val formularioViewModel: FormularioProtocoloViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                val equipoCreado by entrada.savedStateHandle
+                    .getStateFlow<Long?>(CLAVE_EQUIPO_CREADO, null)
+                    .collectAsStateWithLifecycle()
                 FormularioProtocoloScreen(
+                    onRegistrarEquipo = { idInstalacion -> navController.navigate(Rutas.equipoNuevo(idInstalacion)) },
+                    equipoCreado = equipoCreado,
+                    onEquipoCreadoConsumido = { entrada.savedStateHandle[CLAVE_EQUIPO_CREADO] = null },
                     viewModel = formularioViewModel,
                     idVisita = null,
                     idProtocolo = entrada.arguments?.getString(Rutas.ARG_ID_PROTOCOLO),
@@ -249,6 +271,40 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     onVolver = { navController.popBackStack() },
                     onEditar = { idEditar -> navController.navigate(Rutas.formulario(idEditar)) },
                     onAbrirProtocolo = { otro -> navController.navigate(Rutas.detalleProtocolo(otro)) }
+                )
+            }
+            composable(
+                route = Rutas.EQUIPO_NUEVO,
+                arguments = listOf(navArgument(ARG_ID_INSTALACION) {
+                    type = NavType.LongType
+                    defaultValue = SIN_INSTALACION
+                })
+            ) { entrada ->
+                val equipoViewModel: FormularioEquipoViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                val instalacionCreada by entrada.savedStateHandle
+                    .getStateFlow<Long?>(CLAVE_INSTALACION_CREADA, null)
+                    .collectAsStateWithLifecycle()
+                FormularioEquipoScreen(
+                    viewModel = equipoViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onGuardado = { idEquipo ->
+                        navController.previousBackStackEntry?.savedStateHandle?.set(CLAVE_EQUIPO_CREADO, idEquipo)
+                        navController.popBackStack()
+                    },
+                    onNuevaInstalacion = { navController.navigate(Rutas.INSTALACION_NUEVA) },
+                    instalacionCreada = instalacionCreada,
+                    onInstalacionCreadaConsumida = { entrada.savedStateHandle[CLAVE_INSTALACION_CREADA] = null }
+                )
+            }
+            composable(Rutas.INSTALACION_NUEVA) {
+                val instalacionViewModel: FormularioInstalacionViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                FormularioInstalacionScreen(
+                    viewModel = instalacionViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onGuardado = { idInstalacion ->
+                        navController.previousBackStackEntry?.savedStateHandle?.set(CLAVE_INSTALACION_CREADA, idInstalacion)
+                        navController.popBackStack()
+                    }
                 )
             }
             composable(Rutas.PERFIL) { entrada ->

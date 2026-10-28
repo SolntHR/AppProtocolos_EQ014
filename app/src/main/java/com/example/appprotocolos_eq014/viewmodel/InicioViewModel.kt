@@ -11,6 +11,7 @@ import com.example.appprotocolos_eq014.repository.CatalogoRepository
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
+import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.Formato
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ class InicioViewModel(
     private val catalogoRepository: CatalogoRepository,
     private val protocoloRepository: ProtocoloRepository,
     private val visitaRepository: VisitaRepository,
-    private val usuarioRepository: UsuarioRepository
+    private val usuarioRepository: UsuarioRepository,
+    private val catalogoClienteRepository: RegistroCatalogoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InicioUiState())
@@ -80,7 +82,8 @@ class InicioViewModel(
                 protocolos = protocolos
             )
         }
-        _uiState.update { it.copy(equiposCliente = equipos, isLoading = false) }
+        val actas = catalogoClienteRepository.visitasCerradasDeCliente(idCliente)
+        _uiState.update { it.copy(equiposCliente = equipos, actasCliente = actas, isLoading = false) }
     }
 
     fun onBusquedaCambia(query: String) {

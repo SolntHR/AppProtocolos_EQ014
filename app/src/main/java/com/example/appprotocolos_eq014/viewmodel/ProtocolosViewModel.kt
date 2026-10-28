@@ -1,5 +1,6 @@
 package com.example.appprotocolos_eq014.viewmodel
 
+import android.content.Context
 import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import com.example.appprotocolos_eq014.model.DetalleProtocoloUiState
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.ListaProtocolosUiState
 import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +20,8 @@ import kotlinx.coroutines.launch
 // Listado general de protocolos (RF-13) y detalle con formalizar / observar / anular (RF-12)
 class ProtocolosViewModel(
     private val sesion: SesionPreferencias,
-    private val repository: RegistroProtocoloRepository
+    private val repository: RegistroProtocoloRepository,
+    private val contexto: Context // contexto de la aplicacion, para las notificaciones locales
 ) : ViewModel() {
 
     private val _lista = MutableStateFlow(ListaProtocolosUiState())
@@ -37,7 +40,9 @@ class ProtocolosViewModel(
                 return@launch
             }
             try {
-                _lista.update { it.copy(cargando = false, protocolos = repository.todos()) }
+                val protocolos = repository.todos()
+                val promedio = repository.promedioDiasFormalizacion()
+                _lista.update { it.copy(cargando = false, protocolos = protocolos, promedioDiasFormalizacion = promedio) }
             } catch (e: SQLiteException) {
                 _lista.update { it.copy(cargando = false, error = "No se pudo cargar el listado: ${e.message}") }
             }
@@ -88,6 +93,7 @@ class ProtocolosViewModel(
                     rol = sesion.leerRolUsuario().orEmpty(),
                     motivo = motivo
                 )
+                NotificacionesLocales.notificarEstadoProtocolo(contexto, d.resumen.numero, nuevo)
                 _detalle.update { it.copy(procesando = false, mensaje = "Protocolo ${nuevo.etiqueta.lowercase()}") }
                 cargarDetalle(d.resumen.id)
             } catch (e: IllegalArgumentException) {

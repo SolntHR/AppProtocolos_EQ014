@@ -10,8 +10,14 @@ data class ListaProtocolosUiState(
     val busqueda: String = "",
     val soloMios: Boolean = false,
     val soloAtrasados: Boolean = false,
+    val promedioDiasFormalizacion: Double? = null,
     val error: String? = null
 ) {
+    // RF-21: indicadores simples
+    val pendientesFormalizar: Int
+        get() = protocolos.count { it.estado == EstadoProtocolo.REGISTRADO_TERRENO || it.estado == EstadoProtocolo.OBSERVADO }
+    val atrasados: Int get() = protocolos.count { it.atrasado }
+
     val filtrados: List<ProtocoloListado>
         get() {
             val q = busqueda.trim()

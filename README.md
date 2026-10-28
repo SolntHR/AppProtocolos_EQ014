@@ -24,6 +24,11 @@ Hoy los técnicos anotan las mediciones en papel y el cliente recibe el protocol
 | Editar perfil | Formulario con validaciones; RUT, perfil y correo protegidos según el rol. | RN-03 |
 | Gestión de usuarios | Jefe técnico: listado de personal y clientes, activar o desactivar cuentas, agregar y editar usuarios. | RF-22, RN-20 |
 | Instrumentos | Jefe técnico: estado de calibración (vigente, por vencer en 30 días, vencida) y registro de nuevas calibraciones. | RF-19, RN-11, RN-12 |
+| Registro de protocolos | Formulario por tipo de equipo con resultado automático de cada prueba, instrumento con calibración vigente y comparación con la prueba anterior. Guarda como Borrador o Registrado en terreno. ID local UUID y número único. | RF-03 a RF-06, RF-11, RN-02, RN-04 a RN-11 |
+| Protocolos | Listado general con filtros por estado, propios y atrasados, indicadores y detalle con formalizar, observar y anular. | RF-12, RF-13, RF-21, RN-16, RN-17 |
+| Instalaciones y equipos | Registro de instalaciones del cliente y de equipos con TAG único por instalación y datos de placa. | RF-01, RF-02, HU-01, RN-01 |
+| Actas del cliente | El usuario cliente consulta las actas de sus visitas cerradas. | RF-15, RN-18, RN-19 |
+| Notificaciones | Avisos locales al registrar, observar, formalizar o anular un protocolo y al cerrar una visita. | RF-07, RNF-02 |
 
 ## Requisitos de la evaluación
 
@@ -35,7 +40,7 @@ Hoy los técnicos anotan las mediciones en papel y el cliente recibe el protocol
 | Navegación funcional | Navigation Compose con barra inferior por rol, rutas con argumentos y transiciones. |
 | Gestión de estado | `StateFlow` + `UiState` por pantalla, recolectado con `collectAsStateWithLifecycle`. |
 | Almacenamiento local | SQLite (`InduztekDbHelper`, 23 tablas basadas en el MER) y `SharedPreferences` para la sesión; fotos en almacenamiento interno. |
-| Recursos nativos | **Cámara** (con solicitud de permiso en tiempo de ejecución) y **galería** (selector de fotos del sistema). |
+| Recursos nativos | **Cámara** (con solicitud de permiso en tiempo de ejecución), **galería** (selector de fotos del sistema) y **notificaciones locales** (permiso `POST_NOTIFICATIONS` en Android 13+). |
 | Animaciones | Transiciones entre pantallas, `AnimatedVisibility`, `AnimatedContent`, `Crossfade`, colores y progreso animados. |
 
 ## Arquitectura

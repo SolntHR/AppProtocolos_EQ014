@@ -19,9 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
-import com.example.appprotocolos_eq014.ui.components.BotonCuentasPrueba
-import com.example.appprotocolos_eq014.ui.components.CONTRASENA_PRUEBA
-import com.example.appprotocolos_eq014.ui.components.MenuCuentasPrueba
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -88,32 +85,14 @@ fun LoginContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
-            var mostrarCuentasPrueba by remember { mutableStateOf(false) }
-            Box {
-                CampoTexto(
-                    valor = uiState.correo,
-                    onValorCambia = onCorreoCambia,
-                    etiqueta = stringResource(R.string.campo_correo),
-                    icono = R.drawable.ic_correo,
-                    error = uiState.errorCorreo,
-                    tipoTeclado = KeyboardType.Email,
-                    iconoFinal = {
-                        BotonCuentasPrueba(
-                            expandido = mostrarCuentasPrueba,
-                            onClick = { mostrarCuentasPrueba = !mostrarCuentasPrueba }
-                        )
-                    }
-                )
-                MenuCuentasPrueba(
-                    expandido = mostrarCuentasPrueba,
-                    onCerrar = { mostrarCuentasPrueba = false },
-                    onSeleccionar = { cuenta ->
-                        onCorreoCambia(cuenta.correo)
-                        onContrasenaCambia(CONTRASENA_PRUEBA)
-                        mostrarCuentasPrueba = false
-                    }
-                )
-            }
+            CampoTexto(
+                valor = uiState.correo,
+                onValorCambia = onCorreoCambia,
+                etiqueta = stringResource(R.string.campo_correo),
+                icono = R.drawable.ic_correo,
+                error = uiState.errorCorreo,
+                tipoTeclado = KeyboardType.Email
+            )
 
             CampoContrasena(
                 valor = uiState.contrasena,

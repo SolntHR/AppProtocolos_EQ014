@@ -23,11 +23,49 @@ class RecuperarViewModel(
     private var usuario: Usuario? = null
 
     fun onCorreoCambia(valor: String) {
-        _uiState.update { it.copy(correo = valor.trim(), errorCorreo = null) }
+        _uiState.update { it.copy(correo = valor.trim(), errorCorreo = null, errorGeneral = null) }
+    }
+
+    fun onPreguntaCambia(valor: String) {
+        _uiState.update { it.copy(pregunta = valor, errorPregunta = null, errorGeneral = null) }
     }
 
     fun onRespuestaCambia(valor: String) {
-        _uiState.update { it.copy(respuesta = valor, errorRespuesta = null) }
+        _uiState.update { it.copy(respuesta = valor, errorRespuesta = null, errorGeneral = null) }
+    }
+
+    // Paso 1: correo, pregunta y respuesta deben coincidir con la misma cuenta
+    fun onVerificar() {
+        val estado = _uiState.value
+        val errorCorreo = Validaciones.errorCorreo(estado.correo)
+        val errorPregunta = if (estado.pregunta == null) "Selecciona tu pregunta de seguridad" else null
+        val errorRespuesta = Validaciones.errorObligatorio(estado.respuesta, "Ingresa tu respuesta")
+        if (errorCorreo != null || errorPregunta != null || errorRespuesta != null) {
+            _uiState.update {
+                it.copy(errorCorreo = errorCorreo, errorPregunta = errorPregunta, errorRespuesta = errorRespuesta)
+            }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(cargando = true, errorGeneral = null) }
+            val encontrado = usuarioRepository.obtenerPorCorreo(estado.correo)
+            val coincide = encontrado != null &&
+                    encontrado.preguntaSeguridad?.trim() == estado.pregunta?.trim() &&
+                    encontrado.respuestaSeguridad?.trim().equals(estado.respuesta.trim(), ignoreCase = true)
+            when {
+                // Mensaje unico: no se revela cual de los tres datos fallo
+                !coincide -> _uiState.update {
+                    it.copy(cargando = false, errorGeneral = "Los datos no coinciden con ninguna cuenta. Revisa el correo, la pregunta y la respuesta.")
+                }
+                encontrado?.activo != true -> _uiState.update {
+                    it.copy(cargando = false, errorGeneral = "La cuenta está desactivada. Contacta al Jefe técnico.")
+                }
+                else -> {
+                    usuario = encontrado
+                    _uiState.update { it.copy(cargando = false, paso = PasoRecuperacion.NUEVA_CONTRASENA) }
+                }
+            }
+        }
     }
 
     fun onNuevaCambia(valor: String) {
@@ -40,49 +78,6 @@ class RecuperarViewModel(
 
     fun onAlternarVisibilidad() {
         _uiState.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
-    }
-
-    fun onBuscarCuenta() {
-        val correo = _uiState.value.correo
-        Validaciones.errorCorreo(correo)?.let { error ->
-            _uiState.update { it.copy(errorCorreo = error) }
-            return
-        }
-        viewModelScope.launch {
-            _uiState.update { it.copy(cargando = true) }
-            val encontrado = usuarioRepository.obtenerPorCorreo(correo)
-            val error = when {
-                encontrado == null -> "No existe una cuenta con ese correo"
-                !encontrado.activo -> "La cuenta está desactivada. Contacta al Jefe técnico"
-                encontrado.preguntaSeguridad.isNullOrBlank() -> "La cuenta no tiene pregunta de seguridad. Contacta al Jefe técnico"
-                else -> null
-            }
-            usuario = encontrado.takeIf { error == null }
-            _uiState.update {
-                if (error != null) {
-                    it.copy(cargando = false, errorCorreo = error)
-                } else {
-                    it.copy(
-                        cargando = false,
-                        paso = PasoRecuperacion.PREGUNTA,
-                        pregunta = encontrado?.preguntaSeguridad.orEmpty()
-                    )
-                }
-            }
-        }
-    }
-
-    fun onVerificarRespuesta() {
-        val respuesta = _uiState.value.respuesta.trim()
-        val esperada = usuario?.respuestaSeguridad.orEmpty()
-        val error = when {
-            respuesta.isEmpty() -> "Ingresa tu respuesta"
-            !respuesta.equals(esperada.trim(), ignoreCase = true) -> "La respuesta no coincide"
-            else -> null
-        }
-        _uiState.update {
-            if (error != null) it.copy(errorRespuesta = error) else it.copy(paso = PasoRecuperacion.NUEVA_CONTRASENA)
-        }
     }
 
     fun onGuardarContrasena() {

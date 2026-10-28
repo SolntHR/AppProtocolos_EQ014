@@ -16,6 +16,7 @@ import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
+import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 
 const val ARG_ID_USUARIO = "idUsuario"
 const val ARG_ID_EQUIPO = "idEquipo"
@@ -36,14 +37,32 @@ object AppViewModelFactory {
             val contexto = contexto()
             FormularioProtocoloViewModel(
                 sesion = SesionPreferencias(contexto),
-                repository = RegistroProtocoloRepository(obtenerDbHelper(contexto))
+                repository = RegistroProtocoloRepository(obtenerDbHelper(contexto)),
+                contexto = contexto.applicationContext
             )
         }
         initializer {
             val contexto = contexto()
             ProtocolosViewModel(
                 sesion = SesionPreferencias(contexto),
-                repository = RegistroProtocoloRepository(obtenerDbHelper(contexto))
+                repository = RegistroProtocoloRepository(obtenerDbHelper(contexto)),
+                contexto = contexto.applicationContext
+            )
+        }
+        // Registro de instalaciones y equipos (RF-01, RF-02)
+        initializer {
+            val contexto = contexto()
+            FormularioEquipoViewModel(
+                sesion = SesionPreferencias(contexto),
+                repository = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                idInstalacionInicial = createSavedStateHandle().get<Long>(ARG_ID_INSTALACION) ?: SIN_INSTALACION
+            )
+        }
+        initializer {
+            val contexto = contexto()
+            FormularioInstalacionViewModel(
+                sesion = SesionPreferencias(contexto),
+                repository = RegistroCatalogoRepository(obtenerDbHelper(contexto))
             )
         }
         initializer {
@@ -61,7 +80,8 @@ object AppViewModelFactory {
                 catalogoRepository = CatalogoRepository(db),
                 protocoloRepository = ProtocoloRepository(db),
                 visitaRepository = VisitaRepository(db),
-                usuarioRepository = UsuarioRepository(db)
+                usuarioRepository = UsuarioRepository(db),
+                catalogoClienteRepository = RegistroCatalogoRepository(db)
             )
         }
         initializer {
@@ -69,6 +89,7 @@ object AppViewModelFactory {
             HistorialViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
                 protocoloRepository = ProtocoloRepository(obtenerDbHelper(contexto)),
+                catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
                 idEquipo = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_EQUIPO))
             )
         }
@@ -77,6 +98,8 @@ object AppViewModelFactory {
             ActaViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
                 visitaRepository = VisitaRepository(obtenerDbHelper(contexto)),
+                catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                contexto = contexto.applicationContext,
                 idVisita = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA))
             )
         }

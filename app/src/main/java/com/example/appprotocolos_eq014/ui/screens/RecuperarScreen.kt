@@ -38,7 +38,8 @@ import com.example.appprotocolos_eq014.model.PasoRecuperacion
 import com.example.appprotocolos_eq014.model.RecuperarUiState
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
-import com.example.appprotocolos_eq014.ui.components.CampoBloqueado
+import com.example.appprotocolos_eq014.ui.components.MensajeAvisoProtocolo
+import com.example.appprotocolos_eq014.ui.components.SelectorDesplegable
 import com.example.appprotocolos_eq014.ui.components.CampoContrasena
 import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.components.TituloSeccion
@@ -55,9 +56,9 @@ fun RecuperarScreen(
         uiState = uiState,
         onVolver = onVolver,
         onCorreoCambia = viewModel::onCorreoCambia,
-        onBuscarCuenta = viewModel::onBuscarCuenta,
+        onPreguntaCambia = viewModel::onPreguntaCambia,
         onRespuestaCambia = viewModel::onRespuestaCambia,
-        onVerificarRespuesta = viewModel::onVerificarRespuesta,
+        onVerificar = viewModel::onVerificar,
         onNuevaCambia = viewModel::onNuevaCambia,
         onConfirmacionCambia = viewModel::onConfirmacionCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
@@ -70,9 +71,9 @@ fun RecuperarContent(
     uiState: RecuperarUiState,
     onVolver: () -> Unit,
     onCorreoCambia: (String) -> Unit,
-    onBuscarCuenta: () -> Unit,
+    onPreguntaCambia: (String) -> Unit,
     onRespuestaCambia: (String) -> Unit,
-    onVerificarRespuesta: () -> Unit,
+    onVerificar: () -> Unit,
     onNuevaCambia: (String) -> Unit,
     onConfirmacionCambia: (String) -> Unit,
     onAlternarVisibilidad: () -> Unit,
@@ -103,9 +104,10 @@ fun RecuperarContent(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 when (paso) {
-                    PasoRecuperacion.CORREO -> {
+                    PasoRecuperacion.VERIFICAR -> {
                         TituloSeccion(stringResource(R.string.olvido_contrasena))
-                        Explicacion(stringResource(R.string.recuperar_paso_correo))
+                        Explicacion("Ingresa el correo de tu cuenta, elige tu pregunta de seguridad y escribe la respuesta.")
+                        uiState.errorGeneral?.let { MensajeAvisoProtocolo(it) }
                         CampoTexto(
                             valor = uiState.correo,
                             onValorCambia = onCorreoCambia,
@@ -114,20 +116,14 @@ fun RecuperarContent(
                             error = uiState.errorCorreo,
                             tipoTeclado = KeyboardType.Email
                         )
-                        BotonPrincipal(
-                            texto = stringResource(R.string.btn_continuar),
-                            onClick = onBuscarCuenta,
-                            habilitado = !uiState.cargando,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    PasoRecuperacion.PREGUNTA -> {
-                        TituloSeccion(stringResource(R.string.recuperar_titulo_pregunta))
-                        Explicacion(stringResource(R.string.recuperar_paso_pregunta))
-                        CampoBloqueado(
-                            etiqueta = stringResource(R.string.recuperar_pregunta),
-                            valor = uiState.pregunta,
-                            ayuda = uiState.correo
+                        SelectorDesplegable(
+                            etiqueta = "Pregunta de seguridad",
+                            opciones = uiState.preguntas,
+                            seleccion = uiState.pregunta,
+                            textoDe = { it },
+                            onSeleccion = onPreguntaCambia,
+                            error = uiState.errorPregunta,
+                            textoVacio = "Selecciona tu pregunta"
                         )
                         CampoTexto(
                             valor = uiState.respuesta,
@@ -138,7 +134,8 @@ fun RecuperarContent(
                         )
                         BotonPrincipal(
                             texto = stringResource(R.string.btn_verificar),
-                            onClick = onVerificarRespuesta,
+                            onClick = onVerificar,
+                            habilitado = !uiState.cargando,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -222,9 +219,9 @@ private fun RecuperarPreview() {
             uiState = RecuperarUiState(),
             onVolver = {},
             onCorreoCambia = {},
-            onBuscarCuenta = {},
+            onPreguntaCambia = {},
             onRespuestaCambia = {},
-            onVerificarRespuesta = {},
+            onVerificar = {},
             onNuevaCambia = {},
             onConfirmacionCambia = {},
             onAlternarVisibilidad = {},

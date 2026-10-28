@@ -24,7 +24,8 @@ data class InicioUiState(
     val fechaHoy: String = "",
     val equiposCliente: List<EquipoCliente> = emptyList(),
     val busqueda: String = "",
-    val visitas: List<VisitaResumen> = emptyList()
+    val visitas: List<VisitaResumen> = emptyList(),
+    val actasCliente: List<VisitaResumen> = emptyList() // RF-15: actas de visitas cerradas
 ) {
     val equiposFiltrados: List<EquipoCliente>
         get() = equiposCliente.filter { it.tag.contains(busqueda.trim(), ignoreCase = true) }

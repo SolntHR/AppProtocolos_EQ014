@@ -60,6 +60,7 @@ import com.example.appprotocolos_eq014.ui.theme.Blanco
 import com.example.appprotocolos_eq014.ui.theme.NaranjaAcento
 import com.example.appprotocolos_eq014.util.Formato
 import com.example.appprotocolos_eq014.viewmodel.ActaViewModel
+import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 
 @Composable
 fun ActaScreen(
@@ -68,6 +69,7 @@ fun ActaScreen(
     onAbrirEquipo: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    SolicitarPermisoNotificaciones()
     ActaContent(
         uiState = uiState,
         onVolver = onVolver,

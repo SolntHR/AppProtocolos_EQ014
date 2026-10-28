@@ -30,6 +30,8 @@ import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.ProtocoloListado
 import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.model.formatoCl
+import com.example.appprotocolos_eq014.ui.components.BotonSecundario
 import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
 import com.example.appprotocolos_eq014.ui.components.EtiquetaProtocoloListado
@@ -45,7 +47,9 @@ import com.example.appprotocolos_eq014.viewmodel.ProtocolosViewModel
 fun ListaProtocolosScreen(
     viewModel: ProtocolosViewModel,
     onAbrirProtocolo: (String) -> Unit,
-    onNuevoProtocolo: () -> Unit
+    onNuevoProtocolo: () -> Unit,
+    onNuevoEquipo: () -> Unit = {},
+    onNuevaInstalacion: () -> Unit = {}
 ) {
     val state by viewModel.lista.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.cargarLista() }
@@ -60,6 +64,29 @@ fun ListaProtocolosScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     TituloSeccion("Protocolos")
+                    // RF-21: indicadores simples
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Indicador("Pendientes de formalizar", state.pendientesFormalizar.toString(), Modifier.weight(1f))
+                        Indicador("Atrasados", state.atrasados.toString(), Modifier.weight(1f))
+                        Indicador(
+                            "Días prom. a formalizar",
+                            state.promedioDiasFormalizacion?.let { it.formatoCl(1) } ?: "—",
+                            Modifier.weight(1f)
+                        )
+                    }
+                    // RF-01 / RF-02: catalogo de instalaciones y equipos
+                    if (Rol.puedeCrearProtocolos(state.rolUsuario)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BotonSecundario(
+                                texto = "Equipo", onClick = onNuevoEquipo,
+                                icono = R.drawable.ic_mas, modifier = Modifier.weight(1f)
+                            )
+                            BotonSecundario(
+                                texto = "Instalación", onClick = onNuevaInstalacion,
+                                icono = R.drawable.ic_mas, modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                     CampoTexto(
                         valor = state.busqueda,
                         onValorCambia = viewModel::onBusqueda,
@@ -131,6 +158,20 @@ fun ListaProtocolosScreen(
                 text = { Text("Nuevo protocolo", fontWeight = FontWeight.Bold) },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun Indicador(titulo: String, valor: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Column(modifier = Modifier.padding(10.dp)) {
+            Text(valor, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            Text(titulo, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

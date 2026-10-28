@@ -1,22 +1,36 @@
 package com.example.appprotocolos_eq014.model
 
+// Recuperar contraseña: 1) verificar correo + pregunta + respuesta  2) nueva contraseña  3) listo
 enum class PasoRecuperacion {
-    CORREO,
-    PREGUNTA,
+    VERIFICAR,
     NUEVA_CONTRASENA,
     LISTO
 }
 
+// Preguntas de seguridad disponibles para las cuentas
+object PreguntasSeguridad {
+    val lista = listOf(
+        "¿Cuál es el nombre de tu primera mascota?",
+        "¿En qué ciudad nacieron tus padres?",
+        "¿Cuál es tu comida favorita?",
+        "¿Cuál fue el modelo de tu primer auto?",
+        "¿Cuál es el nombre de tu mejor amigo de la infancia?"
+    )
+}
+
 data class RecuperarUiState(
-    val paso: PasoRecuperacion = PasoRecuperacion.CORREO,
+    val paso: PasoRecuperacion = PasoRecuperacion.VERIFICAR,
     val correo: String = "",
-    val pregunta: String = "",
+    val preguntas: List<String> = PreguntasSeguridad.lista,
+    val pregunta: String? = null,
     val respuesta: String = "",
     val nuevaContrasena: String = "",
     val confirmacion: String = "",
     val contrasenaVisible: Boolean = false,
     val errorCorreo: String? = null,
+    val errorPregunta: String? = null,
     val errorRespuesta: String? = null,
+    val errorGeneral: String? = null,
     val errorNueva: String? = null,
     val errorConfirmacion: String? = null,
     val cargando: Boolean = false

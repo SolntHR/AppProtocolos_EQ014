@@ -1,10 +1,13 @@
 package com.example.appprotocolos_eq014.viewmodel
 
+import android.content.Context
 import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.EquipoProtocolo
+import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
 import com.example.appprotocolos_eq014.model.EstadoFila
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.FilaPruebaUi
@@ -28,7 +31,8 @@ import kotlinx.coroutines.launch
 
 class FormularioProtocoloViewModel(
     private val sesion: SesionPreferencias,
-    private val repository: RegistroProtocoloRepository
+    private val repository: RegistroProtocoloRepository,
+    private val contexto: Context // contexto de la aplicacion, para las notificaciones locales
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FormularioProtocoloUiState())
@@ -150,6 +154,16 @@ class FormularioProtocoloViewModel(
         viewModelScope.launch {
             val equipos = repository.equiposDisponibles(visita.id, visita.instalacionId, null)
             _uiState.update { it.copy(equipos = equipos) }
+        }
+    }
+
+    // HU-01: se registro un equipo nuevo desde el formulario
+    fun onEquipoCreado(idEquipo: Long) {
+        val visita = _uiState.value.visitaSeleccionada ?: return
+        viewModelScope.launch {
+            val equipos = repository.equiposDisponibles(visita.id, visita.instalacionId, null)
+            _uiState.update { it.copy(equipos = equipos) }
+            equipos.firstOrNull { it.id == idEquipo }?.let { seleccionarEquipo(it) }
         }
     }
 
@@ -361,6 +375,12 @@ class FormularioProtocoloViewModel(
                     usuarioId = sesion.leerIdUsuario(),
                     rol = sesion.leerRolUsuario().orEmpty(),
                     registrarEnTerreno = registrar
+                )
+                // Notificacion local con el numero del protocolo
+                NotificacionesLocales.notificarEstadoProtocolo(
+                    contexto,
+                    repository.numeroDe(id),
+                    if (registrar) EstadoProtocolo.REGISTRADO_TERRENO else EstadoProtocolo.BORRADOR
                 )
                 _uiState.update {
                     it.copy(

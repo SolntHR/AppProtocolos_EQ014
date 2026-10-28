@@ -5,6 +5,8 @@ import kotlin.math.abs
 // ---------------------------------------------------------------
 // Catalogo de pruebas (RN-05) y reglas de resultado (RN-06 a RN-10).
 // Kotlin puro: no depende de Android.
+// Cada tipo de prueba es una subclase de ReglaPrueba (herencia) y el formulario
+// las usa a traves de la clase base sin saber cual es (polimorfismo).
 // Los idParametro coinciden con la tabla PARAMETRO del helper (version del equipo).
 // idParametro = null -> valor calculado (IP, % error...): se muestra pero no se guarda.
 // ---------------------------------------------------------------
@@ -74,7 +76,8 @@ data class Evaluacion(
     val calculados: Map<String, Double> = emptyMap(), // incluye guardables y calculados
     val detalle: String? = null,                       // ej: "IP = 1,80"
     val error: String? = null,
-    val comparaciones: List<Comparacion> = emptyList()
+    val comparaciones: List<Comparacion> = emptyList(),
+    val camposConError: Set<String> = emptySet()          // para marcar en rojo el campo exacto
 )
 
 // Ultima medicion del mismo tipo y elemento en el mismo equipo (RN-09)
@@ -83,6 +86,320 @@ data class MedicionAnterior(
     val valores: Map<String, Double>
 )
 
+// ---------------------------------------------------------------
+// Clase base: define el flujo comun de validacion (patron "metodo plantilla")
+// y cada subclase implementa su propio calculo de resultado.
+// ---------------------------------------------------------------
+sealed class ReglaPrueba(val tipo: TipoPrueba) {
+
+    // Elementos (devanados, fases o polos) con los nombres de los datos de ejemplo del helper
+    abstract fun elementos(tipoEquipoId: Long): List<String>
+
+    // Campos que el tecnico escribe en cada fila
+    abstract fun camposFila(tipoEquipoId: Long): List<CampoMedicion>
+
+    // Campos que realmente mide el tecnico (los demas pueden venir pre-cargados)
+    open fun camposMedidos(tipoEquipoId: Long): List<CampoMedicion> = camposFila(tipoEquipoId)
+
+    // Campos obligatorios para que la fila quede completa
+    open fun camposRequeridos(tipoEquipoId: Long, opera: Boolean): List<CampoMedicion> = camposFila(tipoEquipoId)
+
+    // Fila sin mediciones = vacia (no se guarda)
+    open fun estaVacia(valores: Map<String, String>, tipoEquipoId: Long, opera: Boolean): Boolean =
+        camposMedidos(tipoEquipoId).all { valores[it.codigo].isNullOrBlank() }
+
+    // Valores principales que se comparan con la prueba anterior (RN-09)
+    abstract val valoresPrincipales: List<CampoMedicion>
+
+    // Palabra para sugerir el instrumento (INSTRUMENTO.nombre_tipo)
+    abstract val palabraInstrumento: String
+
+    // Calculo propio de cada prueba (RN-06, RN-07, RN-08, RN-08b, RN-08c)
+    protected abstract fun calcular(
+        tipoEquipoId: Long,
+        v: Map<String, Double>,
+        comunes: Map<String, String>,
+        unidadAislacion: String,
+        opera: Boolean,
+        resultadoManual: ResultadoPrueba?
+    ): Evaluacion
+
+    // Texto calculado para mostrar en el detalle (los calculados no se guardan)
+    open fun resumenCalculo(valores: Map<String, Double>, maxPlaca: Double?): String? = null
+
+    /** Flujo comun: fila vacia -> incompleta -> numeros validos -> calculo propio -> comparacion. */
+    fun evaluar(
+        tipoEquipoId: Long,
+        valores: Map<String, String>,
+        comunes: Map<String, String>,
+        unidadAislacion: String,
+        opera: Boolean,
+        resultadoManual: ResultadoPrueba?,
+        anterior: MedicionAnterior?
+    ): Evaluacion {
+        if (estaVacia(valores, tipoEquipoId, opera)) return Evaluacion()
+
+        val faltantes = camposRequeridos(tipoEquipoId, opera).filter { valores[it.codigo].isNullOrBlank() }
+        if (faltantes.isNotEmpty()) {
+            return Evaluacion(
+                EstadoFila.INCOMPLETA,
+                error = "Falta: ${faltantes.joinToString(", ") { it.etiqueta }}",
+                camposConError = faltantes.map { it.codigo }.toSet()
+            )
+        }
+
+        val v = mutableMapOf<String, Double>()
+        for (campo in camposFila(tipoEquipoId)) {
+            val texto = valores[campo.codigo]
+            if (texto.isNullOrBlank()) continue
+            val n = ReglasProtocolo.numero(texto)
+                ?: return invalida("${campo.etiqueta}: no es un número válido", campo)
+            if (n < 0) return invalida("${campo.etiqueta}: no se aceptan valores negativos", campo)
+            v[campo.codigo] = n
+        }
+
+        val base = calcular(tipoEquipoId, v, comunes, unidadAislacion, opera, resultadoManual)
+        if (base.estado != EstadoFila.COMPLETA || anterior == null) return base
+        return base.copy(comparaciones = comparar(base.calculados, anterior))
+    }
+
+    fun comparar(actuales: Map<String, Double>, anterior: MedicionAnterior): List<Comparacion> =
+        valoresPrincipales.mapNotNull { campo ->
+            val actual = actuales[campo.codigo] ?: return@mapNotNull null
+            val previo = anterior.valores[campo.codigo] ?: return@mapNotNull null
+            Comparacion(campo.codigo, campo.etiqueta, previo, actual, campo.unidad, anterior.numeroProtocolo)
+        }
+
+    protected fun invalida(mensaje: String, campo: CampoMedicion? = null) =
+        Evaluacion(EstadoFila.INVALIDA, error = mensaje, camposConError = setOfNotNull(campo?.codigo))
+
+    // ------------------- RN-06: Resistencia de aislación -------------------
+    object Aislacion : ReglaPrueba(TipoPrueba.AISLACION) {
+        override fun elementos(tipoEquipoId: Long) = when (tipoEquipoId) {
+            ReglasProtocolo.TIPO_TRANSFORMADOR -> listOf("AT-BT", "AT-T", "BT-T")
+            ReglasProtocolo.TIPO_CABLE -> listOf("Fase R", "Fase S", "Fase T")
+            else -> listOf("Polo 1", "Polo 2", "Polo 3")
+        }
+
+        override fun camposFila(tipoEquipoId: Long) =
+            if (ReglasProtocolo.usaLectura10(tipoEquipoId)) listOf(Parametros.L1, Parametros.L10) else listOf(Parametros.L1)
+
+        override val valoresPrincipales = listOf(Parametros.L1, Parametros.L10)
+        override val palabraInstrumento = "megóhmetro"
+
+        override fun calcular(
+            tipoEquipoId: Long, v: Map<String, Double>, comunes: Map<String, String>,
+            unidadAislacion: String, opera: Boolean, resultadoManual: ResultadoPrueba?
+        ): Evaluacion {
+            val kv = ReglasProtocolo.numero(comunes[Parametros.KV.codigo])
+                ?: return Evaluacion(EstadoFila.INCOMPLETA, error = "Indica la tensión de prueba (kV)")
+            if (kv < 0.25 || kv > 15) return invalida("Tensión de prueba fuera de rango (0,25 a 15 kV)")
+
+            val factor = if (unidadAislacion == "GΩ") 1000.0 else 1.0
+            val l1 = v.getValue(Parametros.L1.codigo) * factor
+            if (l1 > 10_000_000) return invalida("Lectura 1 min fuera de rango, revisa la unidad", Parametros.L1)
+            val calculados = mutableMapOf(Parametros.L1.codigo to l1, Parametros.KV.codigo to kv)
+
+            if (!ReglasProtocolo.usaLectura10(tipoEquipoId)) {
+                val r = if (l1 < 100) ResultadoPrueba.RECHAZADO else ResultadoPrueba.APROBADO
+                return Evaluacion(
+                    EstadoFila.COMPLETA, r, calculados,
+                    detalle = if (l1 < 100) "Lectura 1 min < 100 MΩ" else "Lectura 1 min ≥ 100 MΩ"
+                )
+            }
+
+            val l10 = v.getValue(Parametros.L10.codigo) * factor
+            if (l10 > 10_000_000) return invalida("Lectura 10 min fuera de rango, revisa la unidad", Parametros.L10)
+            calculados[Parametros.L10.codigo] = l10
+            if (l1 <= 0.0) {
+                return Evaluacion(EstadoFila.COMPLETA, ResultadoPrueba.RECHAZADO, calculados, "Lectura 1 min < 100 MΩ")
+            }
+            val ip = l10 / l1
+            calculados[Parametros.IP.codigo] = ip
+            val resultado = when {
+                l1 < 100 -> ResultadoPrueba.RECHAZADO
+                ip < 1.0 -> ResultadoPrueba.RECHAZADO
+                ip < 2.0 -> ResultadoPrueba.OBSERVADO
+                else -> ResultadoPrueba.APROBADO
+            }
+            val detalle = "IP = ${ip.formatoCl(2)}" + if (l1 < 100) " · Lectura 1 min < 100 MΩ" else ""
+            return Evaluacion(EstadoFila.COMPLETA, resultado, calculados, detalle)
+        }
+
+        override fun resumenCalculo(valores: Map<String, Double>, maxPlaca: Double?): String? {
+            val l1 = valores[Parametros.L1.codigo]
+            val l10 = valores[Parametros.L10.codigo]
+            return if (l1 != null && l10 != null && l1 > 0) "IP = ${(l10 / l1).formatoCl(2)}" else null
+        }
+    }
+
+    // ------------------- RN-07: Relación de transformación -------------------
+    object Ttr : ReglaPrueba(TipoPrueba.TTR) {
+        override fun elementos(tipoEquipoId: Long) = listOf("Fase H1-X1", "Fase H2-X2", "Fase H3-X3")
+        override fun camposFila(tipoEquipoId: Long) = listOf(Parametros.REL_TEO, Parametros.REL_MED)
+        override fun camposMedidos(tipoEquipoId: Long) = listOf(Parametros.REL_MED)
+        override val valoresPrincipales = listOf(Parametros.REL_MED)
+        override val palabraInstrumento = "ttr"
+
+        override fun calcular(
+            tipoEquipoId: Long, v: Map<String, Double>, comunes: Map<String, String>,
+            unidadAislacion: String, opera: Boolean, resultadoManual: ResultadoPrueba?
+        ): Evaluacion {
+            val teo = v.getValue(Parametros.REL_TEO.codigo)
+            val med = v.getValue(Parametros.REL_MED.codigo)
+            if (teo <= 0.0) return invalida("La relación teórica debe ser mayor a 0", Parametros.REL_TEO)
+            if (med <= 0.0) return invalida("La relación medida debe ser mayor a 0", Parametros.REL_MED)
+            val tapTexto = comunes[Parametros.TAP.codigo].orEmpty()
+            val tap = ReglasProtocolo.numero(tapTexto)
+            if (tapTexto.isNotBlank() && tap == null) return invalida("Posición del cambiador: debe ser un número")
+
+            val error = abs(med - teo) / teo * 100.0
+            val resultado = when {
+                error <= 0.5 -> ResultadoPrueba.APROBADO
+                error <= 1.0 -> ResultadoPrueba.OBSERVADO
+                else -> ResultadoPrueba.RECHAZADO
+            }
+            val calculados = mutableMapOf(
+                Parametros.REL_TEO.codigo to teo,
+                Parametros.REL_MED.codigo to med,
+                Parametros.ERROR.codigo to error
+            )
+            if (tap != null) calculados[Parametros.TAP.codigo] = tap
+            return Evaluacion(EstadoFila.COMPLETA, resultado, calculados, "Error = ${error.formatoCl(2)} %")
+        }
+
+        override fun resumenCalculo(valores: Map<String, Double>, maxPlaca: Double?): String? {
+            val teo = valores[Parametros.REL_TEO.codigo]
+            val med = valores[Parametros.REL_MED.codigo]
+            return if (teo != null && med != null && teo > 0) "Error = ${(abs(med - teo) / teo * 100).formatoCl(2)} %" else null
+        }
+    }
+
+    // ------------------- RN-08c: Resistencia de devanados (resultado manual) -------------------
+    object Devanados : ReglaPrueba(TipoPrueba.DEVANADOS) {
+        override fun elementos(tipoEquipoId: Long) =
+            listOf("AT fase U", "AT fase V", "AT fase W", "BT fase U", "BT fase V", "BT fase W")
+
+        override fun camposFila(tipoEquipoId: Long) = listOf(Parametros.R_FASE)
+        override val valoresPrincipales = listOf(Parametros.R_FASE)
+        override val palabraInstrumento = "micro-ohm"
+
+        override fun calcular(
+            tipoEquipoId: Long, v: Map<String, Double>, comunes: Map<String, String>,
+            unidadAislacion: String, opera: Boolean, resultadoManual: ResultadoPrueba?
+        ): Evaluacion {
+            if (v.values.any { it > 100_000 }) return invalida("Valor fuera de rango, revisa la unidad (mΩ)", Parametros.R_FASE)
+            return Evaluacion(
+                EstadoFila.COMPLETA, resultadoManual, v,
+                detalle = if (resultadoManual == null) "Resultado pendiente: lo indica el ingeniero" else "Resultado indicado manualmente"
+            )
+        }
+    }
+
+    // ------------------- RN-08: Resistencia de contactos -------------------
+    object Contactos : ReglaPrueba(TipoPrueba.CONTACTOS) {
+        override fun elementos(tipoEquipoId: Long) = listOf("Polo 1", "Polo 2", "Polo 3")
+        override fun camposFila(tipoEquipoId: Long) = listOf(Parametros.R_POLO)
+        override val valoresPrincipales = listOf(Parametros.R_POLO)
+        override val palabraInstrumento = "micro-ohm"
+
+        override fun calcular(
+            tipoEquipoId: Long, v: Map<String, Double>, comunes: Map<String, String>,
+            unidadAislacion: String, opera: Boolean, resultadoManual: ResultadoPrueba?
+        ): Evaluacion {
+            val max = ReglasProtocolo.numero(comunes[Parametros.MAX_PLACA.codigo])
+                ?: return Evaluacion(EstadoFila.INCOMPLETA, error = "Indica el máximo de placa (µΩ)")
+            if (max <= 0.0) return invalida("El máximo de placa debe ser mayor a 0")
+            val r = v.getValue(Parametros.R_POLO.codigo)
+            if (r > 100_000) return invalida("Valor fuera de rango, revisa la unidad (µΩ)", Parametros.R_POLO)
+            val pct = r / max * 100.0
+            val resultado = when {
+                pct <= 100.0 -> ResultadoPrueba.APROBADO
+                pct <= 120.0 -> ResultadoPrueba.OBSERVADO
+                else -> ResultadoPrueba.RECHAZADO
+            }
+            return Evaluacion(
+                EstadoFila.COMPLETA, resultado,
+                mapOf(Parametros.R_POLO.codigo to r, Parametros.MAX_PLACA.codigo to max, Parametros.PCT_PLACA.codigo to pct),
+                "${pct.formatoCl(1)} % del máximo de placa"
+            )
+        }
+
+        override fun resumenCalculo(valores: Map<String, Double>, maxPlaca: Double?): String? {
+            val r = valores[Parametros.R_POLO.codigo]
+            return if (r != null && maxPlaca != null && maxPlaca > 0) "${(r / maxPlaca * 100).formatoCl(1)} % del máximo de placa" else null
+        }
+    }
+
+    // ------------------- RN-08b: Operación de relé -------------------
+    object Rele : ReglaPrueba(TipoPrueba.RELE) {
+        override fun elementos(tipoEquipoId: Long) = listOf("Función 50/51")
+        override fun camposFila(tipoEquipoId: Long) =
+            listOf(Parametros.I_AJUSTE, Parametros.I_MEDIDA, Parametros.T_ESPERADO, Parametros.T_MEDIDO)
+
+        override fun camposMedidos(tipoEquipoId: Long) = listOf(Parametros.I_MEDIDA, Parametros.T_MEDIDO)
+
+        // Si el rele no opero basta con el ajuste y el tiempo esperado
+        override fun camposRequeridos(tipoEquipoId: Long, opera: Boolean) =
+            if (opera) camposFila(tipoEquipoId) else listOf(Parametros.I_AJUSTE, Parametros.T_ESPERADO)
+
+        override fun estaVacia(valores: Map<String, String>, tipoEquipoId: Long, opera: Boolean) =
+            opera && super.estaVacia(valores, tipoEquipoId, opera)
+
+        override val valoresPrincipales = listOf(Parametros.T_MEDIDO)
+        override val palabraInstrumento = "inyección"
+
+        override fun calcular(
+            tipoEquipoId: Long, v: Map<String, Double>, comunes: Map<String, String>,
+            unidadAislacion: String, opera: Boolean, resultadoManual: ResultadoPrueba?
+        ): Evaluacion {
+            val ajuste = v.getValue(Parametros.I_AJUSTE.codigo)
+            val esperado = v.getValue(Parametros.T_ESPERADO.codigo)
+            if (ajuste <= 0.0) return invalida("La corriente de ajuste debe ser mayor a 0", Parametros.I_AJUSTE)
+            if (esperado <= 0.0) return invalida("El tiempo esperado debe ser mayor a 0", Parametros.T_ESPERADO)
+            if (!opera) {
+                // No se guarda tiempo medido: asi queda registrado que no opero
+                val sinTiempo = v.filterKeys { it != Parametros.T_MEDIDO.codigo }
+                return Evaluacion(EstadoFila.COMPLETA, ResultadoPrueba.RECHAZADO, sinTiempo, "El relé no operó")
+            }
+            val medido = v.getValue(Parametros.T_MEDIDO.codigo)
+            if (medido <= 0.0) return invalida("El tiempo medido debe ser mayor a 0", Parametros.T_MEDIDO)
+            val dif = abs(medido - esperado) / esperado * 100.0
+            val calculados = v.toMutableMap()
+            calculados[Parametros.DIF_TIEMPO.codigo] = dif
+            val resultado = when {
+                dif <= 5.0 -> ResultadoPrueba.APROBADO
+                dif <= 10.0 -> ResultadoPrueba.OBSERVADO
+                else -> ResultadoPrueba.RECHAZADO
+            }
+            return Evaluacion(EstadoFila.COMPLETA, resultado, calculados, "Diferencia = ${dif.formatoCl(1)} %")
+        }
+
+        override fun resumenCalculo(valores: Map<String, Double>, maxPlaca: Double?): String? {
+            val te = valores[Parametros.T_ESPERADO.codigo]
+            val tm = valores[Parametros.T_MEDIDO.codigo]
+            return when {
+                te != null && tm != null && te > 0 -> "Diferencia = ${(abs(tm - te) / te * 100).formatoCl(1)} %"
+                te != null && tm == null -> "El relé no operó"
+                else -> null
+            }
+        }
+    }
+
+    companion object {
+        fun para(tipo: TipoPrueba): ReglaPrueba = when (tipo) {
+            TipoPrueba.AISLACION -> Aislacion
+            TipoPrueba.TTR -> Ttr
+            TipoPrueba.DEVANADOS -> Devanados
+            TipoPrueba.CONTACTOS -> Contactos
+            TipoPrueba.RELE -> Rele
+        }
+    }
+}
+
+// ---------------------------------------------------------------
+// Fachada usada por ViewModels y repositorio: delega en la regla de cada tipo
+// ---------------------------------------------------------------
 object ReglasProtocolo {
 
     const val TIPO_TRANSFORMADOR = 1L
@@ -100,55 +417,32 @@ object ReglasProtocolo {
         else -> emptyList()
     }
 
-    // Elementos con los mismos nombres que usan los datos de ejemplo del helper
-    fun elementosPara(tipo: TipoPrueba, tipoEquipoId: Long): List<String> = when (tipo) {
-        TipoPrueba.AISLACION -> when (tipoEquipoId) {
-            TIPO_TRANSFORMADOR -> listOf("AT-BT", "AT-T", "BT-T")
-            TIPO_CABLE -> listOf("Fase R", "Fase S", "Fase T")
-            else -> listOf("Polo 1", "Polo 2", "Polo 3")
-        }
-        TipoPrueba.TTR -> listOf("Fase H1-X1", "Fase H2-X2", "Fase H3-X3")
-        TipoPrueba.DEVANADOS -> listOf("AT fase U", "AT fase V", "AT fase W", "BT fase U", "BT fase V", "BT fase W")
-        TipoPrueba.CONTACTOS -> listOf("Polo 1", "Polo 2", "Polo 3")
-        TipoPrueba.RELE -> listOf("Función 50/51")
-    }
-
     // RN-06: la lectura a 10 min solo aplica a transformadores y cables
     fun usaLectura10(tipoEquipoId: Long) = tipoEquipoId == TIPO_TRANSFORMADOR || tipoEquipoId == TIPO_CABLE
 
-    // Campos que el tecnico escribe en cada fila
-    fun camposFila(tipo: TipoPrueba, tipoEquipoId: Long): List<CampoMedicion> = when (tipo) {
-        TipoPrueba.AISLACION ->
-            if (usaLectura10(tipoEquipoId)) listOf(Parametros.L1, Parametros.L10) else listOf(Parametros.L1)
-        TipoPrueba.TTR -> listOf(Parametros.REL_TEO, Parametros.REL_MED)
-        TipoPrueba.DEVANADOS -> listOf(Parametros.R_FASE)
-        TipoPrueba.CONTACTOS -> listOf(Parametros.R_POLO)
-        TipoPrueba.RELE -> listOf(Parametros.I_AJUSTE, Parametros.I_MEDIDA, Parametros.T_ESPERADO, Parametros.T_MEDIDO)
-    }
+    fun elementosPara(tipo: TipoPrueba, tipoEquipoId: Long) = ReglaPrueba.para(tipo).elementos(tipoEquipoId)
+    fun camposFila(tipo: TipoPrueba, tipoEquipoId: Long) = ReglaPrueba.para(tipo).camposFila(tipoEquipoId)
+    fun camposMedidos(tipo: TipoPrueba, tipoEquipoId: Long) = ReglaPrueba.para(tipo).camposMedidos(tipoEquipoId)
+    fun valoresPrincipales(tipo: TipoPrueba) = ReglaPrueba.para(tipo).valoresPrincipales
+    fun palabraInstrumento(tipo: TipoPrueba) = ReglaPrueba.para(tipo).palabraInstrumento
 
-    // Campos que realmente mide el tecnico (los demas pueden venir pre-cargados)
-    fun camposMedidos(tipo: TipoPrueba, tipoEquipoId: Long): List<CampoMedicion> = when (tipo) {
-        TipoPrueba.TTR -> listOf(Parametros.REL_MED)
-        TipoPrueba.RELE -> listOf(Parametros.I_MEDIDA, Parametros.T_MEDIDO)
-        else -> camposFila(tipo, tipoEquipoId)
-    }
+    fun evaluar(
+        tipo: TipoPrueba,
+        tipoEquipoId: Long,
+        valores: Map<String, String>,
+        comunes: Map<String, String>,
+        unidadAislacion: String,
+        opera: Boolean,
+        resultadoManual: ResultadoPrueba?,
+        anterior: MedicionAnterior?
+    ): Evaluacion = ReglaPrueba.para(tipo)
+        .evaluar(tipoEquipoId, valores, comunes, unidadAislacion, opera, resultadoManual, anterior)
 
-    // Valores principales que se comparan con la prueba anterior (RN-09)
-    fun valoresPrincipales(tipo: TipoPrueba): List<CampoMedicion> = when (tipo) {
-        TipoPrueba.AISLACION -> listOf(Parametros.L1, Parametros.L10)
-        TipoPrueba.TTR -> listOf(Parametros.REL_MED)
-        TipoPrueba.DEVANADOS -> listOf(Parametros.R_FASE)
-        TipoPrueba.CONTACTOS -> listOf(Parametros.R_POLO)
-        TipoPrueba.RELE -> listOf(Parametros.T_MEDIDO)
-    }
+    fun comparar(tipo: TipoPrueba, actuales: Map<String, Double>, anterior: MedicionAnterior): List<Comparacion> =
+        ReglaPrueba.para(tipo).comparar(actuales, anterior)
 
-    // Instrumento sugerido (filtra por nombre_tipo del INSTRUMENTO)
-    fun palabraInstrumento(tipo: TipoPrueba): String = when (tipo) {
-        TipoPrueba.AISLACION -> "megóhmetro"
-        TipoPrueba.TTR -> "ttr"
-        TipoPrueba.DEVANADOS, TipoPrueba.CONTACTOS -> "micro-ohm"
-        TipoPrueba.RELE -> "inyección"
-    }
+    fun resumenCalculo(tipo: TipoPrueba, valores: Map<String, Double>, maxPlaca: Double?): String? =
+        ReglaPrueba.para(tipo).resumenCalculo(valores, maxPlaca)
 
     // "12 / 0,4 kV" -> 30.0 (si la placa no trae ese formato, el tecnico la escribe)
     fun relacionTeorica(tensiones: String?): Double? {
@@ -165,206 +459,5 @@ object ReglasProtocolo {
         if (limpio.isEmpty()) return null
         val valor = limpio.toDoubleOrNull() ?: return null
         return if (valor.isFinite()) valor else null
-    }
-
-    /**
-     * Evalua una fila: valida rangos (RNF-05 / HU-03), calcula IP, % de error, etc.
-     * y entrega el resultado segun RN-06, RN-07, RN-08, RN-08b y RN-08c.
-     */
-    fun evaluar(
-        tipo: TipoPrueba,
-        tipoEquipoId: Long,
-        valores: Map<String, String>,
-        comunes: Map<String, String>,
-        unidadAislacion: String,
-        opera: Boolean,
-        resultadoManual: ResultadoPrueba?,
-        anterior: MedicionAnterior?
-    ): Evaluacion {
-        val todos = camposFila(tipo, tipoEquipoId)
-        val medidos = camposMedidos(tipo, tipoEquipoId)
-        val sinMediciones = medidos.all { valores[it.codigo].isNullOrBlank() }
-        if (sinMediciones && !(tipo == TipoPrueba.RELE && !opera)) return Evaluacion()
-
-        val requeridos = if (tipo == TipoPrueba.RELE && !opera)
-            listOf(Parametros.I_AJUSTE, Parametros.T_ESPERADO)
-        else todos
-        if (requeridos.any { valores[it.codigo].isNullOrBlank() }) {
-            return Evaluacion(EstadoFila.INCOMPLETA, error = "Completa todos los valores de la fila")
-        }
-
-        val v = mutableMapOf<String, Double>()
-        for (campo in todos) {
-            val texto = valores[campo.codigo]
-            if (texto.isNullOrBlank()) continue
-            val n = numero(texto)
-                ?: return Evaluacion(EstadoFila.INVALIDA, error = "${campo.etiqueta}: no es un número válido")
-            if (n < 0) return Evaluacion(EstadoFila.INVALIDA, error = "${campo.etiqueta}: no se aceptan valores negativos")
-            v[campo.codigo] = n
-        }
-
-        val base = when (tipo) {
-            TipoPrueba.AISLACION -> evaluarAislacion(tipoEquipoId, v, comunes, unidadAislacion)
-            TipoPrueba.TTR -> evaluarTtr(v, comunes)
-            TipoPrueba.DEVANADOS -> evaluarDevanados(v, resultadoManual)
-            TipoPrueba.CONTACTOS -> evaluarContactos(v, comunes)
-            TipoPrueba.RELE -> evaluarRele(v, opera)
-        }
-        if (base.estado != EstadoFila.COMPLETA || anterior == null) return base
-        return base.copy(comparaciones = comparar(tipo, base.calculados, anterior))
-    }
-
-    fun comparar(tipo: TipoPrueba, actuales: Map<String, Double>, anterior: MedicionAnterior): List<Comparacion> =
-        valoresPrincipales(tipo).mapNotNull { campo ->
-            val actual = actuales[campo.codigo] ?: return@mapNotNull null
-            val previo = anterior.valores[campo.codigo] ?: return@mapNotNull null
-            Comparacion(campo.codigo, campo.etiqueta, previo, actual, campo.unidad, anterior.numeroProtocolo)
-        }
-
-    // Texto con el valor calculado para mostrar en el detalle (los calculados no se guardan)
-    fun resumenCalculo(tipo: TipoPrueba, valores: Map<String, Double>, maxPlaca: Double?): String? = when (tipo) {
-        TipoPrueba.AISLACION -> {
-            val l1 = valores[Parametros.L1.codigo]
-            val l10 = valores[Parametros.L10.codigo]
-            if (l1 != null && l10 != null && l1 > 0) "IP = ${(l10 / l1).formatoCl(2)}" else null
-        }
-        TipoPrueba.TTR -> {
-            val teo = valores[Parametros.REL_TEO.codigo]
-            val med = valores[Parametros.REL_MED.codigo]
-            if (teo != null && med != null && teo > 0) "Error = ${(abs(med - teo) / teo * 100).formatoCl(2)} %" else null
-        }
-        TipoPrueba.CONTACTOS -> {
-            val r = valores[Parametros.R_POLO.codigo]
-            if (r != null && maxPlaca != null && maxPlaca > 0) "${(r / maxPlaca * 100).formatoCl(1)} % del máximo de placa" else null
-        }
-        TipoPrueba.RELE -> {
-            val te = valores[Parametros.T_ESPERADO.codigo]
-            val tm = valores[Parametros.T_MEDIDO.codigo]
-            if (te != null && tm != null && te > 0) "Diferencia = ${(abs(tm - te) / te * 100).formatoCl(1)} %"
-            else if (te != null && tm == null) "El relé no operó" else null
-        }
-        TipoPrueba.DEVANADOS -> null
-    }
-
-    private fun invalida(mensaje: String) = Evaluacion(EstadoFila.INVALIDA, error = mensaje)
-
-    // RN-06: IP = L10 / L1. L1 < 100 MΩ -> Rechazado
-    private fun evaluarAislacion(
-        tipoEquipoId: Long,
-        v: Map<String, Double>,
-        comunes: Map<String, String>,
-        unidad: String
-    ): Evaluacion {
-        val kv = numero(comunes[Parametros.KV.codigo])
-            ?: return Evaluacion(EstadoFila.INCOMPLETA, error = "Indica la tensión de prueba (kV)")
-        if (kv < 0.25 || kv > 15) return invalida("Tensión de prueba fuera de rango (0,25 a 15 kV)")
-
-        val factor = if (unidad == "GΩ") 1000.0 else 1.0
-        val l1 = v.getValue(Parametros.L1.codigo) * factor
-        if (l1 > 10_000_000) return invalida("Lectura 1 min fuera de rango, revisa la unidad")
-        val calculados = mutableMapOf(Parametros.L1.codigo to l1, Parametros.KV.codigo to kv)
-
-        if (!usaLectura10(tipoEquipoId)) {
-            val r = if (l1 < 100) ResultadoPrueba.RECHAZADO else ResultadoPrueba.APROBADO
-            return Evaluacion(
-                EstadoFila.COMPLETA, r, calculados,
-                detalle = if (l1 < 100) "Lectura 1 min < 100 MΩ" else "Lectura 1 min ≥ 100 MΩ"
-            )
-        }
-
-        val l10 = v.getValue(Parametros.L10.codigo) * factor
-        if (l10 > 10_000_000) return invalida("Lectura 10 min fuera de rango, revisa la unidad")
-        calculados[Parametros.L10.codigo] = l10
-        if (l1 <= 0.0) {
-            return Evaluacion(EstadoFila.COMPLETA, ResultadoPrueba.RECHAZADO, calculados, "Lectura 1 min < 100 MΩ")
-        }
-        val ip = l10 / l1
-        calculados[Parametros.IP.codigo] = ip
-        val resultado = when {
-            l1 < 100 -> ResultadoPrueba.RECHAZADO
-            ip < 1.0 -> ResultadoPrueba.RECHAZADO
-            ip < 2.0 -> ResultadoPrueba.OBSERVADO
-            else -> ResultadoPrueba.APROBADO
-        }
-        val detalle = "IP = ${ip.formatoCl(2)}" + if (l1 < 100) " · Lectura 1 min < 100 MΩ" else ""
-        return Evaluacion(EstadoFila.COMPLETA, resultado, calculados, detalle)
-    }
-
-    // RN-07: error = |medida - teorica| / teorica x 100
-    private fun evaluarTtr(v: Map<String, Double>, comunes: Map<String, String>): Evaluacion {
-        val teo = v.getValue(Parametros.REL_TEO.codigo)
-        val med = v.getValue(Parametros.REL_MED.codigo)
-        if (teo <= 0.0) return invalida("La relación teórica debe ser mayor a 0")
-        if (med <= 0.0) return invalida("La relación medida debe ser mayor a 0")
-        val tapTexto = comunes[Parametros.TAP.codigo].orEmpty()
-        val tap = numero(tapTexto)
-        if (tapTexto.isNotBlank() && tap == null) return invalida("Posición del cambiador: debe ser un número")
-
-        val error = abs(med - teo) / teo * 100.0
-        val resultado = when {
-            error <= 0.5 -> ResultadoPrueba.APROBADO
-            error <= 1.0 -> ResultadoPrueba.OBSERVADO
-            else -> ResultadoPrueba.RECHAZADO
-        }
-        val calculados = mutableMapOf(
-            Parametros.REL_TEO.codigo to teo,
-            Parametros.REL_MED.codigo to med,
-            Parametros.ERROR.codigo to error
-        )
-        if (tap != null) calculados[Parametros.TAP.codigo] = tap
-        return Evaluacion(EstadoFila.COMPLETA, resultado, calculados, "Error = ${error.formatoCl(2)} %")
-    }
-
-    // RN-08c: sin criterio automatico, el ingeniero indica el resultado
-    private fun evaluarDevanados(v: Map<String, Double>, manual: ResultadoPrueba?): Evaluacion {
-        if (v.values.any { it > 100_000 }) return invalida("Valor fuera de rango, revisa la unidad (mΩ)")
-        return Evaluacion(
-            EstadoFila.COMPLETA, manual, v,
-            detalle = if (manual == null) "Resultado pendiente: lo indica el ingeniero" else "Resultado indicado manualmente"
-        )
-    }
-
-    // RN-08: se compara con el valor maximo de placa
-    private fun evaluarContactos(v: Map<String, Double>, comunes: Map<String, String>): Evaluacion {
-        val max = numero(comunes[Parametros.MAX_PLACA.codigo])
-            ?: return Evaluacion(EstadoFila.INCOMPLETA, error = "Indica el máximo de placa (µΩ)")
-        if (max <= 0.0) return invalida("El máximo de placa debe ser mayor a 0")
-        val r = v.getValue(Parametros.R_POLO.codigo)
-        if (r > 100_000) return invalida("Valor fuera de rango, revisa la unidad (µΩ)")
-        val pct = r / max * 100.0
-        val resultado = when {
-            pct <= 100.0 -> ResultadoPrueba.APROBADO
-            pct <= 120.0 -> ResultadoPrueba.OBSERVADO
-            else -> ResultadoPrueba.RECHAZADO
-        }
-        return Evaluacion(
-            EstadoFila.COMPLETA, resultado,
-            mapOf(Parametros.R_POLO.codigo to r, Parametros.MAX_PLACA.codigo to max, Parametros.PCT_PLACA.codigo to pct),
-            "${pct.formatoCl(1)} % del máximo de placa"
-        )
-    }
-
-    // RN-08b: diferencia de tiempo; si no opera -> Rechazado
-    private fun evaluarRele(v: Map<String, Double>, opera: Boolean): Evaluacion {
-        val ajuste = v.getValue(Parametros.I_AJUSTE.codigo)
-        val esperado = v.getValue(Parametros.T_ESPERADO.codigo)
-        if (ajuste <= 0.0) return invalida("La corriente de ajuste debe ser mayor a 0")
-        if (esperado <= 0.0) return invalida("El tiempo esperado debe ser mayor a 0")
-        if (!opera) {
-            // No se guarda tiempo medido: asi queda registrado que no opero
-            val sinTiempo = v.filterKeys { it != Parametros.T_MEDIDO.codigo }
-            return Evaluacion(EstadoFila.COMPLETA, ResultadoPrueba.RECHAZADO, sinTiempo, "El relé no operó")
-        }
-        val medido = v.getValue(Parametros.T_MEDIDO.codigo)
-        if (medido <= 0.0) return invalida("El tiempo medido debe ser mayor a 0")
-        val dif = abs(medido - esperado) / esperado * 100.0
-        val calculados = v.toMutableMap()
-        calculados[Parametros.DIF_TIEMPO.codigo] = dif
-        val resultado = when {
-            dif <= 5.0 -> ResultadoPrueba.APROBADO
-            dif <= 10.0 -> ResultadoPrueba.OBSERVADO
-            else -> ResultadoPrueba.RECHAZADO
-        }
-        return Evaluacion(EstadoFila.COMPLETA, resultado, calculados, "Diferencia = ${dif.formatoCl(1)} %")
     }
 }

@@ -57,6 +57,7 @@ import com.example.appprotocolos_eq014.ui.theme.AmarilloAviso
 import com.example.appprotocolos_eq014.ui.theme.AmarilloSuave
 import com.example.appprotocolos_eq014.ui.theme.RojoError
 import com.example.appprotocolos_eq014.viewmodel.FormularioProtocoloViewModel
+import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 
 /**
  * Formulario de protocolo (RF-03 a RF-06, RF-11, RF-17).
@@ -69,12 +70,25 @@ fun FormularioProtocoloScreen(
     idVisita: Long?,
     idProtocolo: String?,
     onVolver: () -> Unit,
-    onGuardado: (String) -> Unit
+    onGuardado: (String) -> Unit,
+    onRegistrarEquipo: (idInstalacion: Long) -> Unit = {},
+    equipoCreado: Long? = null,
+    onEquipoCreadoConsumido: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    // Notificaciones locales: se pide el permiso al entrar al formulario (Android 13+)
+    SolicitarPermisoNotificaciones()
+
     LaunchedEffect(idVisita, idProtocolo) { viewModel.iniciar(idVisita, idProtocolo) }
+
+    // Al volver del formulario de equipo, se recarga la lista y se selecciona el equipo nuevo
+    LaunchedEffect(equipoCreado) {
+        val id = equipoCreado ?: return@LaunchedEffect
+        viewModel.onEquipoCreado(id)
+        onEquipoCreadoConsumido()
+    }
 
     LaunchedEffect(state.protocoloGuardadoId) {
         val id = state.protocoloGuardadoId ?: return@LaunchedEffect
@@ -125,7 +139,7 @@ fun FormularioProtocoloScreen(
             }
 
             SeccionVisita(state, viewModel)
-            SeccionEquipo(state, viewModel)
+            SeccionEquipo(state, viewModel, onRegistrarEquipo)
 
             if (state.equipoSeleccionado != null) {
                 SeccionAmbiente(state, viewModel)
@@ -226,7 +240,11 @@ private fun SeccionVisita(state: FormularioProtocoloUiState, viewModel: Formular
 // 2. Equipo
 // ---------------------------------------------------------------
 @Composable
-private fun SeccionEquipo(state: FormularioProtocoloUiState, viewModel: FormularioProtocoloViewModel) {
+private fun SeccionEquipo(
+    state: FormularioProtocoloUiState,
+    viewModel: FormularioProtocoloViewModel,
+    onRegistrarEquipo: (Long) -> Unit
+) {
     if (state.visitaSeleccionada == null) return
     TarjetaSeccion(titulo = "2. Equipo") {
         SelectorDesplegable(
@@ -243,6 +261,15 @@ private fun SeccionEquipo(state: FormularioProtocoloUiState, viewModel: Formular
                 "Todos los equipos de esta instalación ya tienen protocolo en la visita.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        // HU-01: equipo que se prueba por primera vez
+        if (!state.esEdicion) {
+            BotonSecundario(
+                texto = "Registrar equipo nuevo",
+                onClick = { state.visitaSeleccionada?.let { onRegistrarEquipo(it.instalacionId) } },
+                icono = R.drawable.ic_mas,
+                modifier = Modifier.fillMaxWidth()
             )
         }
         state.equipoSeleccionado?.let { e ->
@@ -429,6 +456,8 @@ private fun FilaPrueba(
                         onCambio = { onValor(campo.codigo, it) },
                         etiqueta = campo.etiqueta,
                         unidad = if (unidad == "-") "" else unidad,
+                        // RNF-05: se marca en rojo el campo exacto que tiene el problema
+                        marcarError = campo.codigo in ev.camposConError,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -455,7 +484,24 @@ private fun FilaPrueba(
             }
         }
 
-        ev.error?.let { Text(it, color = RojoError, style = MaterialTheme.typography.bodySmall) }
+        ev.error?.let {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painterResource(R.drawable.ic_alerta), contentDescription = null,
+                    tint = RojoError, modifier = Modifier.size(16.dp)
+                )
+                Text(it, color = RojoError, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 6.dp))
+            }
+        }
+        if (ev.estado == EstadoFila.COMPLETA && ev.error == null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painterResource(R.drawable.ic_check), contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp)
+                )
+                Text("Medición completa", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 6.dp))
+            }
+        }
         ev.detalle?.let { Text(it, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold) }
         ev.comparaciones.forEach { LineaComparacion(it) }
     }
@@ -536,6 +582,7 @@ fun CampoNumero(
     unidad: String,
     modifier: Modifier = Modifier,
     error: String? = null,
+    marcarError: Boolean = false,
     // Se deja escribir el signo para que la regla muestre el motivo del rechazo (HU-03)
     permitirNegativo: Boolean = true
 ) {
@@ -548,7 +595,7 @@ fun CampoNumero(
         },
         label = { Text(etiqueta) },
         suffix = if (unidad.isNotBlank()) ({ Text(unidad, fontWeight = FontWeight.Bold) }) else null,
-        isError = error != null,
+        isError = error != null || marcarError,
         supportingText = if (error != null) ({ Text(error) }) else null,
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),

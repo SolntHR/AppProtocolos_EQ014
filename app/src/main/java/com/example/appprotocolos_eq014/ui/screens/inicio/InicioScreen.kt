@@ -35,7 +35,8 @@ fun InicioScreen(
                 InicioCliente(
                     uiState = uiState,
                     onBusquedaCambia = viewModel::onBusquedaCambia,
-                    onAbrirEquipo = onAbrirEquipo
+                    onAbrirEquipo = onAbrirEquipo,
+                    onAbrirActa = onAbrirVisita
                 )
             }
             "TECNICO", "INGENIERO" -> {

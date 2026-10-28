@@ -10,6 +10,7 @@ import com.example.appprotocolos_eq014.model.HistorialUiState
 import com.example.appprotocolos_eq014.model.ProtocoloResumen
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
+import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.Formato
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +20,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 class HistorialViewModel(
-    sesionPreferencias: SesionPreferencias,
+    private val sesionPreferencias: SesionPreferencias,
     private val protocoloRepository: ProtocoloRepository,
+    private val catalogoClienteRepository: RegistroCatalogoRepository,
     private val idEquipo: Long
 ) : ViewModel() {
 
@@ -37,6 +39,13 @@ class HistorialViewModel(
 
     private fun cargarHistorial() {
         viewModelScope.launch {
+            // RN-18: un cliente solo puede ver equipos de su propia empresa
+            if (_uiState.value.esCliente &&
+                !catalogoClienteRepository.equipoEsDeCliente(idEquipo, sesionPreferencias.leerIdUsuario())
+            ) {
+                _uiState.update { it.copy(isLoading = false, error = "No tienes acceso a este equipo") }
+                return@launch
+            }
             val equipo = protocoloRepository.obtenerEquipo(idEquipo)
             if (equipo == null) {
                 _uiState.update { it.copy(isLoading = false, error = "No se encontró el equipo") }
