@@ -46,6 +46,11 @@ import com.example.appprotocolos_eq014.viewmodel.AppViewModelFactory
 import com.example.appprotocolos_eq014.viewmodel.InicioViewModel
 import com.example.appprotocolos_eq014.viewmodel.LoginViewModel
 import com.example.appprotocolos_eq014.viewmodel.PerfilViewModel
+import com.example.appprotocolos_eq014.viewmodel.FormularioProtocoloViewModel
+import com.example.appprotocolos_eq014.viewmodel.ProtocolosViewModel
+import com.example.appprotocolos_eq014.ui.screens.protocolo.DetalleProtocoloScreen
+import com.example.appprotocolos_eq014.ui.screens.protocolo.FormularioProtocoloScreen
+import com.example.appprotocolos_eq014.ui.screens.protocolo.ListaProtocolosScreen
 
 object Rutas {
     const val LOGIN = "login"
@@ -59,15 +64,24 @@ object Rutas {
     const val HISTORIAL = "historial/{$ARG_ID_EQUIPO}"
     const val ACTA = "acta/{$ARG_ID_VISITA}"
 
+    // Registro de protocolos
+    const val ARG_ID_PROTOCOLO = "idProtocolo"
+    const val PROTOCOLOS = "protocolos"
+    const val FORMULARIO = "formulario?$ARG_ID_PROTOCOLO={$ARG_ID_PROTOCOLO}"
+    const val DETALLE_PROTOCOLO = "protocolo/{$ARG_ID_PROTOCOLO}"
+
     fun fichaUsuario(idUsuario: Long) = "ficha_usuario/$idUsuario"
     fun historial(idEquipo: Long) = "historial/$idEquipo"
     fun acta(idVisita: Long) = "acta/$idVisita"
+    fun formulario(idProtocolo: String? = null) =
+        if (idProtocolo == null) "formulario" else "formulario?$ARG_ID_PROTOCOLO=$idProtocolo"
+    fun detalleProtocolo(idProtocolo: String) = "protocolo/$idProtocolo"
 }
 
 private const val CLAVE_PERFIL_ACTUALIZADO = "perfil_actualizado"
 private const val CLAVE_USUARIO_GUARDADO = "usuario_guardado"
 
-private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.INSTRUMENTOS, Rutas.PERFIL)
+private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.PROTOCOLOS, Rutas.INSTRUMENTOS, Rutas.PERFIL)
 
 @Composable
 fun AppNavegacion(modifier: Modifier = Modifier) {
@@ -152,6 +166,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     viewModel = inicioViewModel,
                     onAbrirVisita = { idVisita -> navController.navigate(Rutas.acta(idVisita)) },
                     onAbrirEquipo = { idEquipo -> navController.navigate(Rutas.historial(idEquipo)) },
+                    onNuevoProtocolo = { navController.navigate(Rutas.formulario()) },
                     contenidoJefeTecnico = {
                         val gestionViewModel: GestionUsuariosViewModel =
                             viewModel(factory = AppViewModelFactory.Factory)
@@ -186,6 +201,54 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                             ?.set(CLAVE_USUARIO_GUARDADO, esNuevo)
                         navController.popBackStack()
                     }
+                )
+            }
+            // ---------- Registro de protocolos ----------
+            composable(Rutas.PROTOCOLOS) {
+                val protocolosViewModel: ProtocolosViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                ListaProtocolosScreen(
+                    viewModel = protocolosViewModel,
+                    onAbrirProtocolo = { id -> navController.navigate(Rutas.detalleProtocolo(id)) },
+                    onNuevoProtocolo = { navController.navigate(Rutas.formulario()) }
+                )
+            }
+            composable(
+                route = Rutas.FORMULARIO,
+                arguments = listOf(navArgument(Rutas.ARG_ID_PROTOCOLO) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                })
+            ) { entrada ->
+                val formularioViewModel: FormularioProtocoloViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                FormularioProtocoloScreen(
+                    viewModel = formularioViewModel,
+                    idVisita = null,
+                    idProtocolo = entrada.arguments?.getString(Rutas.ARG_ID_PROTOCOLO),
+                    onVolver = { navController.popBackStack() },
+                    onGuardado = { id ->
+                        // Se cierra el formulario y se abre el detalle del protocolo guardado
+                        // Si se venia del detalle (edicion), tambien se reemplaza ese detalle
+                        val desdeDetalle =
+                            navController.previousBackStackEntry?.destination?.route == Rutas.DETALLE_PROTOCOLO
+                        navController.navigate(Rutas.detalleProtocolo(id)) {
+                            popUpTo(if (desdeDetalle) Rutas.DETALLE_PROTOCOLO else Rutas.FORMULARIO) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(
+                route = Rutas.DETALLE_PROTOCOLO,
+                arguments = listOf(navArgument(Rutas.ARG_ID_PROTOCOLO) { type = NavType.StringType })
+            ) { entrada ->
+                val protocolosViewModel: ProtocolosViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                val id = entrada.arguments?.getString(Rutas.ARG_ID_PROTOCOLO).orEmpty()
+                DetalleProtocoloScreen(
+                    viewModel = protocolosViewModel,
+                    idProtocolo = id,
+                    onVolver = { navController.popBackStack() },
+                    onEditar = { idEditar -> navController.navigate(Rutas.formulario(idEditar)) },
+                    onAbrirProtocolo = { otro -> navController.navigate(Rutas.detalleProtocolo(otro)) }
                 )
             }
             composable(Rutas.PERFIL) { entrada ->

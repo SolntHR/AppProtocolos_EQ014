@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -59,11 +60,13 @@ import com.example.appprotocolos_eq014.util.Formato
 @Composable
 fun InicioPersonalTerreno(
     uiState: InicioUiState,
-    onAbrirVisita: (Long) -> Unit
+    onAbrirVisita: (Long) -> Unit,
+    onNuevoProtocolo: () -> Unit = {}
 ) {
+  Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 24.dp),
+        contentPadding = PaddingValues(bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item { EncabezadoInicio(uiState) }
@@ -99,7 +102,21 @@ fun InicioPersonalTerreno(
             )
         }
     }
+
+    // Boton naranja del mockup: abre el formulario de protocolo
+    ExtendedFloatingActionButton(
+        onClick = onNuevoProtocolo,
+        containerColor = MaterialTheme.colorScheme.secondary,
+        contentColor = MaterialTheme.colorScheme.onSecondary,
+        icon = { Icon(painterResource(R.drawable.ic_mas), contentDescription = null) },
+        text = { Text("Nuevo protocolo", fontWeight = FontWeight.Bold) },
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(16.dp)
+    )
+  }
 }
+
 
 @Composable
 private fun EncabezadoInicio(uiState: InicioUiState) {

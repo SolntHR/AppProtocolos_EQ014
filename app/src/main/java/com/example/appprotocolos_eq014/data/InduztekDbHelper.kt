@@ -8,7 +8,7 @@ class InduztekDbHelper (context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
     companion object {
         private const val NOMBRE_BD = "induztek.db"
-        private const val VERSION_BD = 7
+        private const val VERSION_BD = 8
 
         private const val SQL_CREAR_ROL = """
             CREATE TABLE ROL (
@@ -427,6 +427,18 @@ class InduztekDbHelper (context: Context) :
             (1, 1), (2, 3), (3, 1), (4, 2), (5, 2);
         """
 
+        // Visitas abiertas con fecha de HOY para probar el formulario de protocolos
+        private const val SQL_PRECARGAR_VISITAS_HOY = """
+            INSERT INTO VISITA (id_visita, numero_ot, id_instalacion, fecha, tipo_visita, id_ingeniero_cargo, fecha_hora_cierre) VALUES
+            (6, 'OT-2026-1215', 1, date('now', 'localtime'), 'SOLO_PRUEBAS', 5, NULL),
+            (7, 'OT-2026-1216', 3, date('now', 'localtime'), 'PRUEBAS_Y_MANT', 6, NULL);
+        """
+
+        private const val SQL_PRECARGAR_PARTICIPANTES_HOY = """
+            INSERT INTO VISITA_PARTICIPANTE (id_visita, id_usuario) VALUES
+            (6, 1), (6, 2), (7, 1), (7, 2), (7, 5);
+        """
+
         private const val SQL_PRECARGAR_RECEPCIONES = """
             INSERT INTO RECEPCION_ACTA (id_visita, receptor_nombre, receptor_rut, receptor_cargo, fecha_hora_recepcion) VALUES
             (2, 'Tomás Leiva Araya', '18.390.452-3', 'Supervisor Eléctrico', '2026-09-20 09:55'),
@@ -510,6 +522,8 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_PRECARGAR_VISITA)
         db.execSQL(SQL_PRECARGAR_PROTOCOLO)
         db.execSQL(SQL_PRECARGAR_PARTICIPANTES)
+        db.execSQL(SQL_PRECARGAR_VISITAS_HOY)
+        db.execSQL(SQL_PRECARGAR_PARTICIPANTES_HOY)
         db.execSQL(SQL_PRECARGAR_RECEPCIONES)
         db.execSQL(SQL_PRECARGAR_PRUEBAS)
         db.execSQL(SQL_PRECARGAR_MEDICIONES)

@@ -15,6 +15,7 @@
     <string name="nav_visitas">Visitas</string>
     <string name="nav_equipos">Equipos</string>
     <string name="nav_perfil">Perfil</string>
+    <string name="nav_protocolos">Protocolos</string>
 
     <string name="saludo">Hola, %1$s</string>
     <string name="estado_sin_conexion">Sin conexión · Perfil %1$s</string>

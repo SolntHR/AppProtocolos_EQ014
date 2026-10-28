@@ -16,6 +16,7 @@ fun InicioScreen(
     viewModel: InicioViewModel,
     onAbrirVisita: (Long) -> Unit,
     onAbrirEquipo: (Long) -> Unit,
+    onNuevoProtocolo: () -> Unit,
     contenidoJefeTecnico: @Composable () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -40,7 +41,8 @@ fun InicioScreen(
             "TECNICO", "INGENIERO" -> {
                 InicioPersonalTerreno(
                     uiState = uiState,
-                    onAbrirVisita = onAbrirVisita
+                    onAbrirVisita = onAbrirVisita,
+                    onNuevoProtocolo = onNuevoProtocolo
                 )
             }
             "JEFE_TECNICO" -> {
