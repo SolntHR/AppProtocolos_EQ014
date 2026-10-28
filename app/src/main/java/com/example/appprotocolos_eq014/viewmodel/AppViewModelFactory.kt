@@ -3,6 +3,7 @@ package com.example.appprotocolos_eq014.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -11,6 +12,8 @@ import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
 import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
+
+const val ARG_ID_USUARIO = "idUsuario"
 
 object AppViewModelFactory {
 
@@ -42,6 +45,21 @@ object AppViewModelFactory {
                 sesionPreferencias = SesionPreferencias(contexto),
                 usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
                 fotoPerfilRepository = FotoPerfilRepository(contexto)
+            )
+        }
+        initializer {
+            val contexto = contexto()
+            GestionUsuariosViewModel(
+                sesionPreferencias = SesionPreferencias(contexto),
+                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
+                fotoPerfilRepository = FotoPerfilRepository(contexto)
+            )
+        }
+        initializer {
+            val contexto = contexto()
+            FichaUsuarioViewModel(
+                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
+                idUsuario = createSavedStateHandle().get<Long>(ARG_ID_USUARIO) ?: FichaUsuarioViewModel.NUEVO
             )
         }
         initializer {

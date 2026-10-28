@@ -24,6 +24,75 @@ class UsuarioRepository(private val dbHelper: InduztekDbHelper) {
         buscarUno("$consultaBase WHERE u.id_usuario = ?", arrayOf(idUsuario.toString()))
     }
 
+    suspend fun listarUsuarios(): List<Usuario> = withContext(Dispatchers.IO) {
+        val cursor = dbHelper.readableDatabase.rawQuery(
+            "$consultaBase ORDER BY u.id_rol, u.nombre",
+            null
+        )
+        val usuarios = mutableListOf<Usuario>()
+        while (cursor.moveToNext()) {
+            usuarios.add(cursor.aUsuario())
+        }
+        cursor.close()
+        usuarios
+    }
+
+    suspend fun cambiarActivo(idUsuario: Long, activo: Boolean): Boolean = withContext(Dispatchers.IO) {
+        val valores = ContentValues().apply { put("activo", if (activo) 1 else 0) }
+        dbHelper.writableDatabase.update(
+            "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
+        ) > 0
+    }
+
+    suspend fun existeCorreo(correo: String, excluirId: Long = -1): Boolean = withContext(Dispatchers.IO) {
+        existe("SELECT 1 FROM USUARIO WHERE lower(correo) = lower(?) AND id_usuario <> ?", correo, excluirId)
+    }
+
+    suspend fun existeRut(rut: String, excluirId: Long = -1): Boolean = withContext(Dispatchers.IO) {
+        existe("SELECT 1 FROM USUARIO WHERE upper(rut) = upper(?) AND id_usuario <> ?", rut, excluirId)
+    }
+
+    suspend fun crearUsuario(
+        rolCodigo: String,
+        nombre: String,
+        rut: String,
+        correo: String,
+        telefono: String,
+        contactoNombre: String?,
+        contactoCargo: String?,
+        contrasenaInicial: String
+    ): Long = withContext(Dispatchers.IO) {
+        val db = dbHelper.writableDatabase
+        val cursorRol = db.rawQuery("SELECT id_rol FROM ROL WHERE codigo = ?", arrayOf(rolCodigo))
+        val idRol = if (cursorRol.moveToFirst()) cursorRol.getLong(0) else -1L
+        cursorRol.close()
+        if (idRol == -1L) return@withContext -1L
+
+        val valores = ContentValues().apply {
+            put("id_rol", idRol)
+            put("nombre", nombre)
+            put("rut", rut)
+            put("correo", correo)
+            put("telefono", telefono)
+            put("password_hash", contrasenaInicial)
+            put("activo", 1)
+            put("contacto_nombre", contactoNombre)
+            put("contacto_cargo", contactoCargo)
+        }
+        try {
+            db.insertOrThrow("USUARIO", null, valores)
+        } catch (e: SQLiteConstraintException) {
+            -1L
+        }
+    }
+
+    private fun existe(query: String, valor: String, excluirId: Long): Boolean {
+        val cursor = dbHelper.readableDatabase.rawQuery(query, arrayOf(valor.trim(), excluirId.toString()))
+        val encontrado = cursor.moveToFirst()
+        cursor.close()
+        return encontrado
+    }
+
     suspend fun actualizarPerfil(
         idUsuario: Long,
         nombre: String,

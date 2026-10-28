@@ -14,7 +14,7 @@ import com.example.appprotocolos_eq014.viewmodel.InicioViewModel
 fun InicioScreen(
     viewModel: InicioViewModel,
     onNavigateToNuevoProtocolo: () -> Unit,
-    onNavigateToGestionUsuarios: () -> Unit
+    contenidoJefeTecnico: @Composable () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -37,10 +37,7 @@ fun InicioScreen(
                 )
             }
             "JEFE_TECNICO" -> {
-                InicioJefeTecnico(
-                    uiState = uiState,
-                    onAgregarUsuarioClick = onNavigateToGestionUsuarios
-                )
+                contenidoJefeTecnico()
             }
             else -> {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
