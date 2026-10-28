@@ -41,7 +41,6 @@ import com.example.appprotocolos_eq014.ui.styles.EstilosCampo
 import com.example.appprotocolos_eq014.viewmodel.ProtocolosViewModel
 import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 
-// Detalle de un protocolo para el personal Induztek (RF-10, RF-12, RNF-07)
 @Composable
 fun DetalleProtocoloScreen(
     viewModel: ProtocolosViewModel,
@@ -87,7 +86,6 @@ fun DetalleProtocoloScreen(
 
             Cabecera(d)
 
-            // Acciones segun permisos (RN-04, RN-17)
             if (state.puedeEditar) {
                 BotonPrincipal(
                     texto = if (d.resumen.estado == EstadoProtocolo.OBSERVADO) "Corregir protocolo" else "Continuar protocolo",
@@ -127,7 +125,6 @@ fun DetalleProtocoloScreen(
                 }
             }
 
-            // RNF-07: trazabilidad
             if (d.historialEstados.isNotEmpty()) {
                 TarjetaSeccion(titulo = "Historial de estados") {
                     d.historialEstados.forEach { h ->
@@ -143,7 +140,6 @@ fun DetalleProtocoloScreen(
                 }
             }
 
-            // RF-10: historial del equipo, del mas reciente al mas antiguo
             TarjetaSeccion(titulo = "Historial del equipo ${d.resumen.tagEquipo}") {
                 d.historialEquipo.forEach { p ->
                     TarjetaProtocoloListado(

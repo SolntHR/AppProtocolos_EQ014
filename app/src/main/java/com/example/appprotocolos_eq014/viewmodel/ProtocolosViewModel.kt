@@ -17,13 +17,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// Listado general de protocolos (RF-13) y detalle con formalizar / observar / anular (RF-12)
 class ProtocolosViewModel(
     private val sesion: SesionPreferencias,
     private val repository: RegistroProtocoloRepository,
-    private val contexto: Context // contexto de la aplicacion, para las notificaciones locales
+    private val contexto: Context
 ) : ViewModel() {
-
     private val _lista = MutableStateFlow(ListaProtocolosUiState())
     val lista: StateFlow<ListaProtocolosUiState> = _lista.asStateFlow()
 
@@ -78,7 +76,7 @@ class ProtocolosViewModel(
 
     fun cambiarEstado(nuevo: EstadoProtocolo, motivo: String?) {
         val d = _detalle.value.detalle ?: return
-        // RN-09: con variacion significativa el ingeniero debe comentar antes de formalizar
+
         if (nuevo == EstadoProtocolo.FORMALIZADO && d.tieneVariacionSignificativa && motivo.isNullOrBlank()) {
             _detalle.update { it.copy(error = "Hay variaciones significativas: escribe un comentario antes de formalizar (RN-09).") }
             return

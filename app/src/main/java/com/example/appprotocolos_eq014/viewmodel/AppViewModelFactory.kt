@@ -23,7 +23,6 @@ const val ARG_ID_EQUIPO = "idEquipo"
 const val ARG_ID_VISITA = "idVisita"
 
 object AppViewModelFactory {
-
     private var dbHelper: InduztekDbHelper? = null
 
     private fun obtenerDbHelper(context: Context): InduztekDbHelper =
@@ -32,7 +31,6 @@ object AppViewModelFactory {
     private fun CreationExtras.contexto(): Context = checkNotNull(this[APPLICATION_KEY])
 
     val Factory: ViewModelProvider.Factory = viewModelFactory {
-        // Registro de protocolos (formulario, listado y detalle)
         initializer {
             val contexto = contexto()
             FormularioProtocoloViewModel(
@@ -49,7 +47,7 @@ object AppViewModelFactory {
                 contexto = contexto.applicationContext
             )
         }
-        // Registro de instalaciones y equipos (RF-01, RF-02)
+
         initializer {
             val contexto = contexto()
             FormularioEquipoViewModel(

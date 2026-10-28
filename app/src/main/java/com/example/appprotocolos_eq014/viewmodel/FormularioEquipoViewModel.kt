@@ -21,13 +21,11 @@ import kotlinx.coroutines.launch
 const val ARG_ID_INSTALACION = "idInstalacion"
 const val SIN_INSTALACION = -1L
 
-// RF-02 / HU-01: registrar un equipo nuevo asociado a una instalacion
 class FormularioEquipoViewModel(
     private val sesion: SesionPreferencias,
     private val repository: RegistroCatalogoRepository,
     private val idInstalacionInicial: Long
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FormularioEquipoUiState())
     val uiState: StateFlow<FormularioEquipoUiState> = _uiState.asStateFlow()
 
@@ -55,7 +53,6 @@ class FormularioEquipoViewModel(
         }
     }
 
-    // Al volver del formulario de instalacion se recarga y se selecciona la nueva
     fun onInstalacionCreada(idInstalacion: Long) = cargar(idInstalacion)
 
     fun onInstalacion(valor: OpcionCatalogo) = actualizar(ValidacionesCatalogo.CAMPO_INSTALACION) { it.copy(instalacion = valor) }
@@ -71,12 +68,10 @@ class FormularioEquipoViewModel(
     fun onMaxContactos(valor: String) = actualizar(ValidacionesCatalogo.CAMPO_CONTACTOS) { it.copy(maxContactos = valor) }
     fun onObservaciones(valor: String) = _uiState.update { it.copy(observaciones = valor) }
 
-    // Al cambiar un campo se borra su error y el aviso de equipo existente
     private fun actualizar(campo: String, cambio: (FormularioEquipoUiState) -> FormularioEquipoUiState) {
         _uiState.update { cambio(it).copy(errores = it.errores - campo, equipoExistente = null, error = null) }
     }
 
-    // HU-01: si el TAG ya existe se ofrece usar el registrado
     fun usarEquipoExistente() {
         val existente = _uiState.value.equipoExistente ?: return
         _uiState.update { it.copy(equipoGuardadoId = existente.id) }

@@ -1,14 +1,10 @@
 package com.example.appprotocolos_eq014.model
 
-// ---------------------------------------------------------------
-// Estado del formulario de protocolo (RF-03 a RF-06, RF-17)
-// ---------------------------------------------------------------
-
 data class FilaPruebaUi(
     val elemento: String,
     val valores: Map<String, String> = emptyMap(),
-    val opera: Boolean = true,                    // solo relé
-    val resultadoManual: ResultadoPrueba? = null, // solo devanados (RN-08c)
+    val opera: Boolean = true,
+    val resultadoManual: ResultadoPrueba? = null,
     val evaluacion: Evaluacion = Evaluacion()
 )
 
@@ -16,7 +12,7 @@ data class SeccionPruebaUi(
     val tipo: TipoPrueba,
     val filas: List<FilaPruebaUi>,
     val instrumentoId: Long? = null,
-    val comunes: Map<String, String> = emptyMap(), // tensión de prueba, tap, máximo de placa
+    val comunes: Map<String, String> = emptyMap(),
     val unidadAislacion: String = "MΩ",
     val comentario: String = "",
     val errorInstrumento: String? = null,
@@ -41,7 +37,6 @@ data class FormularioProtocoloUiState(
     val cargando: Boolean = true,
     val guardando: Boolean = false,
 
-    // Si se edita un protocolo existente (RN-17)
     val idProtocolo: String? = null,
     val numero: String? = null,
     val estadoActual: EstadoProtocolo? = null,
@@ -61,7 +56,7 @@ data class FormularioProtocoloUiState(
 
     val instrumentos: List<InstrumentoOpcion> = emptyList(),
     val secciones: List<SeccionPruebaUi> = emptyList(),
-    val anteriores: Map<String, MedicionAnterior> = emptyMap(), // clave "idTipoPrueba|elemento"
+    val anteriores: Map<String, MedicionAnterior> = emptyMap(),
 
     val descripcionMantenimiento: String = "",
     val observaciones: String = "",

@@ -31,7 +31,6 @@ import com.example.appprotocolos_eq014.ui.components.TarjetaSeccion
 import com.example.appprotocolos_eq014.util.ValidacionesCatalogo as V
 import com.example.appprotocolos_eq014.viewmodel.FormularioEquipoViewModel
 
-// RF-02 / HU-01: registrar un equipo con su TAG, tipo y datos de placa
 @Composable
 fun FormularioEquipoScreen(
     viewModel: FormularioEquipoViewModel,
@@ -73,7 +72,6 @@ fun FormularioEquipoScreen(
         ) {
             s.error?.let { MensajeAvisoProtocolo(it) }
 
-            // HU-01: el TAG ya existe en la instalacion -> se ofrece usar el registrado
             AnimatedVisibility(visible = s.equipoExistente != null) {
                 s.equipoExistente?.let { existente ->
                     TarjetaSeccion(titulo = "El equipo ${existente.tag} ya existe") {

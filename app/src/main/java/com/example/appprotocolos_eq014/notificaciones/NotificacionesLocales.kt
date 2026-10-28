@@ -14,13 +14,7 @@ import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.permisos.Permisos
 
-/**
- * Notificaciones locales de Induztek Protocolos (no requieren conexion).
- * - Cambios de estado de un protocolo (registrado, observado, formalizado, anulado)
- * - Cierre de visita con entrega del acta al cliente (RF-07, RF-08)
- */
 object NotificacionesLocales {
-
     private const val CANAL_PROTOCOLOS = "estado_protocolos"
     private const val CANAL_VISITAS = "cierre_visitas"
 
@@ -48,7 +42,7 @@ object NotificacionesLocales {
         )
     }
 
-    @SuppressLint("MissingPermission") // se revisa con Permisos.puedeNotificar
+    @SuppressLint("MissingPermission")
     private fun mostrar(
         context: Context,
         idCanal: String,
@@ -66,7 +60,6 @@ object NotificacionesLocales {
                 )
         }
 
-        // Al tocar la notificacion se abre la app
         val intent = Intent(context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(
@@ -76,7 +69,7 @@ object NotificacionesLocales {
 
         val notificacion = NotificationCompat.Builder(context, idCanal)
             .setSmallIcon(R.drawable.ic_rayo)
-            .setColor(0xFF0B3C6F.toInt()) // azul Induztek
+            .setColor(0xFF0B3C6F.toInt())
             .setContentTitle(titulo)
             .setContentText(texto)
             .setStyle(NotificationCompat.BigTextStyle().bigText(texto))

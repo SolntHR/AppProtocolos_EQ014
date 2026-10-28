@@ -12,13 +12,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 
-// Revision de permisos del dispositivo (camara y notificaciones)
 object Permisos {
-
     fun tiene(context: Context, permiso: String): Boolean =
         ContextCompat.checkSelfPermission(context, permiso) == PackageManager.PERMISSION_GRANTED
 
-    // Android 13+ exige el permiso POST_NOTIFICATIONS; en versiones anteriores basta con que esten habilitadas
     fun puedeNotificar(context: Context): Boolean {
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
@@ -26,10 +23,6 @@ object Permisos {
     }
 }
 
-/**
- * Pide el permiso de notificaciones una sola vez al entrar a la pantalla.
- * Si el usuario lo rechaza la app sigue funcionando: solo no muestra los avisos.
- */
 @Composable
 fun SolicitarPermisoNotificaciones() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return

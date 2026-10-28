@@ -1,15 +1,10 @@
 package com.example.appprotocolos_eq014.model
 
-// ---------------------------------------------------------------
-// Registro de instalaciones (RF-01) y equipos (RF-02, HU-01)
-// ---------------------------------------------------------------
-
 data class OpcionCatalogo(
     val id: Long,
     val nombre: String
 )
 
-// HU-01: equipo que ya existe con el mismo TAG en la instalacion (RN-01)
 data class EquipoExistente(
     val id: Long,
     val tag: String,
@@ -19,7 +14,7 @@ data class EquipoExistente(
 data class FormularioEquipoUiState(
     val cargando: Boolean = true,
     val guardando: Boolean = false,
-    val instalacionFija: Boolean = false,          // viene desde una visita: no se puede cambiar
+    val instalacionFija: Boolean = false,
     val instalaciones: List<OpcionCatalogo> = emptyList(),
     val tipos: List<OpcionCatalogo> = emptyList(),
     val instalacion: OpcionCatalogo? = null,
@@ -34,12 +29,11 @@ data class FormularioEquipoUiState(
     val corriente: String = "",
     val maxContactos: String = "",
     val observaciones: String = "",
-    val errores: Map<String, String> = emptyMap(), // campo -> mensaje
+    val errores: Map<String, String> = emptyMap(),
     val equipoExistente: EquipoExistente? = null,
     val error: String? = null,
     val equipoGuardadoId: Long? = null
 ) {
-    // Datos de placa que pide cada tipo de equipo
     val pidePotencia: Boolean get() = tipo?.id == ReglasProtocolo.TIPO_TRANSFORMADOR
     val pideContactos: Boolean get() = tipo?.id == ReglasProtocolo.TIPO_INTERRUPTOR || tipo?.id == ReglasProtocolo.TIPO_CELDA
     val pideCorriente: Boolean get() = tipo != null

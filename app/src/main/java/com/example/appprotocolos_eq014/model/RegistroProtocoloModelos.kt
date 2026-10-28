@@ -1,11 +1,5 @@
 package com.example.appprotocolos_eq014.model
 
-// ---------------------------------------------------------------
-// Modelos del modulo de registro de protocolos (formulario, listado y detalle).
-// Nombres distintos a los de Acta/Historial para no chocar con esas pantallas.
-// ---------------------------------------------------------------
-
-// Codigos de la tabla ROL y permisos del Anexo 7
 object Rol {
     const val TECNICO = "TECNICO"
     const val INGENIERO = "INGENIERO"
@@ -20,8 +14,8 @@ object Rol {
 data class VisitaAbierta(
     val id: Long,
     val numeroOt: String,
-    val fecha: String,              // yyyy-MM-dd
-    val tipoVisita: String,         // SOLO_PRUEBAS | PRUEBAS_Y_MANT
+    val fecha: String,
+    val tipoVisita: String,
     val instalacionId: Long,
     val instalacionNombre: String,
     val clienteNombre: String,
@@ -49,12 +43,11 @@ data class InstrumentoOpcion(
     val marca: String?,
     val modelo: String?,
     val numeroSerie: String?,
-    val fechaVencimiento: String?   // yyyy-MM-dd
+    val fechaVencimiento: String?
 ) {
     val descripcion: String
         get() = listOfNotNull(marca, modelo).joinToString(" ").ifBlank { nombreTipo }
 
-    // RN-11: vigente si la fecha de la prueba es <= fecha de vencimiento
     fun vigenteEn(fechaIso: String): Boolean =
         fechaVencimiento != null && fechaIso.take(10) <= fechaVencimiento
 }
@@ -75,7 +68,6 @@ data class ProtocoloListado(
     val reemplazadoPorNumero: String? = null,
     val reemplazaANumero: String? = null
 ) {
-    // RN-16: atrasado si no se formaliza dentro de 2 dias habiles desde la prueba
     val atrasado: Boolean
         get() = (estado == EstadoProtocolo.BORRADOR ||
                 estado == EstadoProtocolo.REGISTRADO_TERRENO ||
@@ -101,7 +93,6 @@ data class Comparacion(
     val variacionPct: Double
         get() = if (valorAnterior == 0.0) 0.0 else (valorActual - valorAnterior) / valorAnterior * 100.0
 
-    // RN-09: mas de 25 % es variacion significativa
     val significativa: Boolean get() = kotlin.math.abs(variacionPct) > 25.0
 }
 

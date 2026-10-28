@@ -97,7 +97,6 @@ fun InicioCliente(
             )
         }
 
-        // RF-15: actas de las visitas cerradas de la empresa
         item {
             Column(modifier = Modifier.padding(top = 8.dp)) {
                 Text(text = "Actas de visitas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -157,7 +156,7 @@ private fun TarjetaActaCliente(visita: VisitaResumen, onClick: () -> Unit, modif
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            // RN-19: formalizadas o pendientes de formalizacion
+
             val todosFormalizados = visita.totalProtocolos > 0 && visita.protocolosRegistrados == visita.totalProtocolos
             EtiquetaEstado(
                 texto = if (todosFormalizados) "Formalizado" else "Pendiente de formalización",

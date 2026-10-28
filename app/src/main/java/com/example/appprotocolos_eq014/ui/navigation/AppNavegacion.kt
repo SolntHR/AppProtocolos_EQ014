@@ -70,13 +70,11 @@ object Rutas {
     const val HISTORIAL = "historial/{$ARG_ID_EQUIPO}"
     const val ACTA = "acta/{$ARG_ID_VISITA}"
 
-    // Registro de protocolos
     const val ARG_ID_PROTOCOLO = "idProtocolo"
     const val PROTOCOLOS = "protocolos"
     const val FORMULARIO = "formulario?$ARG_ID_PROTOCOLO={$ARG_ID_PROTOCOLO}"
     const val DETALLE_PROTOCOLO = "protocolo/{$ARG_ID_PROTOCOLO}"
 
-    // Registro de instalaciones y equipos (RF-01, RF-02)
     const val EQUIPO_NUEVO = "equipo_nuevo?$ARG_ID_INSTALACION={$ARG_ID_INSTALACION}"
     const val INSTALACION_NUEVA = "instalacion_nueva"
 
@@ -217,7 +215,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     }
                 )
             }
-            // ---------- Registro de protocolos ----------
+
             composable(Rutas.PROTOCOLOS) {
                 val protocolosViewModel: ProtocolosViewModel = viewModel(factory = AppViewModelFactory.Factory)
                 ListaProtocolosScreen(
@@ -249,8 +247,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     idProtocolo = entrada.arguments?.getString(Rutas.ARG_ID_PROTOCOLO),
                     onVolver = { navController.popBackStack() },
                     onGuardado = { id ->
-                        // Se cierra el formulario y se abre el detalle del protocolo guardado
-                        // Si se venia del detalle (edicion), tambien se reemplaza ese detalle
+
                         val desdeDetalle =
                             navController.previousBackStackEntry?.destination?.route == Rutas.DETALLE_PROTOCOLO
                         navController.navigate(Rutas.detalleProtocolo(id)) {

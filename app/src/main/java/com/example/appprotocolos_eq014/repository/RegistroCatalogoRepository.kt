@@ -8,7 +8,6 @@ import com.example.appprotocolos_eq014.model.VisitaResumen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// Datos que el formulario de equipo envia para guardar
 data class EquipoAGuardar(
     val idInstalacion: Long,
     val idTipoEquipo: Long,
@@ -32,13 +31,7 @@ data class InstalacionAGuardar(
     val observacionesAcceso: String?
 )
 
-/**
- * Catalogo de clientes, instalaciones y equipos (RF-01, RF-02, HU-01)
- * y consultas de pertenencia para el usuario cliente (RN-18).
- * La empresa cliente es un USUARIO con rol CLIENTE (no hay tabla CLIENTE).
- */
 class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
-
     private fun opciones(sql: String, args: Array<String>? = null): List<OpcionCatalogo> =
         helper.readableDatabase.rawQuery(sql, args).use { c ->
             buildList { while (c.moveToNext()) add(OpcionCatalogo(c.getLong(0), c.getString(1))) }
@@ -58,7 +51,6 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         opciones("SELECT id_tipo_equipo, nombre FROM TIPO_EQUIPO ORDER BY id_tipo_equipo")
     }
 
-    // Empresas cliente activas (las registra el Jefe tecnico en Gestion de usuarios)
     suspend fun clientes(): List<OpcionCatalogo> = withContext(Dispatchers.IO) {
         opciones(
             """
@@ -79,7 +71,6 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         )
     }
 
-    // RN-01: el TAG es unico dentro de una instalacion (sin distinguir mayusculas)
     suspend fun buscarEquipo(idInstalacion: Long, tag: String): EquipoExistente? = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(
             """
@@ -135,11 +126,6 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         helper.writableDatabase.insertOrThrow("INSTALACION", null, valores)
     }
 
-    // ---------------------------------------------------------------
-    // Usuario cliente (RF-15, RN-18, RN-19)
-    // ---------------------------------------------------------------
-
-    // Actas de las visitas cerradas de las instalaciones del cliente
     suspend fun visitasCerradasDeCliente(idCliente: Long): List<VisitaResumen> = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(
             """
@@ -165,7 +151,7 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
                             fecha = c.getString(4),
                             cerrada = true,
                             totalProtocolos = c.getInt(5),
-                            protocolosRegistrados = c.getInt(6) // formalizados
+                            protocolosRegistrados = c.getInt(6)
                         )
                     )
                 }

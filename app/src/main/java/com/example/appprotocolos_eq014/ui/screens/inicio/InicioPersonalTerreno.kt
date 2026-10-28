@@ -103,7 +103,6 @@ fun InicioPersonalTerreno(
         }
     }
 
-    // Boton naranja del mockup: abre el formulario de protocolo
     ExtendedFloatingActionButton(
         onClick = onNuevoProtocolo,
         containerColor = MaterialTheme.colorScheme.secondary,
@@ -116,7 +115,6 @@ fun InicioPersonalTerreno(
     )
   }
 }
-
 
 @Composable
 private fun EncabezadoInicio(uiState: InicioUiState) {

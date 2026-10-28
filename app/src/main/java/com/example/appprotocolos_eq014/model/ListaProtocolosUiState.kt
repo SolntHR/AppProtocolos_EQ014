@@ -1,6 +1,5 @@
 package com.example.appprotocolos_eq014.model
 
-// RF-13: listado de protocolos con filtros por estado, cliente, tecnico o equipo
 data class ListaProtocolosUiState(
     val cargando: Boolean = true,
     val idUsuario: Long = -1,
@@ -13,7 +12,6 @@ data class ListaProtocolosUiState(
     val promedioDiasFormalizacion: Double? = null,
     val error: String? = null
 ) {
-    // RF-21: indicadores simples
     val pendientesFormalizar: Int
         get() = protocolos.count { it.estado == EstadoProtocolo.REGISTRADO_TERRENO || it.estado == EstadoProtocolo.OBSERVADO }
     val atrasados: Int get() = protocolos.count { it.atrasado }
@@ -44,7 +42,6 @@ data class DetalleProtocoloUiState(
     val error: String? = null,
     val mensaje: String? = null
 ) {
-    // RN-17: solo quien lo creo y solo en Borrador u Observado
     val puedeEditar: Boolean
         get() {
             val d = detalle ?: return false
@@ -53,11 +50,9 @@ data class DetalleProtocoloUiState(
                     (d.resumen.estado == EstadoProtocolo.BORRADOR || d.resumen.estado == EstadoProtocolo.OBSERVADO)
         }
 
-    // RN-04: Registrado en terreno -> Formalizado / Observado, solo Ingeniero o Jefe tecnico
     val puedeRevisar: Boolean
         get() = Rol.puedeFormalizar(rolUsuario) && detalle?.resumen?.estado == EstadoProtocolo.REGISTRADO_TERRENO
 
-    // RN-04: cualquiera salvo Formalizado -> Anulado
     val puedeAnular: Boolean
         get() {
             val estado = detalle?.resumen?.estado ?: return false

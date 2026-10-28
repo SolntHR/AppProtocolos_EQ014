@@ -42,7 +42,6 @@ import com.example.appprotocolos_eq014.ui.components.TituloSeccion
 import com.example.appprotocolos_eq014.ui.components.TonoEstado
 import com.example.appprotocolos_eq014.viewmodel.ProtocolosViewModel
 
-// Pestaña "Protocolos" del personal Induztek (RF-13, RN-16)
 @Composable
 fun ListaProtocolosScreen(
     viewModel: ProtocolosViewModel,
@@ -64,7 +63,7 @@ fun ListaProtocolosScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     TituloSeccion("Protocolos")
-                    // RF-21: indicadores simples
+
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Indicador("Pendientes de formalizar", state.pendientesFormalizar.toString(), Modifier.weight(1f))
                         Indicador("Atrasados", state.atrasados.toString(), Modifier.weight(1f))
@@ -74,7 +73,7 @@ fun ListaProtocolosScreen(
                             Modifier.weight(1f)
                         )
                     }
-                    // RF-01 / RF-02: catalogo de instalaciones y equipos
+
                     if (Rol.puedeCrearProtocolos(state.rolUsuario)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             BotonSecundario(
@@ -93,7 +92,7 @@ fun ListaProtocolosScreen(
                         etiqueta = "Buscar por nº, TAG, cliente o técnico",
                         icono = R.drawable.ic_buscar
                     )
-                    // Filtro por estado (RF-13)
+
                     Row(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)

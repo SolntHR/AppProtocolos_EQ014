@@ -26,7 +26,6 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 
-// Datos que el formulario envia para guardar
 data class PruebaAGuardar(
     val tipo: TipoPrueba,
     val elemento: String,
@@ -34,13 +33,13 @@ data class PruebaAGuardar(
     val resultado: ResultadoPrueba?,
     val comentario: String?,
     val ingresadoManualmente: Boolean,
-    val valores: Map<String, Double>, // codigo de PARAMETRO -> valor (solo se guardan los que tienen idParametro)
+    val valores: Map<String, Double>,
     val realizada: Boolean = true,
     val motivoNoRealizada: String? = null
 )
 
 data class ProtocoloAGuardar(
-    val idProtocolo: String?,        // null = nuevo
+    val idProtocolo: String?,
     val visitaId: Long,
     val equipoId: Long,
     val temperatura: Double?,
@@ -65,12 +64,7 @@ data class ProtocoloEditable(
     val pruebas: List<PruebaAGuardar>
 )
 
-/**
- * Registro de protocolos en terreno (formulario, listado general y detalle).
- * Trabaja sobre las mismas tablas del InduztekDbHelper.
- */
 class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
-
     suspend fun numeroDe(idProtocolo: String): String = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery("SELECT numero FROM PROTOCOLO WHERE id_protocolo = ?", arrayOf(idProtocolo))
             .use { c -> if (c.moveToFirst()) c.getString(0) else idProtocolo }
@@ -81,10 +75,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             .use { c -> if (c.moveToFirst()) c.getString(0) else "" }
     }
 
-    // ---------------------------------------------------------------
-    // VISITAS, EQUIPOS E INSTRUMENTOS
-    // ---------------------------------------------------------------
-
     private val selectVisita = """
         SELECT v.id_visita, v.numero_ot, v.fecha, v.tipo_visita, v.id_instalacion,
                i.nombre AS instalacion, c.nombre AS cliente, ing.nombre AS ingeniero
@@ -94,7 +84,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         INNER JOIN USUARIO ing ON ing.id_usuario = v.id_ingeniero_cargo
     """
 
-    // Visitas abiertas donde el usuario es ingeniero a cargo o participante. El Jefe tecnico ve todas.
     suspend fun visitasAbiertas(usuarioId: Long, rol: String): List<VisitaAbierta> = withContext(Dispatchers.IO) {
         val todas = if (rol == Rol.JEFE_TECNICO) "1" else "0"
         val sql = """
@@ -126,7 +115,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         ingenieroNombre = c.getString(7)
     )
 
-    // Equipos de la instalacion que aun no tienen protocolo en esa visita (UNIQUE(id_visita, id_equipo))
     suspend fun equiposDisponibles(
         idVisita: Long,
         idInstalacion: Long,
@@ -168,7 +156,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    // RN-11: cada instrumento con el vencimiento de su ultima calibracion
     suspend fun instrumentos(): List<InstrumentoOpcion> = withContext(Dispatchers.IO) {
         val sql = """
             SELECT ins.id_instrumento, ins.nombre_tipo, ins.marca, ins.modelo, ins.numero_serie,
@@ -184,10 +171,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             }
         }
     }
-
-    // ---------------------------------------------------------------
-    // LISTADO E HISTORIAL
-    // ---------------------------------------------------------------
 
     private val selectListado = """
         SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.id_usuario_registra,
@@ -229,12 +212,10 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             buildList { while (c.moveToNext()) add(leerListado(c)) }
         }
 
-    // Personal Induztek puede consultar cualquier protocolo (tabla de permisos)
     suspend fun todos(): List<ProtocoloListado> = withContext(Dispatchers.IO) {
         consultarListado(helper.readableDatabase, "1 = 1", emptyArray())
     }
 
-    // RF-21: dias promedio entre la prueba y la formalizacion
     suspend fun promedioDiasFormalizacion(): Double? = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(
             """
@@ -245,10 +226,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             null
         ).use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getDouble(0) else null }
     }
-
-    // ---------------------------------------------------------------
-    // COMPARACION HISTORICA (RN-09)
-    // ---------------------------------------------------------------
 
     suspend fun medicionesAnteriores(
         idEquipo: Long,
@@ -279,17 +256,13 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 val clave = "${c.getLong(0)}|${c.getString(1)}"
                 val numero = c.getString(2)
                 val primero = numeroPorClave.getOrPut(clave) { numero }
-                if (primero != numero) continue // solo la prueba anterior mas reciente
+                if (primero != numero) continue
                 val campo = Parametros.porId(c.getLong(3)) ?: continue
                 valoresPorClave.getOrPut(clave) { mutableMapOf() }[campo.codigo] = c.getDouble(4)
             }
         }
         return valoresPorClave.mapValues { (clave, valores) -> MedicionAnterior(numeroPorClave.getValue(clave), valores) }
     }
-
-    // ---------------------------------------------------------------
-    // DETALLE
-    // ---------------------------------------------------------------
 
     private data class Cabecera(
         val numeroOt: String,
@@ -472,15 +445,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    // ---------------------------------------------------------------
-    // GUARDAR (Borrador o Registrado en terreno)
-    // ---------------------------------------------------------------
-
-    /**
-     * Guarda el protocolo y sus pruebas en una sola transaccion (RNF-03).
-     * - id_protocolo: UUID generado en el dispositivo (TEXT), no se repite entre tecnicos sin conexion.
-     * - numero: "PT-AAAA-XXXXXXXX" derivado del UUID (RN-02). Se reintenta si ya existiera.
-     */
     suspend fun guardar(
         datos: ProtocoloAGuardar,
         usuarioId: Long,
@@ -534,7 +498,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                     check(c.moveToFirst()) { "El protocolo ya no existe." }
                     EstadoProtocolo.desdeId(c.getLong(0)) to c.getLong(1)
                 }
-                check(creador == usuarioId) { "Solo quien creó el protocolo puede modificarlo." }  // RN-17
+                check(creador == usuarioId) { "Solo quien creó el protocolo puede modificarlo." }
                 check(estado == EstadoProtocolo.BORRADOR || estado == EstadoProtocolo.OBSERVADO) {
                     "Solo se pueden modificar protocolos en Borrador u Observado."
                 }
@@ -542,7 +506,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 estadoActual = estado
             }
 
-            // Se reemplazan todas las pruebas, realizadas y no realizadas (MEDICION se borra en cascada)
             db.delete("PRUEBA", "id_protocolo = ?", arrayOf(idProtocolo))
             for (prueba in datos.pruebas) {
                 val idPrueba = db.insertOrThrow("PRUEBA", null, ContentValues().apply {
@@ -560,7 +523,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 var orden = 1
                 for ((codigo, valor) in prueba.valores) {
                     val campo = Parametros.porCodigo(codigo) ?: continue
-                    val idParametro = campo.idParametro ?: continue // los calculados no se guardan
+                    val idParametro = campo.idParametro ?: continue
                     db.insertOrThrow("MEDICION", null, ContentValues().apply {
                         put("id_prueba", idPrueba)
                         put("id_parametro", idParametro)
@@ -624,10 +587,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
         error("No se pudo generar un número de protocolo único.")
     }
-
-    // ---------------------------------------------------------------
-    // CAMBIOS DE ESTADO (RN-04, RNF-07)
-    // ---------------------------------------------------------------
 
     suspend fun cambiarEstado(
         idProtocolo: String,

@@ -59,11 +59,6 @@ import com.example.appprotocolos_eq014.ui.theme.RojoError
 import com.example.appprotocolos_eq014.viewmodel.FormularioProtocoloViewModel
 import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 
-/**
- * Formulario de protocolo (RF-03 a RF-06, RF-11, RF-17).
- * - idVisita: visita preseleccionada (opcional)
- * - idProtocolo: si no es null se edita un Borrador u Observado propio (RN-17)
- */
 @Composable
 fun FormularioProtocoloScreen(
     viewModel: FormularioProtocoloViewModel,
@@ -78,12 +73,10 @@ fun FormularioProtocoloScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Notificaciones locales: se pide el permiso al entrar al formulario (Android 13+)
     SolicitarPermisoNotificaciones()
 
     LaunchedEffect(idVisita, idProtocolo) { viewModel.iniciar(idVisita, idProtocolo) }
 
-    // Al volver del formulario de equipo, se recarga la lista y se selecciona el equipo nuevo
     LaunchedEffect(equipoCreado) {
         val id = equipoCreado ?: return@LaunchedEffect
         viewModel.onEquipoCreado(id)
@@ -180,7 +173,6 @@ fun FormularioProtocoloScreen(
             }
         }
 
-        // Botones fijos abajo
         Surface(shadowElevation = 8.dp, color = MaterialTheme.colorScheme.surface) {
             Row(
                 modifier = Modifier
@@ -204,9 +196,6 @@ fun FormularioProtocoloScreen(
     }
 }
 
-// ---------------------------------------------------------------
-// 1. Visita
-// ---------------------------------------------------------------
 @Composable
 private fun SeccionVisita(state: FormularioProtocoloUiState, viewModel: FormularioProtocoloViewModel) {
     TarjetaSeccion(titulo = "1. Datos de la visita") {
@@ -236,9 +225,6 @@ private fun SeccionVisita(state: FormularioProtocoloUiState, viewModel: Formular
     }
 }
 
-// ---------------------------------------------------------------
-// 2. Equipo
-// ---------------------------------------------------------------
 @Composable
 private fun SeccionEquipo(
     state: FormularioProtocoloUiState,
@@ -263,7 +249,7 @@ private fun SeccionEquipo(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-        // HU-01: equipo que se prueba por primera vez
+
         if (!state.esEdicion) {
             BotonSecundario(
                 texto = "Registrar equipo nuevo",
@@ -285,9 +271,6 @@ private fun SeccionEquipo(
     }
 }
 
-// ---------------------------------------------------------------
-// 3. Condiciones ambientales (HU-02)
-// ---------------------------------------------------------------
 @Composable
 private fun SeccionAmbiente(state: FormularioProtocoloUiState, viewModel: FormularioProtocoloViewModel) {
     TarjetaSeccion(titulo = "3. Condiciones ambientales") {
@@ -318,9 +301,6 @@ private fun SeccionAmbiente(state: FormularioProtocoloUiState, viewModel: Formul
     }
 }
 
-// ---------------------------------------------------------------
-// 4. Pruebas (una tarjeta por tipo de prueba segun RN-05)
-// ---------------------------------------------------------------
 @Composable
 private fun TarjetaPrueba(
     seccion: SeccionPruebaUi,
@@ -338,7 +318,6 @@ private fun TarjetaPrueba(
             }
         }
 
-        // Aclaracion 2: cada prueba queda realizada o No realizada con motivo
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Prueba realizada", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             Switch(checked = !seccion.noRealizada, onCheckedChange = { viewModel.onNoRealizada(tipo, !it) })
@@ -358,7 +337,6 @@ private fun TarjetaPrueba(
         }
 
         if (!seccion.noRealizada) {
-        // RF-05 / RN-11: instrumento con su vencimiento
         val sugeridos = instrumentos.filter {
             it.nombreTipo.lowercase().contains(ReglasProtocolo.palabraInstrumento(tipo))
         }.ifEmpty { instrumentos }
@@ -375,7 +353,6 @@ private fun TarjetaPrueba(
             error = seccion.errorInstrumento
         )
 
-        // Datos comunes de la prueba
         when (tipo) {
             TipoPrueba.AISLACION -> {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -477,7 +454,7 @@ private fun FilaPrueba(
                         onCambio = { onValor(campo.codigo, it) },
                         etiqueta = campo.etiqueta,
                         unidad = if (unidad == "-") "" else unidad,
-                        // RNF-05: se marca en rojo el campo exacto que tiene el problema
+
                         marcarError = campo.codigo in ev.camposConError,
                         modifier = Modifier.weight(1f)
                     )
@@ -486,7 +463,6 @@ private fun FilaPrueba(
             }
         }
 
-        // RN-08c: resultado manual (solo ingeniero / jefe tecnico)
         if (tipo == TipoPrueba.DEVANADOS) {
             Text(
                 if (puedeResultadoManual) "Resultado (lo indica el ingeniero):" else "El resultado lo indica el ingeniero.",
@@ -528,7 +504,6 @@ private fun FilaPrueba(
     }
 }
 
-// RN-09 / HU-06: valor anterior y variacion
 @Composable
 fun LineaComparacion(c: Comparacion) {
     val signo = if (c.variacionPct > 0) "+" else ""
@@ -583,9 +558,6 @@ private fun ResumenResultado(state: FormularioProtocoloUiState) {
     }
 }
 
-// ---------------------------------------------------------------
-// Componentes pequeños
-// ---------------------------------------------------------------
 @Composable
 private fun DatoLectura(etiqueta: String, valor: String) {
     Column {
@@ -594,7 +566,6 @@ private fun DatoLectura(etiqueta: String, valor: String) {
     }
 }
 
-// Campo numerico grande con su unidad visible (RNF-04 / RNF-05)
 @Composable
 fun CampoNumero(
     valor: String,
@@ -604,13 +575,13 @@ fun CampoNumero(
     modifier: Modifier = Modifier,
     error: String? = null,
     marcarError: Boolean = false,
-    // Se deja escribir el signo para que la regla muestre el motivo del rechazo (HU-03)
+
     permitirNegativo: Boolean = true
 ) {
     OutlinedTextField(
         value = valor,
         onValueChange = { nuevo ->
-            // Solo digitos, coma/punto y (si corresponde) signo menos
+
             val filtrado = nuevo.filter { it.isDigit() || it == ',' || it == '.' || (permitirNegativo && it == '-') }
             onCambio(filtrado)
         },

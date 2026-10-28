@@ -37,7 +37,7 @@ class InduztekDbHelper (context: Context) :
             CREATE TABLE TIPO_EQUIPO (
                 id_tipo_equipo INTEGER PRIMARY KEY AUTOINCREMENT,
                 nombre TEXT UNIQUE NOT NULL,
-                clasificacion TEXT 
+                clasificacion TEXT
             )
         """
 
@@ -278,7 +278,7 @@ class InduztekDbHelper (context: Context) :
                 id_parametro INTEGER NOT NULL,
                 elemento TEXT,
                 valor REAL NOT NULL,
-                unidad TEXT NOT NULL,            
+                unidad TEXT NOT NULL,
                 orden INTEGER DEFAULT 0,
                 UNIQUE(id_prueba, id_parametro),
                 FOREIGN KEY (id_prueba) REFERENCES PRUEBA(id_prueba) ON DELETE CASCADE,
@@ -287,7 +287,7 @@ class InduztekDbHelper (context: Context) :
         """
 
         private const val SQL_PRECARGAR_ROLES = """
-            INSERT INTO ROL (id_rol, codigo, nombre) VALUES 
+            INSERT INTO ROL (id_rol, codigo, nombre) VALUES
             (1, 'TECNICO', 'Técnico de terreno'),
             (2, 'INGENIERO', 'Ingeniero de pruebas'),
             (3, 'JEFE_TECNICO', 'Jefe técnico'),
@@ -295,17 +295,17 @@ class InduztekDbHelper (context: Context) :
         """
 
         private const val SQL_PRECARGAR_ESTADOS = """
-            INSERT INTO ESTADO_PROTOCOLO (id_estado, codigo) VALUES 
+            INSERT INTO ESTADO_PROTOCOLO (id_estado, codigo) VALUES
             (1, 'BORRADOR'), (2, 'REGISTRADO_TERRENO'), (3, 'OBSERVADO'), (4, 'FORMALIZADO'), (5, 'ANULADO');
         """
 
         private const val SQL_PRECARGAR_RESULTADOS = """
-            INSERT INTO RESULTADO (id_resultado, codigo) VALUES 
+            INSERT INTO RESULTADO (id_resultado, codigo) VALUES
             (1, 'APROBADO'), (2, 'OBSERVADO'), (3, 'RECHAZADO');
         """
 
         private const val SQL_PRECARGAR_TIPOS_EQUIPO = """
-            INSERT INTO TIPO_EQUIPO (id_tipo_equipo, nombre, clasificacion) VALUES 
+            INSERT INTO TIPO_EQUIPO (id_tipo_equipo, nombre, clasificacion) VALUES
             (1, 'Transformador', 'PRIMARIO'),
             (2, 'Interruptor', 'PRIMARIO'),
             (3, 'Celda MT', 'PRIMARIO'),
@@ -318,8 +318,8 @@ class InduztekDbHelper (context: Context) :
         """
 
         private const val SQL_PRECARGAR_COMUNAS = """
-            INSERT INTO COMUNA (id_comuna, id_region, nombre) VALUES 
-            (1, 13, 'Lampa'), (2, 13, 'San Bernardo'), (3, 13, 'Til Til'), 
+            INSERT INTO COMUNA (id_comuna, id_region, nombre) VALUES
+            (1, 13, 'Lampa'), (2, 13, 'San Bernardo'), (3, 13, 'Til Til'),
             (4, 13, 'La Florida'), (5, 13, 'Puente Alto'), (6, 13, 'Huechuraba');
         """
         private const val SQL_PRECARGAR_INSTRUMENTOS = """
@@ -383,7 +383,7 @@ class InduztekDbHelper (context: Context) :
             (5, 2, '15.906.334-8', 'Andrea Contreras Silva', 'acontreras@induztek.ejemplo', '+56 9 7456 2210', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'pedro'),
             (6, 2, '16.553.270-8', 'Sebastián Morales Gutiérrez', 'smorales@induztek.ejemplo', '+56 9 8812 4430', '123456', 1, NULL, NULL, NULL, '¿Cuál es el nombre de tu primera mascota?', 'rocky'),
             (7, 3, '13.871.905-7', 'Ricardo Espinoza Lagos', 'respinoza@induztek.ejemplo', '+56 9 9345 1187', '123456', 1, NULL, NULL, NULL, '¿En qué ciudad nacieron tus padres?', 'valparaiso'),
-            
+
             (8, 4, '76.482.915-8', 'Envasadora del Pacífico S.A.', 'mfuentes@envpacifico.ejemplo', '+56 9 6612 3480', '123456', 1, 'Agroindustria', 'Marcela Fuentes Rojas', 'Jefa de Mantenimiento', '¿Cuál es tu comida favorita?', 'sushi'),
             (9, 4, '96.731.540-0', 'Sanitaria Valle Central S.A.', 'jarancibia@svcentral.ejemplo', '+56 9 4471 2093', '123456', 1, 'Servicios sanitarios', 'Jorge Arancibia Leiva', 'Jefe de Planta', '¿Cuál fue el modelo de tu primer auto?', 'nissan'),
             (10, 4, '77.105.362-9', 'Minera Cerro Alto SpA', 'pnavarro@cerroalto.ejemplo', '+56 9 3308 6615', '123456', 1, 'Minería', 'Patricio Navarro Soto', 'Jefe de Mantenimiento Eléctrico', '¿Cuál es el nombre de tu mejor amigo de la infancia?', 'juan'),
@@ -427,7 +427,6 @@ class InduztekDbHelper (context: Context) :
             (1, 1), (2, 3), (3, 1), (4, 2), (5, 2);
         """
 
-        // Visitas abiertas con fecha de HOY para probar el formulario de protocolos
         private const val SQL_PRECARGAR_VISITAS_HOY = """
             INSERT INTO VISITA (id_visita, numero_ot, id_instalacion, fecha, tipo_visita, id_ingeniero_cargo, fecha_hora_cierre) VALUES
             (6, 'OT-2026-1215', 1, date('now', 'localtime'), 'SOLO_PRUEBAS', 5, NULL),
@@ -527,7 +526,6 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_PRECARGAR_RECEPCIONES)
         db.execSQL(SQL_PRECARGAR_PRUEBAS)
         db.execSQL(SQL_PRECARGAR_MEDICIONES)
-
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -559,5 +557,4 @@ class InduztekDbHelper (context: Context) :
 
         onCreate(db)
     }
-
 }

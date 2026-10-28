@@ -32,16 +32,11 @@ import kotlinx.coroutines.launch
 class FormularioProtocoloViewModel(
     private val sesion: SesionPreferencias,
     private val repository: RegistroProtocoloRepository,
-    private val contexto: Context // contexto de la aplicacion, para las notificaciones locales
+    private val contexto: Context
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FormularioProtocoloUiState())
     val uiState: StateFlow<FormularioProtocoloUiState> = _uiState.asStateFlow()
 
-    // ---------------------------------------------------------------
-    // Carga inicial: nuevo protocolo (opcionalmente con visita) o edicion
-    // ---------------------------------------------------------------
-    // Evita reiniciar el formulario al girar la pantalla (el ViewModel sobrevive, la pantalla no)
     private var claveActual: String? = null
 
     fun descartar() {
@@ -95,7 +90,7 @@ class FormularioProtocoloViewModel(
         val anteriores = repository.medicionesAnteriores(p.equipoId, idProtocolo, p.fechaHoraPrueba)
 
         var secciones = if (equipo == null) emptyList() else seccionesVacias(equipo)
-        // Se vuelcan las pruebas guardadas en las filas del formulario
+
         for (prueba in p.pruebas) {
             secciones = secciones.map { s ->
                 if (s.tipo != prueba.tipo) return@map s
@@ -115,7 +110,7 @@ class FormularioProtocoloViewModel(
                         if (f.elemento != prueba.elemento) f
                         else f.copy(
                             valores = campos.mapNotNull { c -> prueba.valores[c.codigo]?.let { c.codigo to it.aTexto() } }.toMap(),
-                            // Si el rele no opero, no se guardo el tiempo medido
+
                             opera = !(prueba.tipo == TipoPrueba.RELE && prueba.valores[Parametros.T_MEDIDO.codigo] == null),
                             resultadoManual = if (prueba.tipo == TipoPrueba.DEVANADOS) prueba.resultado else null
                         )
@@ -146,9 +141,6 @@ class FormularioProtocoloViewModel(
         reevaluarTodo()
     }
 
-    // ---------------------------------------------------------------
-    // 1. Visita y 2. Equipo
-    // ---------------------------------------------------------------
     fun seleccionarVisita(visita: VisitaAbierta) {
         if (_uiState.value.esEdicion) return
         _uiState.update {
@@ -160,7 +152,6 @@ class FormularioProtocoloViewModel(
         }
     }
 
-    // HU-01: se registro un equipo nuevo desde el formulario
     fun onEquipoCreado(idEquipo: Long) {
         val visita = _uiState.value.visitaSeleccionada ?: return
         viewModelScope.launch {
@@ -174,14 +165,12 @@ class FormularioProtocoloViewModel(
         if (_uiState.value.esEdicion) return
         _uiState.update { it.copy(equipoSeleccionado = equipo, secciones = seccionesVacias(equipo), anteriores = emptyMap(), error = null) }
         viewModelScope.launch {
-            // RN-09: valores de la prueba anterior del mismo tipo en el mismo equipo
             val anteriores = repository.medicionesAnteriores(equipo.id, null, Fechas.ahora())
             _uiState.update { it.copy(anteriores = anteriores) }
             reevaluarTodo()
         }
     }
 
-    // Arma las secciones segun RN-05 con valores pre-cargados desde la placa del equipo
     private fun seccionesVacias(equipo: EquipoProtocolo): List<SeccionPruebaUi> {
         val instrumentos = _uiState.value.instrumentos
         return ReglasProtocolo.pruebasPara(equipo.tipoEquipoId).map { tipo ->
@@ -201,7 +190,7 @@ class FormularioProtocoloViewModel(
                     ?.let { mapOf(Parametros.MAX_PLACA.codigo to it.aTexto()) }.orEmpty()
                 else -> emptyMap()
             }
-            // Se sugiere el primer instrumento vigente del tipo correcto
+
             val sugeridos = instrumentos.filter {
                 it.nombreTipo.lowercase().contains(ReglasProtocolo.palabraInstrumento(tipo))
             }
@@ -211,9 +200,6 @@ class FormularioProtocoloViewModel(
         }
     }
 
-    // ---------------------------------------------------------------
-    // 3. Condiciones ambientales (RNF-05: rangos razonables)
-    // ---------------------------------------------------------------
     fun onTemperaturaCambia(valor: String) {
         val n = ReglasProtocolo.numero(valor)
         val error = when {
@@ -236,16 +222,12 @@ class FormularioProtocoloViewModel(
         _uiState.update { it.copy(humedad = valor, errorHumedad = error, error = null) }
     }
 
-    // ---------------------------------------------------------------
-    // 4. Pruebas y mediciones
-    // ---------------------------------------------------------------
     fun onValorFila(tipo: TipoPrueba, indice: Int, codigo: String, valor: String) =
         actualizarFila(tipo, indice) { it.copy(valores = it.valores + (codigo to valor)) }
 
     fun onOperaFila(tipo: TipoPrueba, indice: Int, opera: Boolean) =
         actualizarFila(tipo, indice) { it.copy(opera = opera) }
 
-    // RN-08c: solo el ingeniero (o jefe tecnico) indica el resultado de devanados
     fun onResultadoManual(tipo: TipoPrueba, indice: Int, resultado: ResultadoPrueba?) {
         if (!Rol.puedeFormalizar(_uiState.value.rolUsuario)) return
         actualizarFila(tipo, indice) { it.copy(resultadoManual = resultado) }
@@ -263,7 +245,6 @@ class FormularioProtocoloViewModel(
     fun onComentarioSeccion(tipo: TipoPrueba, texto: String) =
         actualizarSeccion(tipo) { it.copy(comentario = texto) }
 
-    // Aclaracion 2: una prueba se marca como No realizada con motivo obligatorio
     fun onNoRealizada(tipo: TipoPrueba, noRealizada: Boolean) =
         actualizarSeccion(tipo) { it.copy(noRealizada = noRealizada) }
 
@@ -291,7 +272,6 @@ class FormularioProtocoloViewModel(
         _uiState.update { estado -> estado.copy(secciones = estado.secciones.map { reevaluar(it, estado) }) }
     }
 
-    // Aplica las reglas a cada fila y valida el instrumento (RN-11)
     private fun reevaluar(seccion: SeccionPruebaUi, estado: FormularioProtocoloUiState): SeccionPruebaUi {
         val tipoEquipo = estado.equipoSeleccionado?.tipoEquipoId ?: 0
         val filas = seccion.filas.map { f ->
@@ -321,9 +301,6 @@ class FormularioProtocoloViewModel(
         return seccion.copy(filas = filas, errorInstrumento = errorInstrumento)
     }
 
-    // ---------------------------------------------------------------
-    // Guardar
-    // ---------------------------------------------------------------
     fun guardarBorrador() = guardar(registrar = false)
     fun registrarEnTerreno() = guardar(registrar = true)
 
@@ -403,7 +380,7 @@ class FormularioProtocoloViewModel(
                     rol = sesion.leerRolUsuario().orEmpty(),
                     registrarEnTerreno = registrar
                 )
-                // Notificacion local con el numero del protocolo
+
                 NotificacionesLocales.notificarEstadoProtocolo(
                     contexto,
                     repository.numeroDe(id),
@@ -432,7 +409,6 @@ class FormularioProtocoloViewModel(
     }
 }
 
-// 1500.0 -> "1500", 0.4 -> "0.4"
 private fun Double.aTexto(): String =
     if (this % 1.0 == 0.0) this.toLong().toString() else this.toString()
 

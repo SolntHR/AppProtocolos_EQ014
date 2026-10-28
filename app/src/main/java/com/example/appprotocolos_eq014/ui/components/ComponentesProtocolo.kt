@@ -32,8 +32,6 @@ import com.example.appprotocolos_eq014.ui.theme.AmarilloSuave
 import com.example.appprotocolos_eq014.ui.theme.RojoError
 import com.example.appprotocolos_eq014.ui.theme.RojoSuave
 
-// Componentes del modulo de registro de protocolos (usan los colores y etiquetas del tema del equipo)
-
 fun tonoDeEstado(estado: EstadoProtocolo): TonoEstado = when (estado) {
     EstadoProtocolo.FORMALIZADO -> TonoEstado.EXITO
     EstadoProtocolo.REGISTRADO_TERRENO -> TonoEstado.AVISO
@@ -47,7 +45,6 @@ fun EtiquetaEstadoProtocolo(estado: EstadoProtocolo, modifier: Modifier = Modifi
     EtiquetaEstado(texto = estado.etiqueta, tono = tonoDeEstado(estado), modifier = modifier)
 }
 
-// RN-19: un protocolo reemplazado se marca "Reemplazado por nº ___"
 @Composable
 fun EtiquetaProtocoloListado(protocolo: ProtocoloListado, modifier: Modifier = Modifier) {
     val reemplazo = protocolo.reemplazadoPorNumero
@@ -64,7 +61,6 @@ fun EtiquetaResultadoProtocolo(resultado: ResultadoPrueba?, modifier: Modifier =
     else EtiquetaResultado(resultado, modifier)
 }
 
-// Caja de mensaje (error / aviso)
 @Composable
 fun MensajeAvisoProtocolo(texto: String, esError: Boolean = true, modifier: Modifier = Modifier) {
     Box(
@@ -85,7 +81,6 @@ fun MensajeCentradoProtocolo(texto: String, modifier: Modifier = Modifier) {
     }
 }
 
-// Selector desplegable de solo lectura
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SelectorDesplegable(

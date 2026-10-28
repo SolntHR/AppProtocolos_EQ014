@@ -1,13 +1,11 @@
 package com.example.appprotocolos_eq014.model
 
-// Recuperar contraseña: 1) verificar correo + pregunta + respuesta  2) nueva contraseña  3) listo
 enum class PasoRecuperacion {
     VERIFICAR,
     NUEVA_CONTRASENA,
     LISTO
 }
 
-// Preguntas de seguridad disponibles para las cuentas
 object PreguntasSeguridad {
     val lista = listOf(
         "¿Cuál es el nombre de tu primera mascota?",

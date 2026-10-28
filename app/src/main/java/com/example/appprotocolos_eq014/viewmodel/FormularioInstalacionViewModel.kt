@@ -16,12 +16,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// RF-01: registrar una instalacion (planta, subestacion o faena) de un cliente
 class FormularioInstalacionViewModel(
     private val sesion: SesionPreferencias,
     private val repository: RegistroCatalogoRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FormularioInstalacionUiState())
     val uiState: StateFlow<FormularioInstalacionUiState> = _uiState.asStateFlow()
 

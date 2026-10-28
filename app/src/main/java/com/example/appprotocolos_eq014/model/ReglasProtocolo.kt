@@ -2,15 +2,6 @@ package com.example.appprotocolos_eq014.model
 
 import kotlin.math.abs
 
-// ---------------------------------------------------------------
-// Catalogo de pruebas (RN-05) y reglas de resultado (RN-06 a RN-10).
-// Kotlin puro: no depende de Android.
-// Cada tipo de prueba es una subclase de ReglaPrueba (herencia) y el formulario
-// las usa a traves de la clase base sin saber cual es (polimorfismo).
-// Los idParametro coinciden con la tabla PARAMETRO del helper (version del equipo).
-// idParametro = null -> valor calculado (IP, % error...): se muestra pero no se guarda.
-// ---------------------------------------------------------------
-
 data class CampoMedicion(
     val codigo: String,
     val etiqueta: String,
@@ -18,7 +9,6 @@ data class CampoMedicion(
     val idParametro: Long?
 )
 
-// idDb coincide con TIPO_PRUEBA.id_tipo_prueba
 enum class TipoPrueba(val idDb: Long, val nombre: String) {
     AISLACION(1, "Resistencia de aislación"),
     TTR(2, "Relación de transformación (TTR)"),
@@ -32,7 +22,6 @@ enum class TipoPrueba(val idDb: Long, val nombre: String) {
 }
 
 object Parametros {
-    // Guardados en MEDICION
     val L1 = CampoMedicion("LECTURA_1MIN", "Lectura 1 min", "MΩ", 1)
     val L10 = CampoMedicion("LECTURA_10MIN", "Lectura 10 min", "MΩ", 2)
     val KV = CampoMedicion("TENSION_PRUEBA", "Tensión de prueba", "kV", 3)
@@ -46,7 +35,6 @@ object Parametros {
     val T_ESPERADO = CampoMedicion("TIEMPO_ESPERADO", "Tiempo esperado", "ms", 11)
     val T_MEDIDO = CampoMedicion("TIEMPO_MEDIDO", "Tiempo medido", "ms", 12)
 
-    // Calculados (no se guardan)
     val IP = CampoMedicion("IP", "Índice de polarización", "-", null)
     val ERROR = CampoMedicion("ERROR_RELACION", "Error de relación", "%", null)
     val MAX_PLACA = CampoMedicion("MAX_PLACA", "Máximo de placa", "µΩ", null)
@@ -64,7 +52,6 @@ object Parametros {
     fun porId(id: Long): CampoMedicion? = porId[id]
 }
 
-// RN-10: el resultado global es el peor resultado de sus pruebas
 fun peorResultado(resultados: List<ResultadoPrueba?>): ResultadoPrueba? =
     resultados.filterNotNull().maxByOrNull { it.idDb }
 
@@ -73,48 +60,34 @@ enum class EstadoFila { VACIA, INCOMPLETA, INVALIDA, COMPLETA }
 data class Evaluacion(
     val estado: EstadoFila = EstadoFila.VACIA,
     val resultado: ResultadoPrueba? = null,
-    val calculados: Map<String, Double> = emptyMap(), // incluye guardables y calculados
-    val detalle: String? = null,                       // ej: "IP = 1,80"
+    val calculados: Map<String, Double> = emptyMap(),
+    val detalle: String? = null,
     val error: String? = null,
     val comparaciones: List<Comparacion> = emptyList(),
-    val camposConError: Set<String> = emptySet()          // para marcar en rojo el campo exacto
+    val camposConError: Set<String> = emptySet()
 )
 
-// Ultima medicion del mismo tipo y elemento en el mismo equipo (RN-09)
 data class MedicionAnterior(
     val numeroProtocolo: String,
     val valores: Map<String, Double>
 )
 
-// ---------------------------------------------------------------
-// Clase base: define el flujo comun de validacion (patron "metodo plantilla")
-// y cada subclase implementa su propio calculo de resultado.
-// ---------------------------------------------------------------
 sealed class ReglaPrueba(val tipo: TipoPrueba) {
-
-    // Elementos (devanados, fases o polos) con los nombres de los datos de ejemplo del helper
     abstract fun elementos(tipoEquipoId: Long): List<String>
 
-    // Campos que el tecnico escribe en cada fila
     abstract fun camposFila(tipoEquipoId: Long): List<CampoMedicion>
 
-    // Campos que realmente mide el tecnico (los demas pueden venir pre-cargados)
     open fun camposMedidos(tipoEquipoId: Long): List<CampoMedicion> = camposFila(tipoEquipoId)
 
-    // Campos obligatorios para que la fila quede completa
     open fun camposRequeridos(tipoEquipoId: Long, opera: Boolean): List<CampoMedicion> = camposFila(tipoEquipoId)
 
-    // Fila sin mediciones = vacia (no se guarda)
     open fun estaVacia(valores: Map<String, String>, tipoEquipoId: Long, opera: Boolean): Boolean =
         camposMedidos(tipoEquipoId).all { valores[it.codigo].isNullOrBlank() }
 
-    // Valores principales que se comparan con la prueba anterior (RN-09)
     abstract val valoresPrincipales: List<CampoMedicion>
 
-    // Palabra para sugerir el instrumento (INSTRUMENTO.nombre_tipo)
     abstract val palabraInstrumento: String
 
-    // Calculo propio de cada prueba (RN-06, RN-07, RN-08, RN-08b, RN-08c)
     protected abstract fun calcular(
         tipoEquipoId: Long,
         v: Map<String, Double>,
@@ -124,10 +97,8 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
         resultadoManual: ResultadoPrueba?
     ): Evaluacion
 
-    // Texto calculado para mostrar en el detalle (los calculados no se guardan)
     open fun resumenCalculo(valores: Map<String, Double>, maxPlaca: Double?): String? = null
 
-    /** Flujo comun: fila vacia -> incompleta -> numeros validos -> calculo propio -> comparacion. */
     fun evaluar(
         tipoEquipoId: Long,
         valores: Map<String, String>,
@@ -173,7 +144,6 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
     protected fun invalida(mensaje: String, campo: CampoMedicion? = null) =
         Evaluacion(EstadoFila.INVALIDA, error = mensaje, camposConError = setOfNotNull(campo?.codigo))
 
-    // ------------------- RN-06: Resistencia de aislación -------------------
     object Aislacion : ReglaPrueba(TipoPrueba.AISLACION) {
         override fun elementos(tipoEquipoId: Long) = when (tipoEquipoId) {
             ReglasProtocolo.TIPO_TRANSFORMADOR -> listOf("AT-BT", "AT-T", "BT-T")
@@ -233,7 +203,6 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
         }
     }
 
-    // ------------------- RN-07: Relación de transformación -------------------
     object Ttr : ReglaPrueba(TipoPrueba.TTR) {
         override fun elementos(tipoEquipoId: Long) = listOf("Fase H1-X1", "Fase H2-X2", "Fase H3-X3")
         override fun camposFila(tipoEquipoId: Long) = listOf(Parametros.REL_TEO, Parametros.REL_MED)
@@ -275,7 +244,6 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
         }
     }
 
-    // ------------------- RN-08c: Resistencia de devanados (resultado manual) -------------------
     object Devanados : ReglaPrueba(TipoPrueba.DEVANADOS) {
         override fun elementos(tipoEquipoId: Long) =
             listOf("AT fase U", "AT fase V", "AT fase W", "BT fase U", "BT fase V", "BT fase W")
@@ -296,7 +264,6 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
         }
     }
 
-    // ------------------- RN-08: Resistencia de contactos -------------------
     object Contactos : ReglaPrueba(TipoPrueba.CONTACTOS) {
         override fun elementos(tipoEquipoId: Long) = listOf("Polo 1", "Polo 2", "Polo 3")
         override fun camposFila(tipoEquipoId: Long) = listOf(Parametros.R_POLO)
@@ -331,7 +298,6 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
         }
     }
 
-    // ------------------- RN-08b: Operación de relé -------------------
     object Rele : ReglaPrueba(TipoPrueba.RELE) {
         override fun elementos(tipoEquipoId: Long) = listOf("Función 50/51")
         override fun camposFila(tipoEquipoId: Long) =
@@ -339,7 +305,6 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
 
         override fun camposMedidos(tipoEquipoId: Long) = listOf(Parametros.I_MEDIDA, Parametros.T_MEDIDO)
 
-        // Si el rele no opero basta con el ajuste y el tiempo esperado
         override fun camposRequeridos(tipoEquipoId: Long, opera: Boolean) =
             if (opera) camposFila(tipoEquipoId) else listOf(Parametros.I_AJUSTE, Parametros.T_ESPERADO)
 
@@ -358,7 +323,6 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
             if (ajuste <= 0.0) return invalida("La corriente de ajuste debe ser mayor a 0", Parametros.I_AJUSTE)
             if (esperado <= 0.0) return invalida("El tiempo esperado debe ser mayor a 0", Parametros.T_ESPERADO)
             if (!opera) {
-                // No se guarda tiempo medido: asi queda registrado que no opero
                 val sinTiempo = v.filterKeys { it != Parametros.T_MEDIDO.codigo }
                 return Evaluacion(EstadoFila.COMPLETA, ResultadoPrueba.RECHAZADO, sinTiempo, "El relé no operó")
             }
@@ -397,18 +361,13 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
     }
 }
 
-// ---------------------------------------------------------------
-// Fachada usada por ViewModels y repositorio: delega en la regla de cada tipo
-// ---------------------------------------------------------------
 object ReglasProtocolo {
-
     const val TIPO_TRANSFORMADOR = 1L
     const val TIPO_INTERRUPTOR = 2L
     const val TIPO_CELDA = 3L
     const val TIPO_CABLE = 4L
     const val TIPO_RELE = 5L
 
-    // RN-05: pruebas segun tipo de equipo (igual a TIPO_EQUIPO_PRUEBA)
     fun pruebasPara(tipoEquipoId: Long): List<TipoPrueba> = when (tipoEquipoId) {
         TIPO_TRANSFORMADOR -> listOf(TipoPrueba.AISLACION, TipoPrueba.TTR, TipoPrueba.DEVANADOS)
         TIPO_INTERRUPTOR, TIPO_CELDA -> listOf(TipoPrueba.AISLACION, TipoPrueba.CONTACTOS)
@@ -417,7 +376,6 @@ object ReglasProtocolo {
         else -> emptyList()
     }
 
-    // RN-06: la lectura a 10 min solo aplica a transformadores y cables
     fun usaLectura10(tipoEquipoId: Long) = tipoEquipoId == TIPO_TRANSFORMADOR || tipoEquipoId == TIPO_CABLE
 
     fun elementosPara(tipo: TipoPrueba, tipoEquipoId: Long) = ReglaPrueba.para(tipo).elementos(tipoEquipoId)
@@ -444,7 +402,6 @@ object ReglasProtocolo {
     fun resumenCalculo(tipo: TipoPrueba, valores: Map<String, Double>, maxPlaca: Double?): String? =
         ReglaPrueba.para(tipo).resumenCalculo(valores, maxPlaca)
 
-    // "12 / 0,4 kV" -> 30.0 (si la placa no trae ese formato, el tecnico la escribe)
     fun relacionTeorica(tensiones: String?): Double? {
         if (tensiones.isNullOrBlank()) return null
         val partes = tensiones.lowercase().replace("kv", "").split("/")

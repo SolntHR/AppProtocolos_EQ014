@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 class RecuperarViewModel(
     private val usuarioRepository: UsuarioRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(RecuperarUiState())
     val uiState: StateFlow<RecuperarUiState> = _uiState.asStateFlow()
 
@@ -34,7 +33,6 @@ class RecuperarViewModel(
         _uiState.update { it.copy(respuesta = valor, errorRespuesta = null, errorGeneral = null) }
     }
 
-    // Paso 1: correo, pregunta y respuesta deben coincidir con la misma cuenta
     fun onVerificar() {
         val estado = _uiState.value
         val errorCorreo = Validaciones.errorCorreo(estado.correo)
@@ -53,7 +51,6 @@ class RecuperarViewModel(
                     encontrado.preguntaSeguridad?.trim() == estado.pregunta?.trim() &&
                     encontrado.respuestaSeguridad?.trim().equals(estado.respuesta.trim(), ignoreCase = true)
             when {
-                // Mensaje unico: no se revela cual de los tres datos fallo
                 !coincide -> _uiState.update {
                     it.copy(cargando = false, errorGeneral = "Los datos no coinciden con ninguna cuenta. Revisa el correo, la pregunta y la respuesta.")
                 }

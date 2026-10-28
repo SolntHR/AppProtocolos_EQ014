@@ -21,10 +21,9 @@ class ActaViewModel(
     sesionPreferencias: SesionPreferencias,
     private val visitaRepository: VisitaRepository,
     private val catalogoClienteRepository: RegistroCatalogoRepository,
-    private val contexto: Context, // contexto de la aplicacion, para la notificacion de cierre
+    private val contexto: Context,
     private val idVisita: Long
 ) : ViewModel() {
-
     private val rolPuedeCerrar = sesionPreferencias.leerRolUsuario() in setOf("TECNICO", "INGENIERO")
     private val esCliente = sesionPreferencias.leerRolUsuario() == "CLIENTE"
     private val idUsuario = sesionPreferencias.leerIdUsuario()
@@ -38,12 +37,11 @@ class ActaViewModel(
 
     private fun cargarActa() {
         viewModelScope.launch {
-            // RN-18: un cliente solo puede abrir actas de visitas cerradas de su empresa
             if (esCliente && !catalogoClienteRepository.visitaEsDeCliente(idVisita, idUsuario)) {
                 _uiState.update { it.copy(isLoading = false, errorGeneral = "No tienes acceso a esta acta.") }
                 return@launch
             }
-            // RN-19: al cliente no se le muestran protocolos en Borrador ni Anulados
+
             val acta = visitaRepository.obtenerActa(idVisita)?.let { a ->
                 if (esCliente) a.copy(protocolos = a.protocolos.filter { it.estado.visibleParaCliente }) else a
             }
@@ -78,7 +76,6 @@ class ActaViewModel(
         val errorRut = Validaciones.errorRut(estado.receptorRut)
         val errorCargo = Validaciones.errorObligatorio(estado.receptorCargo, "Ingresa el cargo")
 
-        // RN-13: solo se cierra cuando todos los protocolos estan Registrados en terreno (o Formalizados / Anulados)
         val estadosPermitidos = setOf(
             EstadoProtocolo.REGISTRADO_TERRENO, EstadoProtocolo.FORMALIZADO, EstadoProtocolo.ANULADO
         )

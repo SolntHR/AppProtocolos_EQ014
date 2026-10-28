@@ -27,7 +27,6 @@ import com.example.appprotocolos_eq014.ui.components.TarjetaSeccion
 import com.example.appprotocolos_eq014.util.ValidacionesCatalogo as V
 import com.example.appprotocolos_eq014.viewmodel.FormularioInstalacionViewModel
 
-// RF-01: registrar una instalacion de un cliente (planta, subestacion o faena)
 @Composable
 fun FormularioInstalacionScreen(
     viewModel: FormularioInstalacionViewModel,

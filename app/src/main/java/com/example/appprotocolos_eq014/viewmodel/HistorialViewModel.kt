@@ -25,7 +25,6 @@ class HistorialViewModel(
     private val catalogoClienteRepository: RegistroCatalogoRepository,
     private val idEquipo: Long
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(
         HistorialUiState(esCliente = sesionPreferencias.leerRolUsuario() == "CLIENTE")
     )
@@ -39,7 +38,6 @@ class HistorialViewModel(
 
     private fun cargarHistorial() {
         viewModelScope.launch {
-            // RN-18: un cliente solo puede ver equipos de su propia empresa
             if (_uiState.value.esCliente &&
                 !catalogoClienteRepository.equipoEsDeCliente(idEquipo, sesionPreferencias.leerIdUsuario())
             ) {
