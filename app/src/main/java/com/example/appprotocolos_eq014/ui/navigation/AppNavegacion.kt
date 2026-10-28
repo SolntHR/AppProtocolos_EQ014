@@ -26,6 +26,14 @@ import androidx.navigation.navArgument
 import com.example.appprotocolos_eq014.ui.screens.usuarios.FichaUsuarioScreen
 import com.example.appprotocolos_eq014.ui.screens.usuarios.GestionUsuariosScreen
 import com.example.appprotocolos_eq014.viewmodel.ARG_ID_USUARIO
+import com.example.appprotocolos_eq014.viewmodel.ARG_ID_EQUIPO
+import com.example.appprotocolos_eq014.viewmodel.ARG_ID_VISITA
+import com.example.appprotocolos_eq014.viewmodel.ActaViewModel
+import com.example.appprotocolos_eq014.viewmodel.HistorialViewModel
+import com.example.appprotocolos_eq014.viewmodel.RecuperarViewModel
+import com.example.appprotocolos_eq014.ui.screens.RecuperarScreen
+import com.example.appprotocolos_eq014.ui.screens.acta.ActaScreen
+import com.example.appprotocolos_eq014.ui.screens.historial.HistorialScreen
 import com.example.appprotocolos_eq014.viewmodel.FichaUsuarioViewModel
 import com.example.appprotocolos_eq014.viewmodel.GestionUsuariosViewModel
 import com.example.appprotocolos_eq014.ui.screens.perfil.EditarPerfilScreen
@@ -44,7 +52,13 @@ object Rutas {
     const val EDITAR_PERFIL = "editar_perfil"
     const val FICHA_USUARIO = "ficha_usuario/{$ARG_ID_USUARIO}"
 
+    const val RECUPERAR = "recuperar"
+    const val HISTORIAL = "historial/{$ARG_ID_EQUIPO}"
+    const val ACTA = "acta/{$ARG_ID_VISITA}"
+
     fun fichaUsuario(idUsuario: Long) = "ficha_usuario/$idUsuario"
+    fun historial(idEquipo: Long) = "historial/$idEquipo"
+    fun acta(idVisita: Long) = "acta/$idVisita"
 }
 
 private const val CLAVE_PERFIL_ACTUALIZADO = "perfil_actualizado"
@@ -93,14 +107,44 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                         navController.navigate(Rutas.INICIO) {
                             popUpTo(Rutas.LOGIN) { inclusive = true }
                         }
-                    }
+                    },
+                    onOlvidasteContrasena = { navController.navigate(Rutas.RECUPERAR) }
+                )
+            }
+            composable(Rutas.RECUPERAR) {
+                val recuperarViewModel: RecuperarViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                RecuperarScreen(
+                    viewModel = recuperarViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = Rutas.HISTORIAL,
+                arguments = listOf(navArgument(ARG_ID_EQUIPO) { type = NavType.LongType })
+            ) {
+                val historialViewModel: HistorialViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                HistorialScreen(
+                    viewModel = historialViewModel,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = Rutas.ACTA,
+                arguments = listOf(navArgument(ARG_ID_VISITA) { type = NavType.LongType })
+            ) {
+                val actaViewModel: ActaViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                ActaScreen(
+                    viewModel = actaViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onAbrirEquipo = { idEquipo -> navController.navigate(Rutas.historial(idEquipo)) }
                 )
             }
             composable(Rutas.INICIO) { entrada ->
                 val inicioViewModel: InicioViewModel = viewModel(factory = AppViewModelFactory.Factory)
                 InicioScreen(
                     viewModel = inicioViewModel,
-                    onNavigateToNuevoProtocolo = {},
+                    onAbrirVisita = { idVisita -> navController.navigate(Rutas.acta(idVisita)) },
+                    onAbrirEquipo = { idEquipo -> navController.navigate(Rutas.historial(idEquipo)) },
                     contenidoJefeTecnico = {
                         val gestionViewModel: GestionUsuariosViewModel =
                             viewModel(factory = AppViewModelFactory.Factory)

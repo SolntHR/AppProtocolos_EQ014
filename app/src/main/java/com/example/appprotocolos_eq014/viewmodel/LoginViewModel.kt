@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.LoginUiState
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
+import com.example.appprotocolos_eq014.util.Validaciones
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,10 +34,8 @@ class LoginViewModel(
     fun onIngresar() {
         val estado = _uiState.value
 
-        val errorCorreo = if (!estado.correo.contains("@") || !estado.correo.contains("."))
-            "Ingresa un correo válido" else null
-        val errorContrasena = if (estado.contrasena.isEmpty())
-            "La contraseña es obligatoria" else null
+        val errorCorreo = Validaciones.errorCorreo(estado.correo)
+        val errorContrasena = Validaciones.errorContrasena(estado.contrasena)
 
         if (errorCorreo != null || errorContrasena != null) {
             _uiState.update { it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena) }

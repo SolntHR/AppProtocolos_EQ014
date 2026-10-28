@@ -24,6 +24,17 @@ class UsuarioRepository(private val dbHelper: InduztekDbHelper) {
         buscarUno("$consultaBase WHERE u.id_usuario = ?", arrayOf(idUsuario.toString()))
     }
 
+    suspend fun obtenerPorCorreo(correo: String): Usuario? = withContext(Dispatchers.IO) {
+        buscarUno("$consultaBase WHERE lower(u.correo) = lower(?)", arrayOf(correo.trim()))
+    }
+
+    suspend fun actualizarContrasena(idUsuario: Long, contrasena: String): Boolean = withContext(Dispatchers.IO) {
+        val valores = ContentValues().apply { put("password_hash", contrasena) }
+        dbHelper.writableDatabase.update(
+            "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
+        ) > 0
+    }
+
     suspend fun listarUsuarios(): List<Usuario> = withContext(Dispatchers.IO) {
         val cursor = dbHelper.readableDatabase.rawQuery(
             "$consultaBase ORDER BY u.id_rol, u.nombre",

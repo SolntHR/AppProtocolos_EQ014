@@ -5,5 +5,6 @@ data class Equipo(
     val tag: String,
     val tipoEquipoNombre: String,
     val marca: String?,
-    val numeroSerie: String?
+    val numeroSerie: String?,
+    val instalacion: String = ""
 )

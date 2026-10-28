@@ -8,7 +8,7 @@ class InduztekDbHelper (context: Context) :
     SQLiteOpenHelper(context, NOMBRE_BD, null, VERSION_BD) {
     companion object {
         private const val NOMBRE_BD = "induztek.db"
-        private const val VERSION_BD = 6
+        private const val VERSION_BD = 7
 
         private const val SQL_CREAR_ROL = """
             CREATE TABLE ROL (
@@ -406,12 +406,12 @@ class InduztekDbHelper (context: Context) :
             (5, 3, 'INT-52-1', 2, 'Schneider', 'SE-449021', 'SE-449021', NULL, 23.0, 1250.0, 45.0);
         """
         private const val SQL_PRECARGAR_VISITA = """
-            INSERT INTO VISITA (id_visita, numero_ot, id_instalacion, fecha, tipo_visita, id_ingeniero_cargo) VALUES
-            (1, 'OT-2026-1187', 1, '2026-09-26', 'SOLO_PRUEBAS', 5),
-            (2, 'OT-2026-1154', 4, '2026-09-20', 'PRUEBAS_Y_MANT', 6),
-            (3, 'OT-2024-0951', 1, '2024-09-14', 'SOLO_PRUEBAS', 5),
-            (4, 'OT-2025-1032', 1, '2025-09-13', 'SOLO_PRUEBAS', 5),
-            (5, 'OT-2026-1102', 3, '2026-09-08', 'SOLO_PRUEBAS', 6);
+            INSERT INTO VISITA (id_visita, numero_ot, id_instalacion, fecha, tipo_visita, id_ingeniero_cargo, fecha_hora_cierre) VALUES
+            (1, 'OT-2026-1187', 1, '2026-09-26', 'SOLO_PRUEBAS', 5, NULL),
+            (2, 'OT-2026-1154', 4, '2026-09-20', 'PRUEBAS_Y_MANT', 6, '2026-09-20 09:55'),
+            (3, 'OT-2024-0951', 1, '2024-09-14', 'SOLO_PRUEBAS', 5, '2024-09-14 12:10'),
+            (4, 'OT-2025-1032', 1, '2025-09-13', 'SOLO_PRUEBAS', 5, '2025-09-13 11:45'),
+            (5, 'OT-2026-1102', 3, '2026-09-08', 'SOLO_PRUEBAS', 6, '2026-09-08 13:20');
         """
         private const val SQL_PRECARGAR_PROTOCOLO = """
             INSERT INTO PROTOCOLO (id_protocolo, numero, id_visita, id_equipo, id_usuario_registra, fecha_hora_prueba, temperatura_c, humedad_pct, descripcion_mantenimiento, observaciones, id_estado, id_protocolo_reemplazado) VALUES
@@ -421,6 +421,43 @@ class InduztekDbHelper (context: Context) :
             ('PT-2026-0402', 'PT-2026-0402', 1, 2, 1, '2026-09-26 11:15:00', 19.0, 60.0, NULL, NULL, 2, NULL),
             ('PT-2026-0389', 'PT-2026-0389', 2, 4, 3, '2026-09-20 11:00:00', 22.0, 45.0, NULL, 'Falta n° de serie instrumento', 3, NULL),
             ('PT-2026-0360', 'PT-2026-0360', 5, 5, 2, '2026-09-08 10:30:00', 27.0, 20.0, NULL, NULL, 4, NULL);
+        """
+        private const val SQL_PRECARGAR_PARTICIPANTES = """
+            INSERT INTO VISITA_PARTICIPANTE (id_visita, id_usuario) VALUES
+            (1, 1), (2, 3), (3, 1), (4, 2), (5, 2);
+        """
+
+        private const val SQL_PRECARGAR_RECEPCIONES = """
+            INSERT INTO RECEPCION_ACTA (id_visita, receptor_nombre, receptor_rut, receptor_cargo, fecha_hora_recepcion) VALUES
+            (2, 'Tomás Leiva Araya', '18.390.452-3', 'Supervisor Eléctrico', '2026-09-20 09:55'),
+            (3, 'Marcela Fuentes Rojas', '14.226.791-8', 'Jefa de Mantenimiento', '2024-09-14 12:10'),
+            (4, 'Marcela Fuentes Rojas', '14.226.791-8', 'Jefa de Mantenimiento', '2025-09-13 11:45'),
+            (5, 'Patricio Navarro Soto', '13.349.876-1', 'Superintendente de Mantenimiento', '2026-09-08 13:20');
+        """
+
+        private const val SQL_PRECARGAR_PRUEBAS = """
+            INSERT INTO PRUEBA (id_prueba, id_protocolo, id_tipo_prueba, elemento, momento, realizada, motivo_no_realizada, id_instrumento, id_resultado, comentario) VALUES
+            (1, 'PT-2024-0312', 1, 'AT-T', 'UNICA', 1, NULL, 1, 1, NULL),
+            (2, 'PT-2025-0288', 1, 'AT-T', 'UNICA', 1, NULL, 1, 1, NULL),
+            (3, 'PT-2026-0401', 1, 'AT-T', 'UNICA', 1, NULL, 1, 2, 'IP bajo en AT-T, revisar'),
+            (4, 'PT-2026-0401', 2, 'Fase H1-X1', 'UNICA', 0, 'Cliente no autorizó desenergizar el lado BT', NULL, NULL, NULL),
+            (5, 'PT-2026-0402', 1, 'AT-T', 'UNICA', 1, NULL, 1, 1, NULL),
+            (6, 'PT-2026-0402', 2, 'Fase H1-X1', 'UNICA', 1, NULL, 3, 1, NULL),
+            (7, 'PT-2026-0389', 1, 'Polo 1', 'UNICA', 1, NULL, 1, 1, NULL),
+            (8, 'PT-2026-0389', 4, 'Polo 1', 'UNICA', 1, NULL, NULL, 2, 'Falta n° de serie del instrumento'),
+            (9, 'PT-2026-0360', 4, 'Polo 1', 'UNICA', 1, NULL, NULL, 3, NULL);
+        """
+
+        private const val SQL_PRECARGAR_MEDICIONES = """
+            INSERT INTO MEDICION (id_medicion, id_prueba, id_parametro, elemento, valor, unidad, orden) VALUES
+            (1, 1, 1, 'AT-T', 12500, 'MΩ', 1), (2, 1, 2, 'AT-T', 31250, 'MΩ', 2), (3, 1, 3, 'AT-T', 5, 'kV', 3),
+            (4, 2, 1, 'AT-T', 9800, 'MΩ', 1), (5, 2, 2, 'AT-T', 21560, 'MΩ', 2), (6, 2, 3, 'AT-T', 5, 'kV', 3),
+            (7, 3, 1, 'AT-T', 6100, 'MΩ', 1), (8, 3, 2, 'AT-T', 10980, 'MΩ', 2), (9, 3, 3, 'AT-T', 5, 'kV', 3),
+            (10, 5, 1, 'AT-T', 15200, 'MΩ', 1), (11, 5, 2, 'AT-T', 36480, 'MΩ', 2), (12, 5, 3, 'AT-T', 5, 'kV', 3),
+            (13, 6, 4, 'Fase H1-X1', 30.0, '-', 1), (14, 6, 5, 'Fase H1-X1', 30.09, '-', 2), (15, 6, 6, 'Fase H1-X1', 3, '-', 3),
+            (16, 7, 1, 'Polo 1', 8500, 'MΩ', 1), (17, 7, 3, 'Polo 1', 5, 'kV', 2),
+            (18, 8, 8, 'Polo 1', 65, 'µΩ', 1),
+            (19, 9, 8, 'Polo 1', 56, 'µΩ', 1);
         """
     }
 
@@ -472,6 +509,10 @@ class InduztekDbHelper (context: Context) :
         db.execSQL(SQL_PRECARGAR_EQUIPO)
         db.execSQL(SQL_PRECARGAR_VISITA)
         db.execSQL(SQL_PRECARGAR_PROTOCOLO)
+        db.execSQL(SQL_PRECARGAR_PARTICIPANTES)
+        db.execSQL(SQL_PRECARGAR_RECEPCIONES)
+        db.execSQL(SQL_PRECARGAR_PRUEBAS)
+        db.execSQL(SQL_PRECARGAR_MEDICIONES)
 
     }
 

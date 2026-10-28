@@ -11,9 +11,13 @@ import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
 import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
+import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
+import com.example.appprotocolos_eq014.repository.VisitaRepository
 
 const val ARG_ID_USUARIO = "idUsuario"
+const val ARG_ID_EQUIPO = "idEquipo"
+const val ARG_ID_VISITA = "idVisita"
 
 object AppViewModelFactory {
 
@@ -34,10 +38,33 @@ object AppViewModelFactory {
         }
         initializer {
             val contexto = contexto()
+            val db = obtenerDbHelper(contexto)
             InicioViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
-                catalogoRepository = CatalogoRepository(obtenerDbHelper(contexto))
+                catalogoRepository = CatalogoRepository(db),
+                protocoloRepository = ProtocoloRepository(db),
+                visitaRepository = VisitaRepository(db),
+                usuarioRepository = UsuarioRepository(db)
             )
+        }
+        initializer {
+            val contexto = contexto()
+            HistorialViewModel(
+                sesionPreferencias = SesionPreferencias(contexto),
+                protocoloRepository = ProtocoloRepository(obtenerDbHelper(contexto)),
+                idEquipo = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_EQUIPO))
+            )
+        }
+        initializer {
+            val contexto = contexto()
+            ActaViewModel(
+                sesionPreferencias = SesionPreferencias(contexto),
+                visitaRepository = VisitaRepository(obtenerDbHelper(contexto)),
+                idVisita = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA))
+            )
+        }
+        initializer {
+            RecuperarViewModel(usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto())))
         }
         initializer {
             val contexto = contexto()

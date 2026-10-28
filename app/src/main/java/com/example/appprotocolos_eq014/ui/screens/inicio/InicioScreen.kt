@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -13,10 +14,15 @@ import com.example.appprotocolos_eq014.viewmodel.InicioViewModel
 @Composable
 fun InicioScreen(
     viewModel: InicioViewModel,
-    onNavigateToNuevoProtocolo: () -> Unit,
+    onAbrirVisita: (Long) -> Unit,
+    onAbrirEquipo: (Long) -> Unit,
     contenidoJefeTecnico: @Composable () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarDatosInicio()
+    }
 
     if (uiState.isLoading) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -27,13 +33,14 @@ fun InicioScreen(
             "CLIENTE" -> {
                 InicioCliente(
                     uiState = uiState,
-                    onBusquedaCambia = { viewModel.onBusquedaCambia(it) }
+                    onBusquedaCambia = viewModel::onBusquedaCambia,
+                    onAbrirEquipo = onAbrirEquipo
                 )
             }
             "TECNICO", "INGENIERO" -> {
                 InicioPersonalTerreno(
                     uiState = uiState,
-                    onNuevoProtocoloClick = onNavigateToNuevoProtocolo
+                    onAbrirVisita = onAbrirVisita
                 )
             }
             "JEFE_TECNICO" -> {

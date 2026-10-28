@@ -45,6 +45,20 @@ object Validaciones {
         else -> null
     }
 
+    fun errorCorreo(correo: String): String? = when {
+        correo.isBlank() -> "Ingresa tu correo electrónico"
+        !correoValido(correo) -> "Correo inválido. Ejemplo: nombre@empresa.cl"
+        else -> null
+    }
+
+    fun errorContrasena(contrasena: String): String? = when {
+        contrasena.isEmpty() -> "Ingresa tu contraseña"
+        contrasena.length < LARGO_MINIMO_CONTRASENA -> "La contraseña debe tener al menos $LARGO_MINIMO_CONTRASENA caracteres"
+        else -> null
+    }
+
+    private const val LARGO_MINIMO_CONTRASENA = 6
+
     fun errorObligatorio(valor: String, mensaje: String): String? =
         if (valor.isBlank()) mensaje else null
 }
