@@ -25,18 +25,21 @@ data class DestinoInferior(
     @DrawableRes val icono: Int
 )
 
-fun destinosInferiores(esCliente: Boolean): List<DestinoInferior> =
-    if (esCliente) {
-        listOf(
-            DestinoInferior(Rutas.INICIO, R.string.nav_equipos, R.drawable.ic_equipos),
-            DestinoInferior(Rutas.PERFIL, R.string.nav_perfil, R.drawable.ic_perfil)
-        )
-    } else {
-        listOf(
-            DestinoInferior(Rutas.INICIO, R.string.nav_inicio, R.drawable.ic_inicio),
-            DestinoInferior(Rutas.PERFIL, R.string.nav_perfil, R.drawable.ic_perfil)
-        )
-    }
+fun destinosInferiores(rolUsuario: String?): List<DestinoInferior> = when (rolUsuario) {
+    "CLIENTE" -> listOf(
+        DestinoInferior(Rutas.INICIO, R.string.nav_equipos, R.drawable.ic_equipos),
+        DestinoInferior(Rutas.PERFIL, R.string.nav_perfil, R.drawable.ic_perfil)
+    )
+    "JEFE_TECNICO" -> listOf(
+        DestinoInferior(Rutas.INICIO, R.string.nav_usuarios, R.drawable.ic_inicio),
+        DestinoInferior(Rutas.INSTRUMENTOS, R.string.nav_instrumentos, R.drawable.ic_rayo),
+        DestinoInferior(Rutas.PERFIL, R.string.nav_perfil, R.drawable.ic_perfil)
+    )
+    else -> listOf(
+        DestinoInferior(Rutas.INICIO, R.string.nav_inicio, R.drawable.ic_inicio),
+        DestinoInferior(Rutas.PERFIL, R.string.nav_perfil, R.drawable.ic_perfil)
+    )
+}
 
 @Composable
 fun BarraNavegacionInferior(

@@ -3,6 +3,7 @@ package com.example.appprotocolos_eq014.util
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -34,6 +35,27 @@ object Formato {
     fun ahoraParaMostrar(): String = formateador("dd-MM-yyyy HH:mm").format(Date())
 
     fun encabezadoHoy(): String = formateador("EEEE, d MMM yyyy").format(Date()).uppercase(localeChile)
+
+    fun hoyPantalla(): String = formateador("dd-MM-yyyy").format(Date())
+
+    fun enUnAnioPantalla(): String {
+        val calendario = Calendar.getInstance().apply { add(Calendar.YEAR, 1) }
+        return formateador("dd-MM-yyyy").format(calendario.time)
+    }
+
+    fun diasHasta(fechaBaseDatos: String): Long? {
+        val destino = runCatching { formateador("yyyy-MM-dd").parse(fechaBaseDatos.take(10)) }.getOrNull() ?: return null
+        val hoy = formateador("yyyy-MM-dd").let { it.parse(it.format(Date())) } ?: return null
+        return (destino.time - hoy.time) / MILISEGUNDOS_DIA
+    }
+
+    fun fechaParaGuardar(fechaPantalla: String): String? =
+        runCatching {
+            val entrada = formateador("dd-MM-yyyy").apply { isLenient = false }
+            formateador("yyyy-MM-dd").format(entrada.parse(fechaPantalla.trim())!!)
+        }.getOrNull()
+
+    private const val MILISEGUNDOS_DIA = 24L * 60 * 60 * 1000
 
     private fun convertir(valor: String, entrada: String, salida: String): String =
         runCatching { formateador(salida).format(formateador(entrada).parse(valor)!!) }.getOrDefault(valor)

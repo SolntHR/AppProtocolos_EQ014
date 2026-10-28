@@ -152,6 +152,17 @@
     <string name="btn_verificar">Verificar respuesta</string>
     <string name="btn_guardar_contrasena">Guardar contraseña</string>
     <string name="btn_volver_login">Volver al inicio de sesión</string>
+    <string name="instrumentos_resumen">%1$d requieren atención (vencidos o por vencer en 30 días)</string>
+    <string name="instrumentos_nota">No se puede registrar una prueba con un instrumento de calibración vencida. Solo el Jefe técnico actualiza las calibraciones.</string>
+    <string name="instrumento_serie">%1$s · N.º de serie %2$s</string>
+    <string name="instrumento_sin_calibracion">Sin calibración registrada</string>
+    <string name="instrumento_vencido">Venció el %1$s (hace %2$d días)</string>
+    <string name="instrumento_vigente">Vence el %1$s (faltan %2$d días)</string>
+    <string name="btn_registrar_calibracion">Registrar calibración</string>
+    <string name="campo_fecha_calibracion">Fecha de calibración (dd-mm-aaaa) *</string>
+    <string name="campo_fecha_vencimiento">Fecha de vencimiento (dd-mm-aaaa) *</string>
+    <string name="nav_instrumentos">Instrumentos</string>
+    <string name="nav_usuarios">Usuarios</string>
     <string name="tab_personal_induztek">Personal Induztek</string>
     <string name="tab_usuarios_cliente">Usuarios cliente</string>
     <string name="btn_agregar_usuario">+ Agregar usuario</string>

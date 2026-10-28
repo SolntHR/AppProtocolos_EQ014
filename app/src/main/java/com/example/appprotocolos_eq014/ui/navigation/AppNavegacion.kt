@@ -29,6 +29,8 @@ import com.example.appprotocolos_eq014.viewmodel.ARG_ID_USUARIO
 import com.example.appprotocolos_eq014.viewmodel.ARG_ID_EQUIPO
 import com.example.appprotocolos_eq014.viewmodel.ARG_ID_VISITA
 import com.example.appprotocolos_eq014.viewmodel.ActaViewModel
+import com.example.appprotocolos_eq014.viewmodel.InstrumentosViewModel
+import com.example.appprotocolos_eq014.ui.screens.instrumentos.InstrumentosScreen
 import com.example.appprotocolos_eq014.viewmodel.HistorialViewModel
 import com.example.appprotocolos_eq014.viewmodel.RecuperarViewModel
 import com.example.appprotocolos_eq014.ui.screens.RecuperarScreen
@@ -53,6 +55,7 @@ object Rutas {
     const val FICHA_USUARIO = "ficha_usuario/{$ARG_ID_USUARIO}"
 
     const val RECUPERAR = "recuperar"
+    const val INSTRUMENTOS = "instrumentos"
     const val HISTORIAL = "historial/{$ARG_ID_EQUIPO}"
     const val ACTA = "acta/{$ARG_ID_VISITA}"
 
@@ -64,7 +67,7 @@ object Rutas {
 private const val CLAVE_PERFIL_ACTUALIZADO = "perfil_actualizado"
 private const val CLAVE_USUARIO_GUARDADO = "usuario_guardado"
 
-private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.PERFIL)
+private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.INSTRUMENTOS, Rutas.PERFIL)
 
 @Composable
 fun AppNavegacion(modifier: Modifier = Modifier) {
@@ -72,8 +75,8 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
     val entradaActual by navController.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
     val contexto = LocalContext.current
-    val esCliente = remember(rutaActual) {
-        SesionPreferencias(contexto).leerRolUsuario() == "CLIENTE"
+    val rolUsuario = remember(rutaActual) {
+        SesionPreferencias(contexto).leerRolUsuario()
     }
 
     Scaffold(
@@ -83,7 +86,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
         bottomBar = {
             if (rutaActual != null && rutaActual in rutasConBarraInferior) {
                 BarraNavegacionInferior(
-                    destinos = destinosInferiores(esCliente),
+                    destinos = destinosInferiores(rolUsuario),
                     rutaActual = rutaActual,
                     onNavegar = { ruta -> navController.navegarPestana(ruta) }
                 )
@@ -110,6 +113,10 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     },
                     onOlvidasteContrasena = { navController.navigate(Rutas.RECUPERAR) }
                 )
+            }
+            composable(Rutas.INSTRUMENTOS) {
+                val instrumentosViewModel: InstrumentosViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                InstrumentosScreen(viewModel = instrumentosViewModel)
             }
             composable(Rutas.RECUPERAR) {
                 val recuperarViewModel: RecuperarViewModel = viewModel(factory = AppViewModelFactory.Factory)

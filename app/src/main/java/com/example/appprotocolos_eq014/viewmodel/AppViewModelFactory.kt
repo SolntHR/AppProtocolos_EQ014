@@ -11,6 +11,7 @@ import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
 import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
+import com.example.appprotocolos_eq014.repository.InstrumentoRepository
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
@@ -62,6 +63,9 @@ object AppViewModelFactory {
                 visitaRepository = VisitaRepository(obtenerDbHelper(contexto)),
                 idVisita = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA))
             )
+        }
+        initializer {
+            InstrumentosViewModel(instrumentoRepository = InstrumentoRepository(obtenerDbHelper(contexto())))
         }
         initializer {
             RecuperarViewModel(usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto())))
