@@ -3,6 +3,7 @@ package com.example.appprotocolos_eq014.repository
 import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.EquipoExistente
+import com.example.appprotocolos_eq014.model.Instalacion
 import com.example.appprotocolos_eq014.model.OpcionCatalogo
 import com.example.appprotocolos_eq014.model.VisitaResumen
 import kotlinx.coroutines.Dispatchers
@@ -21,14 +22,6 @@ data class EquipoAGuardar(
     val corriente: Double?,
     val maxContactosUohm: Double?,
     val observaciones: String?
-)
-
-data class InstalacionAGuardar(
-    val idCliente: Long,
-    val nombre: String,
-    val ubicacion: String?,
-    val idComuna: Long,
-    val observacionesAcceso: String?
 )
 
 class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
@@ -72,6 +65,7 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
     }
 
     suspend fun buscarEquipo(idInstalacion: Long, tag: String): EquipoExistente? = withContext(Dispatchers.IO) {
+
         helper.readableDatabase.rawQuery(
             """
             SELECT e.id_equipo, e.tag, t.nombre, e.marca, e.numero_serie
@@ -115,13 +109,13 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         ).use { it.moveToFirst() }
     }
 
-    suspend fun crearInstalacion(i: InstalacionAGuardar): Long = withContext(Dispatchers.IO) {
+    suspend fun crearInstalacion(instalacion: Instalacion): Long = withContext(Dispatchers.IO) {
         val valores = ContentValues().apply {
-            put("id_usuario_cliente", i.idCliente)
-            put("nombre", i.nombre)
-            put("ubicacion", i.ubicacion)
-            put("id_comuna", i.idComuna)
-            put("observaciones_acceso", i.observacionesAcceso)
+            put("id_usuario_cliente", instalacion.clienteId)
+            put("nombre", instalacion.nombre)
+            put("ubicacion", instalacion.ubicacion)
+            put("id_comuna", instalacion.comunaId)
+            put("observaciones_acceso", instalacion.observacionesAcceso)
         }
         helper.writableDatabase.insertOrThrow("INSTALACION", null, valores)
     }

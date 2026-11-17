@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.FormularioInstalacionUiState
+import com.example.appprotocolos_eq014.model.Instalacion
 import com.example.appprotocolos_eq014.model.OpcionCatalogo
 import com.example.appprotocolos_eq014.model.Rol
-import com.example.appprotocolos_eq014.repository.InstalacionAGuardar
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.ValidacionesCatalogo
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,11 +71,11 @@ class FormularioInstalacionViewModel(
                     return@launch
                 }
                 val id = repository.crearInstalacion(
-                    InstalacionAGuardar(
-                        idCliente = cliente.id,
+                    Instalacion(
+                        clienteId = cliente.id,
                         nombre = s.nombre.trim(),
                         ubicacion = s.ubicacion.trim().ifBlank { null },
-                        idComuna = comuna.id,
+                        comunaId = comuna.id,
                         observacionesAcceso = s.observacionesAcceso.trim().ifBlank { null }
                     )
                 )
