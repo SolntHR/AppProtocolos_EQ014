@@ -195,7 +195,7 @@ class FormularioProtocoloViewModel(
                 it.nombreTipo.lowercase().contains(ReglasProtocolo.palabraInstrumento(tipo))
             }
             val hoy = Fechas.hoy()
-            val sugerido = sugeridos.firstOrNull { it.vigenteEn(hoy) } ?: sugeridos.firstOrNull()
+            val sugerido = sugeridos.firstOrNull { it.vigenteEn(hoy) }
             SeccionPruebaUi(tipo = tipo, filas = filas, comunes = comunes, instrumentoId = sugerido?.id)
         }
     }
@@ -292,10 +292,11 @@ class FormularioProtocoloViewModel(
         val hayCompletas = filas.any { it.evaluacion.estado == EstadoFila.COMPLETA }
         val instrumento = estado.instrumentos.firstOrNull { it.id == seccion.instrumentoId }
         val errorInstrumento = when {
-            seccion.noRealizada || !hayCompletas -> null
-            instrumento == null -> "Selecciona el instrumento utilizado (RF-05)"
-            !instrumento.vigenteEn(estado.fechaHoraPrueba) ->
-                "Calibración vencida el ${Fechas.fecha(instrumento.fechaVencimiento)}. No se puede usar (RN-11)"
+            seccion.noRealizada -> null
+            instrumento != null && !instrumento.vigenteEn(estado.fechaHoraPrueba) ->
+                "Calibración vencida el ${Fechas.fecha(instrumento.fechaVencimiento)}. No se puede usar."
+            !hayCompletas -> null
+            instrumento == null -> "Selecciona el instrumento utilizado"
             else -> null
         }
         return seccion.copy(filas = filas, errorInstrumento = errorInstrumento)
