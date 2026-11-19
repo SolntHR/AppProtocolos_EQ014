@@ -5,12 +5,6 @@ data class OpcionCatalogo(
     val nombre: String
 )
 
-data class EquipoExistente(
-    val id: Long,
-    val tag: String,
-    val descripcion: String
-)
-
 data class FormularioEquipoUiState(
     val cargando: Boolean = true,
     val guardando: Boolean = false,
@@ -30,7 +24,7 @@ data class FormularioEquipoUiState(
     val maxContactos: String = "",
     val observaciones: String = "",
     val errores: Map<String, String> = emptyMap(),
-    val equipoExistente: EquipoExistente? = null,
+    val equipoExistente: Equipo? = null,
     val error: String? = null,
     val equipoGuardadoId: Long? = null
 ) {

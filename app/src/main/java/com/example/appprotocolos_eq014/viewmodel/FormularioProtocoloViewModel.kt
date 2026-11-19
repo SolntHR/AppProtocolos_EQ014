@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.EquipoProtocolo
+import com.example.appprotocolos_eq014.model.Equipo
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
 import com.example.appprotocolos_eq014.model.EstadoFila
@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToLong
 
 class FormularioProtocoloViewModel(
     private val sesion: SesionPreferencias,
@@ -161,7 +162,7 @@ class FormularioProtocoloViewModel(
         }
     }
 
-    fun seleccionarEquipo(equipo: EquipoProtocolo) {
+    fun seleccionarEquipo(equipo: Equipo) {
         if (_uiState.value.esEdicion) return
         _uiState.update { it.copy(equipoSeleccionado = equipo, secciones = seccionesVacias(equipo), anteriores = emptyMap(), error = null) }
         viewModelScope.launch {
@@ -171,7 +172,7 @@ class FormularioProtocoloViewModel(
         }
     }
 
-    private fun seccionesVacias(equipo: EquipoProtocolo): List<SeccionPruebaUi> {
+    private fun seccionesVacias(equipo: Equipo): List<SeccionPruebaUi> {
         val instrumentos = _uiState.value.instrumentos
         return ReglasProtocolo.pruebasPara(equipo.tipoEquipoId).map { tipo ->
             val filas = ReglasProtocolo.elementosPara(tipo, equipo.tipoEquipoId).map { elemento ->
@@ -205,7 +206,7 @@ class FormularioProtocoloViewModel(
         val error = when {
             valor.isBlank() -> null
             n == null -> "Ingresa un número"
-            n < -30 || n > 60 -> "Rango permitido: -30 a 60 °C"
+            n !in -30.0..60.0 -> "Rango permitido: -30 a 60 °C"
             else -> null
         }
         _uiState.update { it.copy(temperatura = valor, errorTemperatura = error, error = null) }
@@ -416,5 +417,5 @@ private fun Double.aTexto(): String =
 private fun Double.redondear(decimales: Int): String {
     var factor = 1.0
     repeat(decimales) { factor *= 10 }
-    return (Math.round(this * factor) / factor).aTexto()
+    return ((this * factor).roundToLong() / factor).aTexto()
 }

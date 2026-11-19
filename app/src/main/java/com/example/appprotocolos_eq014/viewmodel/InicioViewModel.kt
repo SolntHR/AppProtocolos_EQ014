@@ -77,7 +77,7 @@ class InicioViewModel(
                 tag = equipo.tag,
                 descripcion = listOfNotNull(
                     listOfNotNull(equipo.tipoEquipoNombre, equipo.marca).joinToString(" "),
-                    equipo.instalacion.ifEmpty { null }
+                    equipo.instalacionNombre.ifEmpty { null }
                 ).joinToString(" · "),
                 protocolos = protocolos
             )

@@ -2,27 +2,12 @@ package com.example.appprotocolos_eq014.repository
 
 import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.EquipoExistente
+import com.example.appprotocolos_eq014.model.Equipo
 import com.example.appprotocolos_eq014.model.Instalacion
 import com.example.appprotocolos_eq014.model.OpcionCatalogo
 import com.example.appprotocolos_eq014.model.VisitaResumen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-data class EquipoAGuardar(
-    val idInstalacion: Long,
-    val idTipoEquipo: Long,
-    val tag: String,
-    val marca: String?,
-    val modelo: String?,
-    val numeroSerie: String?,
-    val anio: Int?,
-    val potenciaKva: Double?,
-    val tensiones: String?,
-    val corriente: Double?,
-    val maxContactosUohm: Double?,
-    val observaciones: String?
-)
 
 class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
     private fun opciones(sql: String, args: Array<String>? = null): List<OpcionCatalogo> =
@@ -64,8 +49,7 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         )
     }
 
-    suspend fun buscarEquipo(idInstalacion: Long, tag: String): EquipoExistente? = withContext(Dispatchers.IO) {
-
+    suspend fun buscarEquipo(idInstalacion: Long, tag: String): Equipo? = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(
             """
             SELECT e.id_equipo, e.tag, t.nombre, e.marca, e.numero_serie
@@ -75,19 +59,21 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
             arrayOf(idInstalacion.toString(), tag)
         ).use { c ->
             if (!c.moveToFirst()) null
-            else EquipoExistente(
+            else Equipo(
                 id = c.getLong(0),
+                instalacionId = idInstalacion,
                 tag = c.getString(1),
-                descripcion = listOfNotNull(c.getString(2), c.getString(3), c.getString(4)?.let { "Serie $it" })
-                    .joinToString(" · ")
+                tipoEquipoNombre = c.getString(2),
+                marca = c.getString(3),
+                numeroSerie = c.getString(4),
             )
         }
     }
 
-    suspend fun crearEquipo(e: EquipoAGuardar): Long = withContext(Dispatchers.IO) {
+    suspend fun crearEquipo(e: Equipo): Long = withContext(Dispatchers.IO) {
         val valores = ContentValues().apply {
-            put("id_instalacion", e.idInstalacion)
-            put("id_tipo_equipo", e.idTipoEquipo)
+            put("id_instalacion", e.instalacionId)
+            put("id_tipo_equipo", e.tipoEquipoId)
             put("tag", e.tag)
             put("marca", e.marca)
             put("modelo", e.modelo)

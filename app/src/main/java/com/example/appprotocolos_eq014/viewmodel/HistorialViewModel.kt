@@ -3,7 +3,7 @@ package com.example.appprotocolos_eq014.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.EquipoDetalle
+import com.example.appprotocolos_eq014.model.Equipo
 import com.example.appprotocolos_eq014.model.FilaComparacion
 import com.example.appprotocolos_eq014.model.FilaHistorial
 import com.example.appprotocolos_eq014.model.HistorialUiState
@@ -127,12 +127,12 @@ class HistorialViewModel(
         )
     }
 
-    private fun describir(equipo: EquipoDetalle): String =
+    private fun describir(equipo: Equipo): String =
         listOfNotNull(
-            listOfNotNull(equipo.tipo, equipo.marca).joinToString(" "),
+            listOfNotNull(equipo.tipoEquipoNombre, equipo.marca).joinToString(" "),
             equipo.numeroSerie,
             equipo.potenciaKva?.let { "${Formato.numero(it)} kVA" },
-            equipo.instalacion
+            equipo.instalacionNombre
         ).joinToString(" · ")
 
     private companion object {

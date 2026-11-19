@@ -5,11 +5,11 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.model.Equipo
 import com.example.appprotocolos_eq014.model.FormularioEquipoUiState
 import com.example.appprotocolos_eq014.model.OpcionCatalogo
 import com.example.appprotocolos_eq014.model.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.Rol
-import com.example.appprotocolos_eq014.repository.EquipoAGuardar
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.ValidacionesCatalogo
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,9 +107,9 @@ class FormularioEquipoViewModel(
                     return@launch
                 }
                 val id = repository.crearEquipo(
-                    EquipoAGuardar(
-                        idInstalacion = instalacion.id,
-                        idTipoEquipo = tipo.id,
+                    Equipo(
+                        instalacionId = instalacion.id,
+                        tipoEquipoId= tipo.id,
                         tag = tag,
                         marca = s.marca.trim().ifBlank { null },
                         modelo = s.modelo.trim().ifBlank { null },

@@ -5,7 +5,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.CambioEstado
-import com.example.appprotocolos_eq014.model.EquipoProtocolo
+import com.example.appprotocolos_eq014.model.Equipo
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.Instrumento
@@ -119,7 +119,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         idVisita: Long,
         idInstalacion: Long,
         idProtocoloEditando: String?
-    ): List<EquipoProtocolo> = withContext(Dispatchers.IO) {
+    ): List<Equipo> = withContext(Dispatchers.IO) {
         val sql = """
             SELECT e.id_equipo, e.tag, e.id_tipo_equipo, t.nombre, e.marca, e.numero_serie,
                    e.potencia_kva, e.tensiones, e.corriente, e.max_contactos_uohm
@@ -138,8 +138,9 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             buildList {
                 while (c.moveToNext()) {
                     add(
-                        EquipoProtocolo(
+                        Equipo(
                             id = c.getLong(0),
+                            instalacionId = idInstalacion,
                             tag = c.getString(1),
                             tipoEquipoId = c.getLong(2),
                             tipoEquipoNombre = c.getString(3),

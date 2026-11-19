@@ -24,19 +24,6 @@ data class VisitaAbierta(
     val incluyeMantenimiento: Boolean get() = tipoVisita == "PRUEBAS_Y_MANT"
 }
 
-data class EquipoProtocolo(
-    val id: Long,
-    val tag: String,
-    val tipoEquipoId: Long,
-    val tipoEquipoNombre: String,
-    val marca: String?,
-    val numeroSerie: String?,
-    val potenciaKva: Double?,
-    val tensiones: String?,
-    val corriente: Double?,
-    val maxContactosUohm: Double?
-)
-
 data class ProtocoloListado(
     val id: String,
     val numero: String,

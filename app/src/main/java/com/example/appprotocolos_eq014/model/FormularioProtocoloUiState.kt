@@ -46,8 +46,8 @@ data class FormularioProtocoloUiState(
 
     val visitas: List<VisitaAbierta> = emptyList(),
     val visitaSeleccionada: VisitaAbierta? = null,
-    val equipos: List<EquipoProtocolo> = emptyList(),
-    val equipoSeleccionado: EquipoProtocolo? = null,
+    val equipos: List<Equipo> = emptyList(),
+    val equipoSeleccionado: Equipo? = null,
 
     val temperatura: String = "",
     val humedad: String = "",
