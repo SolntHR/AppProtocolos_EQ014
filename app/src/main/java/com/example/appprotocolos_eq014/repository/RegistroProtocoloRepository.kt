@@ -8,7 +8,7 @@ import com.example.appprotocolos_eq014.model.CambioEstado
 import com.example.appprotocolos_eq014.model.EquipoProtocolo
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
-import com.example.appprotocolos_eq014.model.InstrumentoOpcion
+import com.example.appprotocolos_eq014.model.Instrumento
 import com.example.appprotocolos_eq014.model.MedicionAnterior
 import com.example.appprotocolos_eq014.model.MedicionDetalle
 import com.example.appprotocolos_eq014.model.Parametros
@@ -156,7 +156,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    suspend fun instrumentos(): List<InstrumentoOpcion> = withContext(Dispatchers.IO) {
+    suspend fun instrumentos(): List<Instrumento> = withContext(Dispatchers.IO) {
         val sql = """
             SELECT ins.id_instrumento, ins.nombre_tipo, ins.marca, ins.modelo, ins.numero_serie,
                    (SELECT MAX(c.fecha_vencimiento) FROM CALIBRACION c WHERE c.id_instrumento = ins.id_instrumento)
@@ -166,7 +166,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         helper.readableDatabase.rawQuery(sql, null).use { c ->
             buildList {
                 while (c.moveToNext()) {
-                    add(InstrumentoOpcion(c.getLong(0), c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getString(5)))
+                    add(Instrumento(c.getLong(0), c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getString(5)))
                 }
             }
         }

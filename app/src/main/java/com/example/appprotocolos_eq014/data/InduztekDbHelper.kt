@@ -67,9 +67,9 @@ class InduztekDbHelper (context: Context) :
             CREATE TABLE INSTRUMENTO (
                 id_instrumento INTEGER PRIMARY KEY AUTOINCREMENT,
                 nombre_tipo TEXT NOT NULL,
-                marca TEXT,
-                modelo TEXT,
-                numero_serie TEXT
+                marca TEXT NOT NULL,
+                modelo TEXT NOT NULL,
+                numero_serie TEXT NOT NULL
             )
         """
 

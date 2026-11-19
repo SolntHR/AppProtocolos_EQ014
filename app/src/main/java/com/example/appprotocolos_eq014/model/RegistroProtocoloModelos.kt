@@ -37,21 +37,6 @@ data class EquipoProtocolo(
     val maxContactosUohm: Double?
 )
 
-data class InstrumentoOpcion(
-    val id: Long,
-    val nombreTipo: String,
-    val marca: String?,
-    val modelo: String?,
-    val numeroSerie: String?,
-    val fechaVencimiento: String?
-) {
-    val descripcion: String
-        get() = listOfNotNull(marca, modelo).joinToString(" ").ifBlank { nombreTipo }
-
-    fun vigenteEn(fechaIso: String): Boolean =
-        fechaVencimiento != null && fechaIso.take(10) <= fechaVencimiento
-}
-
 data class ProtocoloListado(
     val id: String,
     val numero: String,

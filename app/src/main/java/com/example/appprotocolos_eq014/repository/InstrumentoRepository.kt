@@ -2,15 +2,13 @@ package com.example.appprotocolos_eq014.repository
 
 import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.EstadoCalibracion
-import com.example.appprotocolos_eq014.model.InstrumentoCalibracion
-import com.example.appprotocolos_eq014.util.Formato
+import com.example.appprotocolos_eq014.model.Instrumento
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class InstrumentoRepository(private val dbHelper: InduztekDbHelper) {
 
-    suspend fun listarConCalibracion(): List<InstrumentoCalibracion> = withContext(Dispatchers.IO) {
+    suspend fun listarConCalibracion(): List<Instrumento> = withContext(Dispatchers.IO) {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
             SELECT i.id_instrumento, i.nombre_tipo, i.marca, i.modelo, i.numero_serie,
@@ -25,25 +23,17 @@ class InstrumentoRepository(private val dbHelper: InduztekDbHelper) {
             """,
             null
         )
-        val instrumentos = mutableListOf<InstrumentoCalibracion>()
+        val instrumentos = mutableListOf<Instrumento>()
         while (cursor.moveToNext()) {
-            val vencimiento = cursor.getString(6)
-            val dias = vencimiento?.let { Formato.diasHasta(it) }
             instrumentos.add(
-                InstrumentoCalibracion(
+                Instrumento(
                     id = cursor.getLong(0),
-                    nombre = cursor.getString(1),
-                    marcaModelo = listOfNotNull(cursor.getString(2), cursor.getString(3)).joinToString(" "),
-                    numeroSerie = cursor.getString(4).orEmpty(),
+                    nombreTipo = cursor.getString(1),
+                    marca = cursor.getString(2),
+                    modelo = cursor.getString(3),
+                    numeroSerie = cursor.getString(4),
                     fechaCalibracion = cursor.getString(5),
-                    fechaVencimiento = vencimiento,
-                    diasRestantes = dias,
-                    estado = when {
-                        dias == null -> EstadoCalibracion.SIN_CALIBRACION
-                        dias < 0 -> EstadoCalibracion.VENCIDA
-                        dias <= DIAS_AVISO -> EstadoCalibracion.POR_VENCER
-                        else -> EstadoCalibracion.VIGENTE
-                    }
+                    fechaVencimiento = cursor.getString(6)
                 )
             )
         }
@@ -64,7 +54,4 @@ class InstrumentoRepository(private val dbHelper: InduztekDbHelper) {
         dbHelper.writableDatabase.insert("CALIBRACION", null, valores) != -1L
     }
 
-    companion object {
-        const val DIAS_AVISO = 30L
-    }
 }

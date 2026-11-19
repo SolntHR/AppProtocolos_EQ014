@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.EstadoCalibracion
-import com.example.appprotocolos_eq014.model.InstrumentoCalibracion
+import com.example.appprotocolos_eq014.model.Instrumento
 import com.example.appprotocolos_eq014.model.InstrumentosUiState
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
@@ -86,7 +86,7 @@ fun InstrumentosScreen(viewModel: InstrumentosViewModel) {
 @Composable
 fun InstrumentosContent(
     uiState: InstrumentosUiState,
-    onRegistrarCalibracion: (InstrumentoCalibracion) -> Unit
+    onRegistrarCalibracion: (Instrumento) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -133,7 +133,7 @@ fun InstrumentosContent(
 
 @Composable
 private fun TarjetaInstrumento(
-    instrumento: InstrumentoCalibracion,
+    instrumento: Instrumento,
     onRegistrar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -146,14 +146,21 @@ private fun TarjetaInstrumento(
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = instrumento.nombre, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text(text = instrumento.nombreTipo, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        text = stringResource(R.string.instrumento_serie, instrumento.marcaModelo, instrumento.numeroSerie),
+                        text = stringResource(
+                            R.string.instrumento_serie,
+                            instrumento.marcaModelo,
+                            instrumento.numeroSerie.orEmpty()
+                        ),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                EtiquetaEstado(texto = instrumento.estado.etiqueta, tono = tonoDe(instrumento.estado))
+                EtiquetaEstado(
+                    texto = instrumento.estadoCalibracion.etiqueta,
+                    tono = tonoDe(instrumento.estadoCalibracion)
+                )
             }
             Text(text = textoVencimiento(instrumento), fontSize = 12.sp)
             TextButton(onClick = onRegistrar, contentPadding = PaddingValues(0.dp)) {
@@ -167,7 +174,7 @@ private fun TarjetaInstrumento(
 }
 
 @Composable
-private fun textoVencimiento(instrumento: InstrumentoCalibracion): String {
+private fun textoVencimiento(instrumento: Instrumento): String {
     val vencimiento = instrumento.fechaVencimiento ?: return stringResource(R.string.instrumento_sin_calibracion)
     val dias = instrumento.diasRestantes ?: 0
     val fecha = Formato.fecha(vencimiento)
@@ -187,7 +194,7 @@ private fun tonoDe(estado: EstadoCalibracion): TonoEstado = when (estado) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HojaCalibracion(
-    instrumento: InstrumentoCalibracion,
+    instrumento: Instrumento,
     uiState: InstrumentosUiState,
     onFechaCalibracionCambia: (String) -> Unit,
     onFechaVencimientoCambia: (String) -> Unit,
@@ -211,7 +218,7 @@ private fun HojaCalibracion(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "${instrumento.nombre} · ${instrumento.numeroSerie}",
+                text = "${instrumento.nombreTipo} · ${instrumento.numeroSerie}",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -252,8 +259,8 @@ private fun InstrumentosPreview() {
             uiState = InstrumentosUiState(
                 isLoading = false,
                 instrumentos = listOf(
-                    InstrumentoCalibracion(4, "Micro-ohmímetro", "Megger DLRO10X", "DLR-10882", "2025-08-20", "2026-08-20", -68, EstadoCalibracion.VENCIDA),
-                    InstrumentoCalibracion(1, "Megóhmetro 5 kV", "Megger MIT525", "MIT-0045821", "2026-03-15", "2027-03-15", 139, EstadoCalibracion.VIGENTE)
+                    Instrumento(4, "Micro-ohmímetro", "Megger DLRO10X", "DLR-10882", "2025-08-20", "2026-08-20", "2026-08-20"),
+                    Instrumento(1, "Megóhmetro 5 kV", "Megger MIT525", "MIT-0045821", "2026-03-15", "2027-03-15", "2027-03-15")
                 )
             ),
             onRegistrarCalibracion = {}

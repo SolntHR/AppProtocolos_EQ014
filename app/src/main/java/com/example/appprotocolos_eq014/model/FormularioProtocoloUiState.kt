@@ -54,7 +54,7 @@ data class FormularioProtocoloUiState(
     val errorTemperatura: String? = null,
     val errorHumedad: String? = null,
 
-    val instrumentos: List<InstrumentoOpcion> = emptyList(),
+    val instrumentos: List<Instrumento> = emptyList(),
     val secciones: List<SeccionPruebaUi> = emptyList(),
     val anteriores: Map<String, MedicionAnterior> = emptyMap(),
 
