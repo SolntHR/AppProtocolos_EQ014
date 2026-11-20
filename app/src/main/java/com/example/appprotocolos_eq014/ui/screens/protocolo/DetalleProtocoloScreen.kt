@@ -25,10 +25,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.Fechas
+import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.ProtocoloDetalle
 import com.example.appprotocolos_eq014.model.entidades.Prueba
-import com.example.appprotocolos_eq014.model.formatoCl
+import com.example.appprotocolos_eq014.util.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario

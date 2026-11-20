@@ -9,7 +9,7 @@ import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
 import com.example.appprotocolos_eq014.model.reglas.EstadoFila
-import com.example.appprotocolos_eq014.model.Fechas
+import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
 import com.example.appprotocolos_eq014.model.uistate.FormularioProtocoloUiState
 import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior

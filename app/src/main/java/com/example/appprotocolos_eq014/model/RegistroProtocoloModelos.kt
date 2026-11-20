@@ -3,6 +3,7 @@ package com.example.appprotocolos_eq014.model
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Prueba
+import com.example.appprotocolos_eq014.util.Fechas
 
 object Rol {
     const val TECNICO = "TECNICO"

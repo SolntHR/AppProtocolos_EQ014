@@ -7,7 +7,7 @@ import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.CambioEstado
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.Fechas
+import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
 import com.example.appprotocolos_eq014.model.entidades.Medicion

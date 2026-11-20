@@ -33,7 +33,7 @@ import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.reglas.CampoMedicion
 import com.example.appprotocolos_eq014.model.Comparacion
 import com.example.appprotocolos_eq014.model.reglas.EstadoFila
-import com.example.appprotocolos_eq014.model.Fechas
+import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
 import com.example.appprotocolos_eq014.model.uistate.FormularioProtocoloUiState
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
@@ -43,7 +43,7 @@ import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
-import com.example.appprotocolos_eq014.model.formatoCl
+import com.example.appprotocolos_eq014.util.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
