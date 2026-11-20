@@ -34,13 +34,6 @@ data class ProtocoloListado(
                 Fechas.diasHabilesDesde(fechaHora) > 2
 }
 
-data class MedicionDetalle(
-    val codigo: String,
-    val nombre: String,
-    val valor: Double,
-    val unidad: String
-)
-
 data class Comparacion(
     val codigo: String,
     val nombre: String,
@@ -64,7 +57,7 @@ data class PruebaDetalle(
     val ingresadoManualmente: Boolean,
     val realizada: Boolean,
     val motivoNoRealizada: String?,
-    val mediciones: List<MedicionDetalle>,
+    val mediciones: List<Medicion>,
     val calculo: String?,
     val comparaciones: List<Comparacion> = emptyList()
 )

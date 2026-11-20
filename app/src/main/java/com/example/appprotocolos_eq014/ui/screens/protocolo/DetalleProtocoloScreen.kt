@@ -210,7 +210,7 @@ private fun BloquePrueba(prueba: PruebaDetalle) {
         prueba.mediciones.forEach { m ->
             val valorTexto = if (m.unidad == "-") m.valor.formatoCl(2) else "${m.valor.formatoCl(2)} ${m.unidad}"
             Row {
-                Text(m.nombre, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                Text(m.parametroNombre, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                 Text(valorTexto, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
             }
         }

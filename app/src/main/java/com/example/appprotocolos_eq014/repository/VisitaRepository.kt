@@ -4,7 +4,7 @@ import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.Visita
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.MedicionActa
+import com.example.appprotocolos_eq014.model.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
 import com.example.appprotocolos_eq014.model.PruebaActa
 import com.example.appprotocolos_eq014.model.RecepcionActa
@@ -211,10 +211,10 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
         return pruebas
     }
 
-    private fun medicionesDePrueba(idPrueba: Long): List<MedicionActa> {
+    private fun medicionesDePrueba(idPrueba: Long): List<Medicion> {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
-            SELECT pa.nombre, m.valor, m.unidad
+            SELECT m.id_medicion, m.id_parametro, pa.codigo, pa.nombre, m.elemento, m.valor, m.unidad, m.orden
             FROM MEDICION m
             INNER JOIN PARAMETRO pa ON m.id_parametro = pa.id_parametro
             WHERE m.id_prueba = ?
@@ -222,9 +222,21 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
             """,
             arrayOf(idPrueba.toString())
         )
-        val mediciones = mutableListOf<MedicionActa>()
+        val mediciones = mutableListOf<Medicion>()
         while (cursor.moveToNext()) {
-            mediciones.add(MedicionActa(cursor.getString(0), cursor.getDouble(1), cursor.getString(2)))
+            mediciones.add(
+                Medicion(
+                    id = cursor.getLong(0),
+                    pruebaId = idPrueba,
+                    parametroId = cursor.getLong(1),
+                    parametroCodigo = cursor.getString(2),
+                    parametroNombre = cursor.getString(3),
+                    elemento = cursor.getString(4),
+                    valor = cursor.getDouble(5),
+                    unidad = cursor.getString(6),
+                    orden = cursor.getInt(7)
+                )
+            )
         }
         cursor.close()
         return mediciones

@@ -10,7 +10,7 @@ import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.Instrumento
 import com.example.appprotocolos_eq014.model.MedicionAnterior
-import com.example.appprotocolos_eq014.model.MedicionDetalle
+import com.example.appprotocolos_eq014.model.Medicion
 import com.example.appprotocolos_eq014.model.Parametros
 import com.example.appprotocolos_eq014.model.ProtocoloDetalle
 import com.example.appprotocolos_eq014.model.ProtocoloListado
@@ -327,7 +327,15 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 realizada = leida.realizada,
                 motivoNoRealizada = leida.motivoNoRealizada,
                 mediciones = p.valores.mapNotNull { (codigo, valor) ->
-                    Parametros.porCodigo(codigo)?.let { MedicionDetalle(codigo, it.etiqueta, valor, it.unidad) }
+                    Parametros.porCodigo(codigo)?.let {
+                        Medicion(
+                            parametroId = it.idParametro ?: 0,
+                            parametroCodigo = codigo,
+                            parametroNombre = it.etiqueta,
+                            elemento = p.elemento,
+                            valor = valor,
+                            unidad = it.unidad
+                        ) }
                 },
                 calculo = ReglasProtocolo.resumenCalculo(p.tipo, p.valores, cabecera.maxContactos),
                 comparaciones = if (anterior == null || !leida.realizada) emptyList()

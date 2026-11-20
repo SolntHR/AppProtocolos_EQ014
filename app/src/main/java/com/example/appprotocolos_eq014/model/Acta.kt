@@ -1,18 +1,12 @@
 package com.example.appprotocolos_eq014.model
 
-data class MedicionActa(
-    val parametro: String,
-    val valor: Double,
-    val unidad: String
-)
-
 data class PruebaActa(
     val nombre: String,
     val elemento: String,
     val realizada: Boolean,
     val motivoNoRealizada: String?,
     val resultado: ResultadoPrueba?,
-    val mediciones: List<MedicionActa>
+    val mediciones: List<Medicion>
 )
 
 data class ProtocoloActa(

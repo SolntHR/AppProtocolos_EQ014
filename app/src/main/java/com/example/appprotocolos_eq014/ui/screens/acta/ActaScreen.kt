@@ -42,7 +42,7 @@ import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.ActaUiState
 import com.example.appprotocolos_eq014.model.Visita
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.MedicionActa
+import com.example.appprotocolos_eq014.model.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
 import com.example.appprotocolos_eq014.model.PruebaActa
 import com.example.appprotocolos_eq014.model.RecepcionActa
@@ -358,9 +358,9 @@ private fun PruebaDocumento(prueba: PruebaActa) {
     }
 }
 
-private fun describir(medicion: MedicionActa): String {
+private fun describir(medicion: Medicion): String {
     val unidad = if (medicion.unidad == "-") "" else " ${medicion.unidad}"
-    return "${medicion.parametro}: ${Formato.numeroAutomatico(medicion.valor)}$unidad"
+    return "${medicion.parametroNombre}: ${Formato.numeroAutomatico(medicion.valor)}$unidad"
 }
 
 @Composable
@@ -500,7 +500,7 @@ private fun ActaPreview() {
                             listOf(
                                 PruebaActa(
                                     "Resistencia de aislación", "AT-T", true, null, ResultadoPrueba.OBSERVADO,
-                                    listOf(MedicionActa("Lectura a 1 min", 6100.0, "MΩ"), MedicionActa("Lectura a 10 min", 10980.0, "MΩ"))
+                                    listOf(Medicion(parametroNombre = "Lectura a 1 min", valor = 6100.0, unidad = "MΩ"), Medicion(parametroNombre = "Lectura a 10 min", valor = 10980.0, unidad = "MΩ"))
                                 )
                             )
                         )
