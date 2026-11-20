@@ -15,6 +15,7 @@ import com.example.appprotocolos_eq014.model.reglas.Parametros
 import com.example.appprotocolos_eq014.model.ProtocoloDetalle
 import com.example.appprotocolos_eq014.model.ProtocoloListado
 import com.example.appprotocolos_eq014.model.entidades.Prueba
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
@@ -25,32 +26,6 @@ import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
-
-data class ProtocoloAGuardar(
-    val idProtocolo: String?,
-    val visitaId: Long,
-    val equipoId: Long,
-    val temperatura: Double?,
-    val humedad: Double?,
-    val descripcionMantenimiento: String?,
-    val observaciones: String?,
-    val pruebas: List<Prueba>
-)
-
-data class ProtocoloEditable(
-    val idProtocolo: String,
-    val numero: String,
-    val estado: EstadoProtocolo,
-    val visitaId: Long,
-    val equipoId: Long,
-    val creadorId: Long,
-    val fechaHoraPrueba: String,
-    val temperatura: Double?,
-    val humedad: Double?,
-    val descripcionMantenimiento: String?,
-    val observaciones: String?,
-    val pruebas: List<Prueba>
-)
 
 class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
     suspend fun numeroDe(idProtocolo: String): String = withContext(Dispatchers.IO) {
@@ -411,7 +386,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    suspend fun paraEditar(idProtocolo: String): ProtocoloEditable? = withContext(Dispatchers.IO) {
+    suspend fun paraEditar(idProtocolo: String): Protocolo? = withContext(Dispatchers.IO) {
         val db = helper.readableDatabase
         val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false)
         db.rawQuery(
@@ -423,13 +398,13 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             arrayOf(idProtocolo)
         ).use { c ->
             if (!c.moveToFirst()) return@use null
-            ProtocoloEditable(
-                idProtocolo = c.getString(0),
+            Protocolo(
+                id = c.getString(0),
                 numero = c.getString(1),
                 estado = EstadoProtocolo.desdeId(c.getLong(2)),
                 visitaId = c.getLong(3),
                 equipoId = c.getLong(4),
-                creadorId = c.getLong(5),
+                usuarioRegistraId = c.getLong(5),
                 fechaHoraPrueba = c.getString(6),
                 temperatura = c.realONulo(7),
                 humedad = c.realONulo(8),
@@ -441,7 +416,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
     }
 
     suspend fun guardar(
-        datos: ProtocoloAGuardar,
+        datos: Protocolo,
         usuarioId: Long,
         rol: String,
         registrarEnTerreno: Boolean
@@ -462,7 +437,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             val idProtocolo: String
             val estadoActual: EstadoProtocolo
 
-            if (datos.idProtocolo == null) {
+            if (datos.esNuevo) {
                 validarVisitaAsignada(db, datos.visitaId, datos.equipoId, usuarioId, rol)
                 val yaExiste = db.rawQuery(
                     "SELECT 1 FROM PROTOCOLO WHERE id_visita = ? AND id_equipo = ? LIMIT 1",
@@ -485,7 +460,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 insertarHistorial(db, idProtocolo, null, EstadoProtocolo.BORRADOR, usuarioId, ahora, "Creación del protocolo")
                 estadoActual = EstadoProtocolo.BORRADOR
             } else {
-                idProtocolo = datos.idProtocolo
+                idProtocolo = datos.id
                 val (estado, creador) = db.rawQuery(
                     "SELECT id_estado, id_usuario_registra FROM PROTOCOLO WHERE id_protocolo = ?",
                     arrayOf(idProtocolo)
@@ -548,7 +523,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    private fun ContentValues.putCabecera(datos: ProtocoloAGuardar) {
+    private fun ContentValues.putCabecera(datos: Protocolo) {
         if (datos.temperatura != null) put("temperatura_c", datos.temperatura) else putNull("temperatura_c")
         if (datos.humedad != null) put("humedad_pct", datos.humedad) else putNull("humedad_pct")
         put("descripcion_mantenimiento", datos.descripcionMantenimiento?.ifBlank { null })

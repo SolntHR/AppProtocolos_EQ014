@@ -21,7 +21,7 @@ import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.entidades.Prueba
-import com.example.appprotocolos_eq014.repository.ProtocoloAGuardar
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -80,7 +80,7 @@ class FormularioProtocoloViewModel(
             _uiState.update { it.copy(cargando = false, error = "El protocolo no existe.") }
             return
         }
-        if (p.creadorId != idUsuario) {
+        if (p.usuarioRegistraId != idUsuario) {
             _uiState.update { it.copy(cargando = false, error = "Solo quien creó el protocolo puede modificarlo (RN-17).") }
             return
         }
@@ -123,7 +123,7 @@ class FormularioProtocoloViewModel(
         _uiState.update {
             it.copy(
                 cargando = false,
-                idProtocolo = p.idProtocolo,
+                idProtocolo = p.id,
                 numero = p.numero,
                 estadoActual = p.estado,
                 fechaHoraPrueba = p.fechaHoraPrueba,
@@ -367,8 +367,8 @@ class FormularioProtocoloViewModel(
             _uiState.update { it.copy(guardando = true, error = null) }
             try {
                 val id = repository.guardar(
-                    datos = ProtocoloAGuardar(
-                        idProtocolo = s.idProtocolo,
+                    datos = Protocolo(
+                        id = s.idProtocolo.orEmpty(),
                         visitaId = visita.id,
                         equipoId = equipo.id,
                         temperatura = temperatura,
