@@ -2,8 +2,8 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appprotocolos_eq014.model.PasoRecuperacion
-import com.example.appprotocolos_eq014.model.RecuperarUiState
+import com.example.appprotocolos_eq014.model.uistate.PasoRecuperacion
+import com.example.appprotocolos_eq014.model.uistate.RecuperarUiState
 import com.example.appprotocolos_eq014.model.entidades.Usuario
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.util.Validaciones

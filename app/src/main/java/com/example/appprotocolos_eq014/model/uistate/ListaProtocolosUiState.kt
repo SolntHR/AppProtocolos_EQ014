@@ -1,5 +1,8 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.uistate
 
+import com.example.appprotocolos_eq014.model.ProtocoloDetalle
+import com.example.appprotocolos_eq014.model.ProtocoloListado
+import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 
 data class ListaProtocolosUiState(

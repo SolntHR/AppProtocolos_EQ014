@@ -3,7 +3,7 @@ package com.example.appprotocolos_eq014.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.EditarPerfilUiState
+import com.example.appprotocolos_eq014.model.uistate.EditarPerfilUiState
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.util.Validaciones
 import kotlinx.coroutines.flow.MutableStateFlow

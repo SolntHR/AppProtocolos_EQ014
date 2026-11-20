@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.entidades.Equipo
-import com.example.appprotocolos_eq014.model.FilaComparacion
-import com.example.appprotocolos_eq014.model.FilaHistorial
-import com.example.appprotocolos_eq014.model.HistorialUiState
+import com.example.appprotocolos_eq014.model.uistate.FilaComparacion
+import com.example.appprotocolos_eq014.model.uistate.FilaHistorial
+import com.example.appprotocolos_eq014.model.uistate.HistorialUiState
 import com.example.appprotocolos_eq014.model.ProtocoloResumen
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository

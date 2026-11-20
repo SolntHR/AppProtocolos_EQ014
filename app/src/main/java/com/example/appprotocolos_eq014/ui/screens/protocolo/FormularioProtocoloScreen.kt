@@ -34,14 +34,14 @@ import com.example.appprotocolos_eq014.model.reglas.CampoMedicion
 import com.example.appprotocolos_eq014.model.Comparacion
 import com.example.appprotocolos_eq014.model.reglas.EstadoFila
 import com.example.appprotocolos_eq014.model.Fechas
-import com.example.appprotocolos_eq014.model.FilaPruebaUi
-import com.example.appprotocolos_eq014.model.FormularioProtocoloUiState
+import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
+import com.example.appprotocolos_eq014.model.uistate.FormularioProtocoloUiState
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.reglas.Parametros
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
-import com.example.appprotocolos_eq014.model.SeccionPruebaUi
+import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 import com.example.appprotocolos_eq014.model.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior

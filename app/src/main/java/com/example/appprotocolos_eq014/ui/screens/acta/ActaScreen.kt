@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.ActaUiState
+import com.example.appprotocolos_eq014.model.uistate.ActaUiState
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Medicion

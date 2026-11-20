@@ -4,7 +4,7 @@ import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.entidades.Instalacion
-import com.example.appprotocolos_eq014.model.OpcionCatalogo
+import com.example.appprotocolos_eq014.model.uistate.OpcionCatalogo
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

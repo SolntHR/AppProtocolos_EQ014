@@ -1,4 +1,4 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.uistate
 
 enum class RolPersonal(val codigo: String, val etiqueta: String) {
     TECNICO("TECNICO", "Técnico"),

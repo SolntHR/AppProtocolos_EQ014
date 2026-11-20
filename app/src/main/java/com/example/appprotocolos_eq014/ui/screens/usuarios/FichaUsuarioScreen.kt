@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.FichaUsuarioUiState
-import com.example.appprotocolos_eq014.model.RolPersonal
+import com.example.appprotocolos_eq014.model.uistate.FichaUsuarioUiState
+import com.example.appprotocolos_eq014.model.uistate.RolPersonal
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario

@@ -3,10 +3,10 @@ package com.example.appprotocolos_eq014.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.EquipoCliente
+import com.example.appprotocolos_eq014.model.uistate.EquipoCliente
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.InicioUiState
-import com.example.appprotocolos_eq014.model.ProtocoloCliente
+import com.example.appprotocolos_eq014.model.uistate.InicioUiState
+import com.example.appprotocolos_eq014.model.uistate.ProtocoloCliente
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository

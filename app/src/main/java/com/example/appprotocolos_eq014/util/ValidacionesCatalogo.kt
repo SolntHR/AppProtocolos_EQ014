@@ -1,7 +1,7 @@
 package com.example.appprotocolos_eq014.util
 
-import com.example.appprotocolos_eq014.model.FormularioEquipoUiState
-import com.example.appprotocolos_eq014.model.FormularioInstalacionUiState
+import com.example.appprotocolos_eq014.model.uistate.FormularioEquipoUiState
+import com.example.appprotocolos_eq014.model.uistate.FormularioInstalacionUiState
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import java.util.Calendar
 
