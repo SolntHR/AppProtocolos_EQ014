@@ -1,5 +1,7 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+
 data class OpcionCatalogo(
     val id: Long,
     val nombre: String

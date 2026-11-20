@@ -1,5 +1,7 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.entidades.Prueba
+
 object Rol {
     const val TECNICO = "TECNICO"
     const val INGENIERO = "INGENIERO"

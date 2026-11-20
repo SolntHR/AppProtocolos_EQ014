@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.GestionUsuariosUiState
 import com.example.appprotocolos_eq014.model.PestanaUsuarios
-import com.example.appprotocolos_eq014.model.Usuario
+import com.example.appprotocolos_eq014.model.entidades.Usuario
 import com.example.appprotocolos_eq014.model.UsuarioFila
 import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository

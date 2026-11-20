@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.FormularioEquipoUiState
 import com.example.appprotocolos_eq014.model.OpcionCatalogo
 import com.example.appprotocolos_eq014.model.ReglasProtocolo

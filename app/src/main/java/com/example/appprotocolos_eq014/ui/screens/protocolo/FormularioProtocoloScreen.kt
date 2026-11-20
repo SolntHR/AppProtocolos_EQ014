@@ -36,7 +36,7 @@ import com.example.appprotocolos_eq014.model.EstadoFila
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.FilaPruebaUi
 import com.example.appprotocolos_eq014.model.FormularioProtocoloUiState
-import com.example.appprotocolos_eq014.model.Instrumento
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.Parametros
 import com.example.appprotocolos_eq014.model.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.ResultadoPrueba

@@ -40,11 +40,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.ActaUiState
-import com.example.appprotocolos_eq014.model.Visita
+import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.Medicion
+import com.example.appprotocolos_eq014.model.entidades.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
-import com.example.appprotocolos_eq014.model.Prueba
+import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.TipoPrueba
 import com.example.appprotocolos_eq014.model.RecepcionActa
 import com.example.appprotocolos_eq014.model.ResultadoPrueba

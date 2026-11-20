@@ -1,4 +1,9 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.entidades
+
+import com.example.appprotocolos_eq014.model.Comparacion
+import com.example.appprotocolos_eq014.model.Parametros
+import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.TipoPrueba
 
 data class Prueba(
     val id: Long = 0,
@@ -25,7 +30,7 @@ data class Prueba(
     companion object{
         fun medicionesDesde( valores: Map<String, Double> ): List<Medicion> =
             valores.mapNotNull { (codigo, valor)  ->
-                    Parametros.porCodigo(codigo)?.let {campo ->
+                    Parametros.porCodigo(codigo)?.let { campo ->
                         Medicion(
                             parametroId = campo.idParametro ?:0,
                             parametroCodigo = codigo,

@@ -1,4 +1,7 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.entidades
+
+import com.example.appprotocolos_eq014.model.ProtocoloActa
+import com.example.appprotocolos_eq014.model.RecepcionActa
 
 data class Visita(
     val id: Long = 0,

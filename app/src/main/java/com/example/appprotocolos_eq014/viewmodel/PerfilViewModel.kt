@@ -8,7 +8,7 @@ import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.DatoPerfil
 import com.example.appprotocolos_eq014.model.PerfilUiState
-import com.example.appprotocolos_eq014.model.Usuario
+import com.example.appprotocolos_eq014.model.entidades.Usuario
 import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -27,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.ProtocoloDetalle
-import com.example.appprotocolos_eq014.model.Prueba
+import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal

@@ -34,8 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.EstadoCalibracion
-import com.example.appprotocolos_eq014.model.Instrumento
+import com.example.appprotocolos_eq014.model.entidades.EstadoCalibracion
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.InstrumentosUiState
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario

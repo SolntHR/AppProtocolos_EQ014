@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.InicioUiState
-import com.example.appprotocolos_eq014.model.Visita
+import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.ui.components.AvatarIniciales
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
 import com.example.appprotocolos_eq014.ui.components.TituloSeccion

@@ -4,7 +4,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteConstraintException
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.Usuario
+import com.example.appprotocolos_eq014.model.entidades.Usuario
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

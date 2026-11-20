@@ -2,7 +2,7 @@ package com.example.appprotocolos_eq014.repository
 
 import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.Instrumento
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

@@ -1,5 +1,7 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.entidades.Visita
+
 data class ProtocoloCliente(
     val numero: String,
     val fecha: String,

@@ -3,7 +3,7 @@ package com.example.appprotocolos_eq014.repository
 import android.content.ContentValues
 import android.database.Cursor
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.ProtocoloResumen
 import com.example.appprotocolos_eq014.model.ResultadoPrueba

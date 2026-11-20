@@ -3,7 +3,7 @@ package com.example.appprotocolos_eq014.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.FilaComparacion
 import com.example.appprotocolos_eq014.model.FilaHistorial
 import com.example.appprotocolos_eq014.model.HistorialUiState

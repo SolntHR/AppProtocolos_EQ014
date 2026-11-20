@@ -1,5 +1,9 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
+import com.example.appprotocolos_eq014.model.entidades.Visita
+
 data class FilaPruebaUi(
     val elemento: String,
     val valores: Map<String, String> = emptyMap(),

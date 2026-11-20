@@ -1,5 +1,7 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.entidades.Visita
+
 data class ActaUiState(
     val isLoading: Boolean = true,
     val acta: Visita? = null,

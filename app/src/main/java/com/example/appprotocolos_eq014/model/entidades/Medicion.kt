@@ -1,4 +1,4 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.entidades
 
 data class Medicion(
     val id: Long = 0,

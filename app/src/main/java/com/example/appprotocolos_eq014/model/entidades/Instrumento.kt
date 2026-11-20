@@ -1,4 +1,4 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.entidades
 
 import com.example.appprotocolos_eq014.util.Formato
 

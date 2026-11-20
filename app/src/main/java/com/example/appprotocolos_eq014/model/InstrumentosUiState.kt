@@ -1,5 +1,8 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.entidades.EstadoCalibracion
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
+
 data class InstrumentosUiState(
     val isLoading: Boolean = true,
     val instrumentos: List<Instrumento> = emptyList(),

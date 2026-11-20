@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
 import com.example.appprotocolos_eq014.model.EstadoFila
@@ -19,8 +19,8 @@ import com.example.appprotocolos_eq014.model.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.TipoPrueba
-import com.example.appprotocolos_eq014.model.Visita
-import com.example.appprotocolos_eq014.model.Prueba
+import com.example.appprotocolos_eq014.model.entidades.Visita
+import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.repository.ProtocoloAGuardar
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import kotlinx.coroutines.flow.MutableStateFlow
