@@ -41,13 +41,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.ActaUiState
 import com.example.appprotocolos_eq014.model.entidades.Visita
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.TipoPrueba
 import com.example.appprotocolos_eq014.model.RecepcionActa
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.CampoBloqueado

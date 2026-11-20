@@ -2,7 +2,7 @@ package com.example.appprotocolos_eq014.model.entidades
 
 import com.example.appprotocolos_eq014.model.Comparacion
 import com.example.appprotocolos_eq014.model.Parametros
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.TipoPrueba
 
 data class Prueba(

@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.ProtocoloListado
 import com.example.appprotocolos_eq014.model.Rol

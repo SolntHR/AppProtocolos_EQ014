@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.DetalleProtocoloUiState
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.ListaProtocolosUiState
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales

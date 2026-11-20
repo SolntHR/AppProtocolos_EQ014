@@ -3,13 +3,13 @@ package com.example.appprotocolos_eq014.repository
 import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.entidades.Visita
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.TipoPrueba
 import com.example.appprotocolos_eq014.model.RecepcionActa
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

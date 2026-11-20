@@ -8,7 +8,7 @@ import com.example.appprotocolos_eq014.model.FilaComparacion
 import com.example.appprotocolos_eq014.model.FilaHistorial
 import com.example.appprotocolos_eq014.model.HistorialUiState
 import com.example.appprotocolos_eq014.model.ProtocoloResumen
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.Formato

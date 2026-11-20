@@ -1,5 +1,7 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
+
 data class ListaProtocolosUiState(
     val cargando: Boolean = true,
     val idUsuario: Long = -1,

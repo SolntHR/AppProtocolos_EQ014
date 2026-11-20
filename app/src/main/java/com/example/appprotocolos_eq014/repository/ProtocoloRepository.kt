@@ -4,9 +4,9 @@ import android.content.ContentValues
 import android.database.Cursor
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.entidades.Equipo
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.ProtocoloResumen
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

@@ -23,9 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.ProtocoloListado
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.styles.EstilosCampo
 import com.example.appprotocolos_eq014.ui.theme.AmarilloAviso
 import com.example.appprotocolos_eq014.ui.theme.AmarilloSuave

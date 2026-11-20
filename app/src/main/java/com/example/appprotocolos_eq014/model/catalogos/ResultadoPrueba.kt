@@ -1,4 +1,4 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.catalogos
 
 enum class ResultadoPrueba(val idDb: Long, val etiqueta: String) {
     APROBADO(1, "Aprobado"),

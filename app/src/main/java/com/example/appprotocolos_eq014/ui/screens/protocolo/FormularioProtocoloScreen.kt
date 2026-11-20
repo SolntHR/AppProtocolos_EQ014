@@ -39,7 +39,7 @@ import com.example.appprotocolos_eq014.model.FormularioProtocoloUiState
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.Parametros
 import com.example.appprotocolos_eq014.model.ReglasProtocolo
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.TipoPrueba

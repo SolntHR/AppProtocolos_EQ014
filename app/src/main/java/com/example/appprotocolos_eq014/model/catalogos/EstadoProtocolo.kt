@@ -1,4 +1,4 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.catalogos
 
 enum class EstadoProtocolo(val idDb: Long, val etiqueta: String) {
     BORRADOR(1, "Borrador"),

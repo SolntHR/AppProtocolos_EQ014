@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.entidades.Equipo
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
 import com.example.appprotocolos_eq014.model.EstadoFila
 import com.example.appprotocolos_eq014.model.Fechas
@@ -15,7 +15,7 @@ import com.example.appprotocolos_eq014.model.FormularioProtocoloUiState
 import com.example.appprotocolos_eq014.model.MedicionAnterior
 import com.example.appprotocolos_eq014.model.Parametros
 import com.example.appprotocolos_eq014.model.ReglasProtocolo
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.TipoPrueba

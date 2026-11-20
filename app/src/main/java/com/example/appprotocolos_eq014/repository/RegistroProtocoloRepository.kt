@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.CambioEstado
 import com.example.appprotocolos_eq014.model.entidades.Equipo
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.MedicionAnterior
@@ -16,7 +16,7 @@ import com.example.appprotocolos_eq014.model.ProtocoloDetalle
 import com.example.appprotocolos_eq014.model.ProtocoloListado
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.ReglasProtocolo
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.TipoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Visita

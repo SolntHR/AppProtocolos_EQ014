@@ -1,5 +1,8 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+
 data class ProtocoloResumen(
     val id: String,
     val numero: String,

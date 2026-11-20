@@ -1,5 +1,6 @@
 package com.example.appprotocolos_eq014.model
 
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import java.util.UUID
 
 data class Protocolo(
