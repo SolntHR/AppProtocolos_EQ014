@@ -44,8 +44,8 @@ data class FormularioProtocoloUiState(
     val tecnicoNombre: String = "",
     val rolUsuario: String = "",
 
-    val visitas: List<VisitaAbierta> = emptyList(),
-    val visitaSeleccionada: VisitaAbierta? = null,
+    val visitas: List<Visita> = emptyList(),
+    val visitaSeleccionada: Visita? = null,
     val equipos: List<Equipo> = emptyList(),
     val equipoSeleccionado: Equipo? = null,
 

@@ -1,16 +1,5 @@
 package com.example.appprotocolos_eq014.model
 
-data class VisitaResumen(
-    val id: Long,
-    val numeroOt: String,
-    val cliente: String,
-    val instalacion: String,
-    val fecha: String,
-    val cerrada: Boolean,
-    val totalProtocolos: Int,
-    val protocolosRegistrados: Int
-)
-
 data class MedicionActa(
     val parametro: String,
     val valor: Double,
@@ -45,15 +34,3 @@ data class RecepcionActa(
     val fechaHora: String
 )
 
-data class ActaVisita(
-    val idVisita: Long,
-    val numeroOt: String,
-    val cliente: String,
-    val instalacion: String,
-    val fecha: String,
-    val tipoVisita: String,
-    val tecnicos: String,
-    val ingenieroCargo: String,
-    val protocolos: List<ProtocoloActa>,
-    val recepcion: RecepcionActa?
-)

@@ -19,7 +19,7 @@ import com.example.appprotocolos_eq014.model.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.TipoPrueba
-import com.example.appprotocolos_eq014.model.VisitaAbierta
+import com.example.appprotocolos_eq014.model.Visita
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
@@ -77,14 +77,15 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
 
     private val selectVisita = """
         SELECT v.id_visita, v.numero_ot, v.fecha, v.tipo_visita, v.id_instalacion,
-               i.nombre AS instalacion, c.nombre AS cliente, ing.nombre AS ingeniero
+               i.nombre AS instalacion, c.nombre AS cliente, ing.nombre AS ingeniero,
+               v.id_ingeniero_cargo, v.fecha_hora_cierre
         FROM VISITA v
         INNER JOIN INSTALACION i ON i.id_instalacion = v.id_instalacion
         INNER JOIN USUARIO c ON c.id_usuario = i.id_usuario_cliente
         INNER JOIN USUARIO ing ON ing.id_usuario = v.id_ingeniero_cargo
     """
 
-    suspend fun visitasAbiertas(usuarioId: Long, rol: String): List<VisitaAbierta> = withContext(Dispatchers.IO) {
+    suspend fun visitasAbiertas(usuarioId: Long, rol: String): List<Visita> = withContext(Dispatchers.IO) {
         val todas = if (rol == Rol.JEFE_TECNICO) "1" else "0"
         val sql = """
             $selectVisita
@@ -99,12 +100,12 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             .use { c -> buildList { while (c.moveToNext()) add(leerVisita(c)) } }
     }
 
-    suspend fun visita(idVisita: Long): VisitaAbierta? = withContext(Dispatchers.IO) {
+    suspend fun visita(idVisita: Long): Visita? = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery("$selectVisita WHERE v.id_visita = ?", arrayOf(idVisita.toString()))
             .use { c -> if (c.moveToFirst()) leerVisita(c) else null }
     }
 
-    private fun leerVisita(c: Cursor) = VisitaAbierta(
+    private fun leerVisita(c: Cursor) = Visita(
         id = c.getLong(0),
         numeroOt = c.getString(1),
         fecha = c.getString(2),
@@ -112,7 +113,9 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         instalacionId = c.getLong(4),
         instalacionNombre = c.getString(5),
         clienteNombre = c.getString(6),
-        ingenieroNombre = c.getString(7)
+        ingenieroNombre = c.getString(7),
+        ingenieroCargoId = c.getLong(8),
+        fechaHoraCierre = c.getString(9)
     )
 
     suspend fun equiposDisponibles(

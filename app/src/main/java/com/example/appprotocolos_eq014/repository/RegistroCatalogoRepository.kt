@@ -5,7 +5,7 @@ import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.Equipo
 import com.example.appprotocolos_eq014.model.Instalacion
 import com.example.appprotocolos_eq014.model.OpcionCatalogo
-import com.example.appprotocolos_eq014.model.VisitaResumen
+import com.example.appprotocolos_eq014.model.Visita
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -106,12 +106,13 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         helper.writableDatabase.insertOrThrow("INSTALACION", null, valores)
     }
 
-    suspend fun visitasCerradasDeCliente(idCliente: Long): List<VisitaResumen> = withContext(Dispatchers.IO) {
+    suspend fun visitasCerradasDeCliente(idCliente: Long): List<Visita> = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(
             """
-            SELECT v.id_visita, v.numero_ot, c.nombre, i.nombre, v.fecha,
+            SELECT v.id_visita, v.numero_ot, c.nombre, i.nombre, v.fecha, v.fecha_hora_cierre,
                    (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado NOT IN (1, 5)),
-                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado = 4)
+                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado = 4),
+                   v.id_instalacion, v.tipo_visita
             FROM VISITA v
             INNER JOIN INSTALACION i ON i.id_instalacion = v.id_instalacion
             INNER JOIN USUARIO c ON c.id_usuario = i.id_usuario_cliente
@@ -123,15 +124,17 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
             buildList {
                 while (c.moveToNext()) {
                     add(
-                        VisitaResumen(
+                        Visita(
                             id = c.getLong(0),
                             numeroOt = c.getString(1),
-                            cliente = c.getString(2),
-                            instalacion = c.getString(3),
+                            clienteNombre = c.getString(2),
+                            instalacionNombre = c.getString(3),
                             fecha = c.getString(4),
-                            cerrada = true,
-                            totalProtocolos = c.getInt(5),
-                            protocolosRegistrados = c.getInt(6)
+                            fechaHoraCierre = c.getString(5),
+                            totalProtocolos = c.getInt(6),
+                            protocolosFormalizados = c.getInt(7),
+                            instalacionId = c.getLong(8),
+                            tipoVisita = c.getString(9)
                         )
                     )
                 }

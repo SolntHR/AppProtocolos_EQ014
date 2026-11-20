@@ -2,25 +2,25 @@ package com.example.appprotocolos_eq014.repository
 
 import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.ActaVisita
+import com.example.appprotocolos_eq014.model.Visita
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.MedicionActa
 import com.example.appprotocolos_eq014.model.ProtocoloActa
 import com.example.appprotocolos_eq014.model.PruebaActa
 import com.example.appprotocolos_eq014.model.RecepcionActa
 import com.example.appprotocolos_eq014.model.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.VisitaResumen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class VisitaRepository(private val dbHelper: InduztekDbHelper) {
 
-    suspend fun visitasDeUsuario(idUsuario: Long): List<VisitaResumen> = withContext(Dispatchers.IO) {
+    suspend fun visitasDeUsuario(idUsuario: Long): List<Visita> = withContext(Dispatchers.IO) {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
             SELECT v.id_visita, v.numero_ot, c.nombre, i.nombre, v.fecha, v.fecha_hora_cierre,
                    (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado <> 5),
-                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado IN (2, 3, 4))
+                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado IN (2, 3, 4)),
+                   v.id_instalacion, v.tipo_visita, v.id_ingeniero_cargo
             FROM VISITA v
             INNER JOIN INSTALACION i ON v.id_instalacion = i.id_instalacion
             INNER JOIN USUARIO c ON i.id_usuario_cliente = c.id_usuario
@@ -30,18 +30,21 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
             """,
             arrayOf(idUsuario.toString(), idUsuario.toString())
         )
-        val visitas = mutableListOf<VisitaResumen>()
+        val visitas = mutableListOf<Visita>()
         while (cursor.moveToNext()) {
             visitas.add(
-                VisitaResumen(
+                Visita(
                     id = cursor.getLong(0),
                     numeroOt = cursor.getString(1),
-                    cliente = cursor.getString(2),
-                    instalacion = cursor.getString(3),
+                    clienteNombre = cursor.getString(2),
+                    instalacionNombre = cursor.getString(3),
                     fecha = cursor.getString(4),
-                    cerrada = !cursor.isNull(5),
+                    fechaHoraCierre = cursor.getString(5),
                     totalProtocolos = cursor.getInt(6),
-                    protocolosRegistrados = cursor.getInt(7)
+                    protocolosRegistrados = cursor.getInt(7),
+                    instalacionId = cursor.getLong(8),
+                    tipoVisita = cursor.getString(9),
+                    ingenieroCargoId = cursor.getLong(10),
                 )
             )
         }
@@ -49,11 +52,12 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
         visitas
     }
 
-    suspend fun obtenerActa(idVisita: Long): ActaVisita? = withContext(Dispatchers.IO) {
+    suspend fun obtenerActa(idVisita: Long): Visita? = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase
-        val cursorVisita = db.rawQuery(
+        val cursor = db.rawQuery(
             """
-            SELECT v.numero_ot, c.nombre, i.nombre, v.fecha, v.tipo_visita, ing.nombre
+            SELECT v.numero_ot, c.nombre, i.nombre, v.fecha, v.tipo_visita, ing.nombre,
+                   v.id_instalacion, v.id_ingeniero_cargo, v.fecha_hora_cierre
             FROM VISITA v
             INNER JOIN INSTALACION i ON v.id_instalacion = i.id_instalacion
             INNER JOIN USUARIO c ON i.id_usuario_cliente = c.id_usuario
@@ -62,29 +66,29 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
             """,
             arrayOf(idVisita.toString())
         )
-        if (!cursorVisita.moveToFirst()) {
-            cursorVisita.close()
+        if (!cursor.moveToFirst()) {
+            cursor.close()
             return@withContext null
         }
-        val numeroOt = cursorVisita.getString(0)
-        val cliente = cursorVisita.getString(1)
-        val instalacion = cursorVisita.getString(2)
-        val fecha = cursorVisita.getString(3)
-        val tipoVisita = if (cursorVisita.getString(4) == "PRUEBAS_Y_MANT") "Pruebas y mantenimiento" else "Solo pruebas"
-        val ingeniero = cursorVisita.getString(5)
-        cursorVisita.close()
 
-        ActaVisita(
-            idVisita = idVisita,
-            numeroOt = numeroOt,
-            cliente = cliente,
-            instalacion = instalacion,
-            fecha = fecha,
-            tipoVisita = tipoVisita,
+        val visita = Visita(
+            id = idVisita,
+            numeroOt = cursor.getString(0),
+            clienteNombre = cursor.getString(1),
+            instalacionNombre = cursor.getString(2),
+            fecha = cursor.getString(3),
+            tipoVisita = cursor.getString(4),
+            ingenieroNombre = cursor.getString(5),
+            instalacionId = cursor.getLong(6),
+            ingenieroCargoId = cursor.getLong(7),
+            fechaHoraCierre = cursor.getString(8)
+        )
+        cursor.close()
+
+        visita.copy(
             tecnicos = tecnicosDeVisita(idVisita),
-            ingenieroCargo = ingeniero,
-            protocolos = protocolosDeVisita(idVisita),
-            recepcion = recepcionDeVisita(idVisita)
+            recepcion = recepcionDeVisita(idVisita),
+            protocolos = protocolosDeVisita(idVisita)
         )
     }
 

@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.ActaUiState
-import com.example.appprotocolos_eq014.model.ActaVisita
+import com.example.appprotocolos_eq014.model.Visita
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.MedicionActa
 import com.example.appprotocolos_eq014.model.ProtocoloActa
@@ -184,7 +184,7 @@ fun ActaContent(
 }
 
 @Composable
-private fun DocumentoActa(acta: ActaVisita, onAbrirEquipo: (Long) -> Unit) {
+private fun DocumentoActa(acta: Visita, onAbrirEquipo: (Long) -> Unit) {
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
@@ -229,12 +229,12 @@ private fun DocumentoActa(acta: ActaVisita, onAbrirEquipo: (Long) -> Unit) {
             SelloPendiente()
 
             val datos = listOf(
-                stringResource(R.string.acta_cliente) to acta.cliente,
-                stringResource(R.string.acta_instalacion) to acta.instalacion,
+                stringResource(R.string.acta_cliente) to acta.clienteNombre,
+                stringResource(R.string.acta_instalacion) to acta.instalacionNombre,
                 stringResource(R.string.acta_fecha) to Formato.fecha(acta.fecha),
-                stringResource(R.string.acta_tipo_visita) to acta.tipoVisita,
+                stringResource(R.string.acta_tipo_visita) to acta.tipoVisitaTexto,
                 stringResource(R.string.acta_tecnico) to acta.tecnicos,
-                stringResource(R.string.acta_ingeniero) to acta.ingenieroCargo
+                stringResource(R.string.acta_ingeniero) to acta.ingenieroNombre
             )
             datos.chunked(2).forEach { par ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -483,15 +483,16 @@ private fun ActaPreview() {
                 isLoading = false,
                 puedeRegistrarRecepcion = true,
                 fechaHora = "27-10-2026 21:15",
-                acta = ActaVisita(
-                    idVisita = 1,
+                acta = Visita(
+                    id = 1,
                     numeroOt = "OT-2026-1187",
-                    cliente = "Envasadora del Pacífico S.A.",
-                    instalacion = "Planta Lampa",
                     fecha = "2026-09-26",
-                    tipoVisita = "Solo pruebas",
+                    instalacionId = 1,
+                    clienteNombre = "Envasadora del Pacífico S.A.",
+                    instalacionNombre = "Planta Lampa",
+                    tipoVisita = Visita.SOLO_PRUEBAS,
                     tecnicos = "Matías Godoy Herrera",
-                    ingenieroCargo = "Andrea Contreras Silva",
+                    ingenieroNombre = "Andrea Contreras Silva",
                     protocolos = listOf(
                         ProtocoloActa(
                             "PT-2026-0401", 1, "TR-01", "Transformador Rhona · serie RH-18733",

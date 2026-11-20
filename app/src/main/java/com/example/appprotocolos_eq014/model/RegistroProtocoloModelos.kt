@@ -11,19 +11,6 @@ object Rol {
     fun esPersonalInduztek(codigo: String) = codigo.isNotBlank() && codigo != CLIENTE
 }
 
-data class VisitaAbierta(
-    val id: Long,
-    val numeroOt: String,
-    val fecha: String,
-    val tipoVisita: String,
-    val instalacionId: Long,
-    val instalacionNombre: String,
-    val clienteNombre: String,
-    val ingenieroNombre: String
-) {
-    val incluyeMantenimiento: Boolean get() = tipoVisita == "PRUEBAS_Y_MANT"
-}
-
 data class ProtocoloListado(
     val id: String,
     val numero: String,

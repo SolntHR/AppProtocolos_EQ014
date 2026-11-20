@@ -19,7 +19,7 @@ import com.example.appprotocolos_eq014.model.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.TipoPrueba
-import com.example.appprotocolos_eq014.model.VisitaAbierta
+import com.example.appprotocolos_eq014.model.Visita
 import com.example.appprotocolos_eq014.repository.ProtocoloAGuardar
 import com.example.appprotocolos_eq014.repository.PruebaAGuardar
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
@@ -142,7 +142,7 @@ class FormularioProtocoloViewModel(
         reevaluarTodo()
     }
 
-    fun seleccionarVisita(visita: VisitaAbierta) {
+    fun seleccionarVisita(visita: Visita) {
         if (_uiState.value.esEdicion) return
         _uiState.update {
             it.copy(visitaSeleccionada = visita, equipoSeleccionado = null, equipos = emptyList(), secciones = emptyList(), error = null)
