@@ -27,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Fechas
 import com.example.appprotocolos_eq014.model.ProtocoloDetalle
-import com.example.appprotocolos_eq014.model.PruebaDetalle
+import com.example.appprotocolos_eq014.model.Prueba
 import com.example.appprotocolos_eq014.model.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
@@ -108,7 +108,7 @@ fun DetalleProtocoloScreen(
             }
             d.pruebas.groupBy { it.tipo }.forEach { (tipo, pruebas) ->
                 TarjetaSeccion(titulo = tipo.nombre) {
-                    pruebas.firstNotNullOfOrNull { it.instrumento }?.let {
+                    pruebas.firstNotNullOfOrNull { it.instrumentoNombre }?.let {
                         Text("Instrumento: $it", style = MaterialTheme.typography.bodySmall)
                     }
                     pruebas.forEachIndexed { i, prueba ->
@@ -194,7 +194,7 @@ private fun Cabecera(d: ProtocoloDetalle) {
 }
 
 @Composable
-private fun BloquePrueba(prueba: PruebaDetalle) {
+private fun BloquePrueba(prueba: Prueba) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(prueba.elemento, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))

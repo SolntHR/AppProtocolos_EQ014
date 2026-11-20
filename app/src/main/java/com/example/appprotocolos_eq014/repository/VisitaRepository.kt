@@ -6,7 +6,8 @@ import com.example.appprotocolos_eq014.model.Visita
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
-import com.example.appprotocolos_eq014.model.PruebaActa
+import com.example.appprotocolos_eq014.model.Prueba
+import com.example.appprotocolos_eq014.model.TipoPrueba
 import com.example.appprotocolos_eq014.model.RecepcionActa
 import com.example.appprotocolos_eq014.model.ResultadoPrueba
 import kotlinx.coroutines.Dispatchers
@@ -183,26 +184,32 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
         return protocolos
     }
 
-    private fun pruebasDeProtocolo(idProtocolo: String): List<PruebaActa> {
+    private fun pruebasDeProtocolo(idProtocolo: String): List<Prueba> {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
-            SELECT pr.id_prueba, tp.nombre, pr.elemento, pr.realizada, pr.motivo_no_realizada, pr.id_resultado
+            SELECT pr.id_prueba, pr.id_tipo_prueba, pr.elemento, pr.realizada, pr.motivo_no_realizada,
+                   pr.id_resultado, pr.id_instrumento, pr.comentario, pr.ingresado_manualmente
             FROM PRUEBA pr
-            INNER JOIN TIPO_PRUEBA tp ON pr.id_tipo_prueba = tp.id_tipo_prueba
             WHERE pr.id_protocolo = ?
             ORDER BY pr.id_prueba
             """,
             arrayOf(idProtocolo)
         )
-        val pruebas = mutableListOf<PruebaActa>()
+        val pruebas = mutableListOf<Prueba>()
         while (cursor.moveToNext()) {
+            val tipo = TipoPrueba.desdeId(cursor.getLong(1)) ?: continue
             pruebas.add(
-                PruebaActa(
-                    nombre = cursor.getString(1),
+                Prueba(
+                    id = cursor.getLong(0),
+                    protocoloId = idProtocolo,
+                    tipo = tipo,
                     elemento = cursor.getString(2),
                     realizada = cursor.getInt(3) == 1,
                     motivoNoRealizada = cursor.getString(4),
                     resultado = if (cursor.isNull(5)) null else ResultadoPrueba.desdeId(cursor.getLong(5)),
+                    instrumentoId = if (cursor.isNull(6)) null else cursor.getLong(6),
+                    comentario = cursor.getString(7),
+                    ingresadoManualmente = cursor.getInt(8) == 1,
                     mediciones = medicionesDePrueba(cursor.getLong(0))
                 )
             )

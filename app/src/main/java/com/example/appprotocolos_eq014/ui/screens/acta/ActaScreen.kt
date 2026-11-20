@@ -44,7 +44,8 @@ import com.example.appprotocolos_eq014.model.Visita
 import com.example.appprotocolos_eq014.model.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
-import com.example.appprotocolos_eq014.model.PruebaActa
+import com.example.appprotocolos_eq014.model.Prueba
+import com.example.appprotocolos_eq014.model.TipoPrueba
 import com.example.appprotocolos_eq014.model.RecepcionActa
 import com.example.appprotocolos_eq014.model.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
@@ -325,7 +326,7 @@ private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
 }
 
 @Composable
-private fun PruebaDocumento(prueba: PruebaActa) {
+private fun PruebaDocumento(prueba: Prueba) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -336,7 +337,7 @@ private fun PruebaDocumento(prueba: PruebaActa) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "${prueba.nombre} · ${prueba.elemento}",
+                text = "${prueba.tipo.nombre} · ${prueba.elemento}",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f)
@@ -498,9 +499,11 @@ private fun ActaPreview() {
                             "PT-2026-0401", 1, "TR-01", "Transformador Rhona · serie RH-18733",
                             EstadoProtocolo.REGISTRADO_TERRENO,
                             listOf(
-                                PruebaActa(
-                                    "Resistencia de aislación", "AT-T", true, null, ResultadoPrueba.OBSERVADO,
-                                    listOf(Medicion(parametroNombre = "Lectura a 1 min", valor = 6100.0, unidad = "MΩ"), Medicion(parametroNombre = "Lectura a 10 min", valor = 10980.0, unidad = "MΩ"))
+                                Prueba(
+                                    tipo = TipoPrueba.AISLACION,
+                                    elemento = "AT-T",
+                                    resultado = ResultadoPrueba.OBSERVADO,
+                                    mediciones = listOf(Medicion(parametroNombre = "Lectura a 1 min", valor = 6100.0, unidad = "MΩ"), Medicion(parametroNombre = "Lectura a 10 min", valor = 10980.0, unidad = "MΩ"))
                                 )
                             )
                         )

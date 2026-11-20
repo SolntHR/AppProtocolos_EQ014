@@ -20,8 +20,8 @@ import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.model.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.TipoPrueba
 import com.example.appprotocolos_eq014.model.Visita
+import com.example.appprotocolos_eq014.model.Prueba
 import com.example.appprotocolos_eq014.repository.ProtocoloAGuardar
-import com.example.appprotocolos_eq014.repository.PruebaAGuardar
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -338,28 +338,27 @@ class FormularioProtocoloViewModel(
         }
 
         val noRealizadas = s.secciones.filter { it.noRealizada }.map { sec ->
-            PruebaAGuardar(
+            Prueba(
                 tipo = sec.tipo,
                 elemento = "Todos los elementos",
                 instrumentoId = null,
                 resultado = null,
                 comentario = sec.comentario.ifBlank { null },
                 ingresadoManualmente = false,
-                valores = emptyMap(),
                 realizada = false,
                 motivoNoRealizada = sec.motivoNoRealizada.trim()
             )
         }
         val pruebas = noRealizadas + s.secciones.flatMap { sec ->
             sec.filasCompletas.map { f ->
-                PruebaAGuardar(
+                Prueba(
                     tipo = sec.tipo,
                     elemento = f.elemento,
                     instrumentoId = sec.instrumentoId,
                     resultado = f.evaluacion.resultado,
                     comentario = sec.comentario.ifBlank { null },
                     ingresadoManualmente = sec.tipo == TipoPrueba.DEVANADOS,
-                    valores = f.evaluacion.calculados
+                    mediciones = Prueba.medicionesDesde(f.evaluacion.calculados)
                 )
             }
         }

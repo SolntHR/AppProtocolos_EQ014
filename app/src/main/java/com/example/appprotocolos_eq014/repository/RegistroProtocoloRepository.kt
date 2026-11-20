@@ -14,7 +14,7 @@ import com.example.appprotocolos_eq014.model.Medicion
 import com.example.appprotocolos_eq014.model.Parametros
 import com.example.appprotocolos_eq014.model.ProtocoloDetalle
 import com.example.appprotocolos_eq014.model.ProtocoloListado
-import com.example.appprotocolos_eq014.model.PruebaDetalle
+import com.example.appprotocolos_eq014.model.Prueba
 import com.example.appprotocolos_eq014.model.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.Rol
@@ -26,18 +26,6 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 
-data class PruebaAGuardar(
-    val tipo: TipoPrueba,
-    val elemento: String,
-    val instrumentoId: Long?,
-    val resultado: ResultadoPrueba?,
-    val comentario: String?,
-    val ingresadoManualmente: Boolean,
-    val valores: Map<String, Double>,
-    val realizada: Boolean = true,
-    val motivoNoRealizada: String? = null
-)
-
 data class ProtocoloAGuardar(
     val idProtocolo: String?,
     val visitaId: Long,
@@ -46,7 +34,7 @@ data class ProtocoloAGuardar(
     val humedad: Double?,
     val descripcionMantenimiento: String?,
     val observaciones: String?,
-    val pruebas: List<PruebaAGuardar>
+    val pruebas: List<Prueba>
 )
 
 data class ProtocoloEditable(
@@ -61,7 +49,7 @@ data class ProtocoloEditable(
     val humedad: Double?,
     val descripcionMantenimiento: String?,
     val observaciones: String?,
-    val pruebas: List<PruebaAGuardar>
+    val pruebas: List<Prueba>
 )
 
 class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
@@ -286,13 +274,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         val maxContactos: Double?
     )
 
-    private data class PruebaLeida(
-        val datos: PruebaAGuardar,
-        val instrumento: String?,
-        val realizada: Boolean,
-        val motivoNoRealizada: String?
-    )
-
     suspend fun detalle(idProtocolo: String): ProtocoloDetalle? = withContext(Dispatchers.IO) {
         val db = helper.readableDatabase
         val resumen = consultarListado(db, "p.id_protocolo = ?", arrayOf(idProtocolo)).firstOrNull()
@@ -314,31 +295,11 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
 
         val previos = anteriores(db, resumen.equipoId, idProtocolo, resumen.fechaHora)
-        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map { leida ->
-            val p = leida.datos
+        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map { p ->
             val anterior = previos["${p.tipo.idDb}|${p.elemento}"]
-            PruebaDetalle(
-                tipo = p.tipo,
-                elemento = p.elemento,
-                instrumento = leida.instrumento,
-                resultado = p.resultado,
-                comentario = p.comentario,
-                ingresadoManualmente = p.ingresadoManualmente,
-                realizada = leida.realizada,
-                motivoNoRealizada = leida.motivoNoRealizada,
-                mediciones = p.valores.mapNotNull { (codigo, valor) ->
-                    Parametros.porCodigo(codigo)?.let {
-                        Medicion(
-                            parametroId = it.idParametro ?: 0,
-                            parametroCodigo = codigo,
-                            parametroNombre = it.etiqueta,
-                            elemento = p.elemento,
-                            valor = valor,
-                            unidad = it.unidad
-                        ) }
-                },
+            p.copy(
                 calculo = ReglasProtocolo.resumenCalculo(p.tipo, p.valores, cabecera.maxContactos),
-                comparaciones = if (anterior == null || !leida.realizada) emptyList()
+                comparaciones = if (anterior == null || !p.realizada) emptyList()
                 else ReglasProtocolo.comparar(p.tipo, p.valores, anterior)
             )
         }
@@ -380,11 +341,11 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         )
     }
 
-    private fun leerPruebas(db: SQLiteDatabase, idProtocolo: String, soloRealizadas: Boolean): List<PruebaLeida> {
-        val valoresPorPrueba = mutableMapOf<Long, MutableMap<String, Double>>()
+    private fun leerPruebas(db: SQLiteDatabase, idProtocolo: String, soloRealizadas: Boolean): List<Prueba> {
+        val medicionesPorPrueba = mutableMapOf<Long, MutableList<Medicion>>()
         db.rawQuery(
             """
-            SELECT m.id_prueba, m.id_parametro, m.valor
+            SELECT m.id_medicion, m.id_prueba, m.id_parametro, m.elemento, m.valor, m.unidad, m.orden
             FROM MEDICION m INNER JOIN PRUEBA pr ON pr.id_prueba = m.id_prueba
             WHERE pr.id_protocolo = ?
             ORDER BY m.id_prueba, m.orden
@@ -392,16 +353,30 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             arrayOf(idProtocolo)
         ).use { c ->
             while (c.moveToNext()) {
-                val campo = Parametros.porId(c.getLong(1)) ?: continue
-                valoresPorPrueba.getOrPut(c.getLong(0)) { linkedMapOf() }[campo.codigo] = c.getDouble(2)
+                val campo = Parametros.porId(c.getLong(2)) ?: continue
+                medicionesPorPrueba.getOrPut((c.getLong(1))) {mutableListOf()}.add(
+                    Medicion(
+                        id = c.getLong(0),
+                        pruebaId = c.getLong(1),
+                        parametroId = c.getLong(2),
+                        parametroCodigo = campo.codigo,
+                        parametroNombre = campo.etiqueta,
+                        elemento = c.getString(3),
+                        valor = c.getDouble(4),
+                        unidad = c.getString(5),
+                        orden = c.getInt(6)
+                    )
+                )
+
             }
         }
+
         val filtro = if (soloRealizadas) " AND pr.realizada = 1" else ""
         return db.rawQuery(
             """
             SELECT pr.id_prueba, pr.id_tipo_prueba, pr.elemento, pr.id_instrumento, pr.id_resultado,
                    pr.comentario, pr.ingresado_manualmente, pr.realizada, pr.motivo_no_realizada,
-                   ins.marca, ins.modelo, ins.numero_serie
+                   ins.marca, ins.modelo, ins.numero_serie, pr.momento
             FROM PRUEBA pr LEFT JOIN INSTRUMENTO ins ON ins.id_instrumento = pr.id_instrumento
             WHERE pr.id_protocolo = ?$filtro
             ORDER BY pr.id_tipo_prueba, pr.id_prueba
@@ -415,19 +390,20 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                         listOfNotNull(c.getString(9), c.getString(10)).joinToString(" ") +
                                 (c.getString(11)?.let { " · Serie $it" } ?: "")
                     add(
-                        PruebaLeida(
-                            datos = PruebaAGuardar(
-                                tipo = tipo,
-                                elemento = c.getString(2),
-                                instrumentoId = if (c.isNull(3)) null else c.getLong(3),
-                                resultado = if (c.isNull(4)) null else ResultadoPrueba.desdeId(c.getLong(4)),
-                                comentario = c.getString(5),
-                                ingresadoManualmente = c.getInt(6) == 1,
-                                valores = valoresPorPrueba[c.getLong(0)].orEmpty()
-                            ),
-                            instrumento = instrumento,
+                        Prueba(
+                            id = c.getLong(0),
+                            protocoloId = idProtocolo,
+                            tipo = tipo,
+                            elemento = c.getString(2),
+                            momento = c.getString(12) ?: "UNICA",
+                            instrumentoId = if (c.isNull(3)) null else c.getLong(3),
+                            resultado = if (c.isNull(4)) null else ResultadoPrueba.desdeId(c.getLong(4)),
+                            comentario = c.getString(5),
+                            ingresadoManualmente = c.getInt(6) == 1,
                             realizada = c.getInt(7) == 1,
-                            motivoNoRealizada = c.getString(8)
+                            motivoNoRealizada = c.getString(8),
+                            instrumentoNombre = instrumento,
+                            mediciones = medicionesPorPrueba[c.getLong(0)].orEmpty()
                         )
                     )
                 }
@@ -437,9 +413,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
 
     suspend fun paraEditar(idProtocolo: String): ProtocoloEditable? = withContext(Dispatchers.IO) {
         val db = helper.readableDatabase
-        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map {
-            it.datos.copy(realizada = it.realizada, motivoNoRealizada = it.motivoNoRealizada)
-        }
+        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false)
         db.rawQuery(
             """
             SELECT id_protocolo, numero, id_estado, id_visita, id_equipo, id_usuario_registra,
@@ -533,7 +507,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                     put("id_protocolo", idProtocolo)
                     put("id_tipo_prueba", prueba.tipo.idDb)
                     put("elemento", prueba.elemento)
-                    put("momento", "UNICA")
+                    put("momento", prueba.momento)
                     put("realizada", if (prueba.realizada) 1 else 0)
                     put("motivo_no_realizada", prueba.motivoNoRealizada)
                     if (prueba.instrumentoId != null) put("id_instrumento", prueba.instrumentoId) else putNull("id_instrumento")

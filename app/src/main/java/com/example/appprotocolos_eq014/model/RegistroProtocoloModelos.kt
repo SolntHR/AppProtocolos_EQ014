@@ -48,20 +48,6 @@ data class Comparacion(
     val significativa: Boolean get() = kotlin.math.abs(variacionPct) > 25.0
 }
 
-data class PruebaDetalle(
-    val tipo: TipoPrueba,
-    val elemento: String,
-    val instrumento: String?,
-    val resultado: ResultadoPrueba?,
-    val comentario: String?,
-    val ingresadoManualmente: Boolean,
-    val realizada: Boolean,
-    val motivoNoRealizada: String?,
-    val mediciones: List<Medicion>,
-    val calculo: String?,
-    val comparaciones: List<Comparacion> = emptyList()
-)
-
 data class CambioEstado(
     val anterior: EstadoProtocolo?,
     val nuevo: EstadoProtocolo,
@@ -77,7 +63,7 @@ data class ProtocoloDetalle(
     val humedad: Double?,
     val descripcionMantenimiento: String?,
     val observaciones: String?,
-    val pruebas: List<PruebaDetalle>,
+    val pruebas: List<Prueba>,
     val historialEstados: List<CambioEstado>,
     val historialEquipo: List<ProtocoloListado>
 ) {
