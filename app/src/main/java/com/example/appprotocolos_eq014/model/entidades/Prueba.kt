@@ -1,9 +1,9 @@
 package com.example.appprotocolos_eq014.model.entidades
 
 import com.example.appprotocolos_eq014.model.Comparacion
-import com.example.appprotocolos_eq014.model.Parametros
+import com.example.appprotocolos_eq014.model.reglas.Parametros
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.TipoPrueba
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 
 data class Prueba(
     val id: Long = 0,

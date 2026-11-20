@@ -8,7 +8,7 @@ import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.FormularioEquipoUiState
 import com.example.appprotocolos_eq014.model.OpcionCatalogo
-import com.example.appprotocolos_eq014.model.ReglasProtocolo
+import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.Rol
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.ValidacionesCatalogo

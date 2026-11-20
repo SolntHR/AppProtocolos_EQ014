@@ -7,7 +7,7 @@ import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Medicion
 import com.example.appprotocolos_eq014.model.ProtocoloActa
 import com.example.appprotocolos_eq014.model.entidades.Prueba
-import com.example.appprotocolos_eq014.model.TipoPrueba
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 import com.example.appprotocolos_eq014.model.RecepcionActa
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import kotlinx.coroutines.Dispatchers

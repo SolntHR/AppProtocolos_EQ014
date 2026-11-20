@@ -2,7 +2,7 @@ package com.example.appprotocolos_eq014.util
 
 import com.example.appprotocolos_eq014.model.FormularioEquipoUiState
 import com.example.appprotocolos_eq014.model.FormularioInstalacionUiState
-import com.example.appprotocolos_eq014.model.ReglasProtocolo
+import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import java.util.Calendar
 
 object ValidacionesCatalogo {

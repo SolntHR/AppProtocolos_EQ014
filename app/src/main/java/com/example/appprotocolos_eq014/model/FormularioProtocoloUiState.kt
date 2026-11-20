@@ -5,6 +5,11 @@ import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.entidades.Visita
+import com.example.appprotocolos_eq014.model.reglas.EstadoFila
+import com.example.appprotocolos_eq014.model.reglas.Evaluacion
+import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
+import com.example.appprotocolos_eq014.model.reglas.peorResultado
 
 data class FilaPruebaUi(
     val elemento: String,
