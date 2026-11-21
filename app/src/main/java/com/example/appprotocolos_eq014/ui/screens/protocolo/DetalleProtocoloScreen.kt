@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.util.Fechas
-import com.example.appprotocolos_eq014.model.ProtocoloDetalle
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.util.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
@@ -63,7 +63,7 @@ fun DetalleProtocoloScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        BarraSuperior(titulo = state.detalle?.resumen?.numero ?: "Protocolo", onVolver = onVolver)
+        BarraSuperior(titulo = state.detalle?.numero ?: "Protocolo", onVolver = onVolver)
 
         val d = state.detalle
         if (state.cargando && d == null) {
@@ -88,8 +88,8 @@ fun DetalleProtocoloScreen(
 
             if (state.puedeEditar) {
                 BotonPrincipal(
-                    texto = if (d.resumen.estado == EstadoProtocolo.OBSERVADO) "Corregir protocolo" else "Continuar protocolo",
-                    onClick = { onEditar(d.resumen.id) },
+                    texto = if (d.estado == EstadoProtocolo.OBSERVADO) "Corregir protocolo" else "Continuar protocolo",
+                    onClick = { onEditar(d.id) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -140,11 +140,11 @@ fun DetalleProtocoloScreen(
                 }
             }
 
-            TarjetaSeccion(titulo = "Historial del equipo ${d.resumen.tagEquipo}") {
-                d.historialEquipo.forEach { p ->
+            TarjetaSeccion(titulo = "Historial del equipo ${d.tagEquipo}") {
+                state.historialEquipo.forEach { p ->
                     TarjetaProtocoloListado(
                         protocolo = p,
-                        onClick = { if (p.id != d.resumen.id) onAbrirProtocolo(p.id) }
+                        onClick = { if (p.id != d.id) onAbrirProtocolo(p.id) }
                     )
                 }
             }
@@ -171,24 +171,24 @@ fun DetalleProtocoloScreen(
 }
 
 @Composable
-private fun Cabecera(d: ProtocoloDetalle) {
-    val r = d.resumen
-    TarjetaSeccion(titulo = "${r.tagEquipo} · ${r.tipoEquipo}") {
+private fun Cabecera(d: Protocolo) {
+    TarjetaSeccion(titulo = "${d.tagEquipo} · ${d.tipoEquipoNombre}") {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            EtiquetaProtocoloListado(r)
-            EtiquetaResultadoProtocolo(r.resultadoGlobal)
+            EtiquetaProtocoloListado(d)
+            EtiquetaResultadoProtocolo(d.resultadoGlobal)
         }
-        Text("${r.cliente} · ${r.instalacion}")
-        Text("${d.numeroOt} · ${Fechas.fechaHora(r.fechaHora)}", style = MaterialTheme.typography.bodySmall)
-        Text("Técnico: ${r.tecnico}", style = MaterialTheme.typography.bodySmall)
+        Text("${d.clienteNombre} · ${d.instalacionNombre}")
+        Text("${d.numeroOt} · ${Fechas.fechaHora(d.fechaHoraPrueba)}", style = MaterialTheme.typography.bodySmall)
+        Text("Técnico: ${d.tecnicoNombre}", style = MaterialTheme.typography.bodySmall)
         Text(
             "T° ambiente: ${d.temperatura?.let { "${it.formatoCl(1)} °C" } ?: "-"} · Humedad: ${d.humedad?.let { "${it.formatoCl(0)} %" } ?: "-"}",
             style = MaterialTheme.typography.bodySmall
         )
-        r.reemplazaANumero?.let { Text("Reemplaza al protocolo nº $it", fontWeight = FontWeight.SemiBold) }
-        if (r.atrasado) MensajeAvisoProtocolo("Atrasado: supera los 2 días hábiles sin formalizar (RN-16).")
+        d.reemplazaANumero?.let { Text("Reemplaza al protocolo nº $it", fontWeight = FontWeight.SemiBold) }
+        d.motivoObservacion?.let { MensajeAvisoProtocolo("Observado: $it")}
+        if (d.atrasado) MensajeAvisoProtocolo("Atrasado: supera los 2 días hábiles sin formalizar.")
         if (d.tieneVariacionSignificativa) {
-            MensajeAvisoProtocolo("Tiene variaciones significativas respecto a la prueba anterior (RN-09).", esError = false)
+            MensajeAvisoProtocolo("Tiene variaciones significativas respecto a la prueba anterior.", esError = false)
         }
     }
 }

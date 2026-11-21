@@ -65,8 +65,11 @@ class ProtocolosViewModel(
             }
             try {
                 val d = repository.detalle(idProtocolo)
+                val historialEquipo = if (d == null) emptyList()
+                                        else repository.historialDeEquipo(d.equipoId)
                 _detalle.update {
-                    it.copy(cargando = false, detalle = d, error = if (d == null) "El protocolo no existe." else null)
+                    it.copy(cargando = false, detalle = d, historialEquipo = historialEquipo,
+                        error = if (d == null) "El protocolo no existe." else null)
                 }
             } catch (e: SQLiteException) {
                 _detalle.update { it.copy(cargando = false, error = "Error al cargar: ${e.message}") }
@@ -85,15 +88,15 @@ class ProtocolosViewModel(
             _detalle.update { it.copy(procesando = true, error = null) }
             try {
                 repository.cambiarEstado(
-                    idProtocolo = d.resumen.id,
+                    idProtocolo = d.id,
                     nuevo = nuevo,
                     usuarioId = sesion.leerIdUsuario(),
                     rol = sesion.leerRolUsuario().orEmpty(),
                     motivo = motivo
                 )
-                NotificacionesLocales.notificarEstadoProtocolo(contexto, d.resumen.numero, nuevo)
+                NotificacionesLocales.notificarEstadoProtocolo(contexto, d.numero, nuevo)
                 _detalle.update { it.copy(procesando = false, mensaje = "Protocolo ${nuevo.etiqueta.lowercase()}") }
-                cargarDetalle(d.resumen.id)
+                cargarDetalle(d.id)
             } catch (e: IllegalArgumentException) {
                 _detalle.update { it.copy(procesando = false, error = e.message) }
             } catch (e: IllegalStateException) {

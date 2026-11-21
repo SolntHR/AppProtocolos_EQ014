@@ -12,8 +12,6 @@ import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
 import com.example.appprotocolos_eq014.model.entidades.Medicion
 import com.example.appprotocolos_eq014.model.reglas.Parametros
-import com.example.appprotocolos_eq014.model.ProtocoloDetalle
-import com.example.appprotocolos_eq014.model.ProtocoloListado
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
@@ -149,7 +147,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
     }
 
     private val selectListado = """
-        SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.id_usuario_registra,
+        SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.id_usuario_registra, p.id_visita,
                e.id_equipo, e.tag, te.nombre AS tipo_equipo, i.nombre AS instalacion,
                c.nombre AS cliente, u.nombre AS tecnico,
                (SELECT MAX(pr.id_resultado) FROM PRUEBA pr WHERE pr.id_protocolo = p.id_protocolo AND pr.realizada = 1) AS resultado,
@@ -163,19 +161,20 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         INNER JOIN USUARIO u ON u.id_usuario = p.id_usuario_registra
     """
 
-    private fun leerListado(c: Cursor): ProtocoloListado {
+    private fun leerListado(c: Cursor): Protocolo {
         val idxRes = c.getColumnIndexOrThrow("resultado")
-        return ProtocoloListado(
+        return Protocolo(
             id = c.getString(c.getColumnIndexOrThrow("id_protocolo")),
             numero = c.getString(c.getColumnIndexOrThrow("numero")),
+            visitaId = c.getLong(c.getColumnIndexOrThrow("id_visita")),
             equipoId = c.getLong(c.getColumnIndexOrThrow("id_equipo")),
             tagEquipo = c.getString(c.getColumnIndexOrThrow("tag")),
-            tipoEquipo = c.getString(c.getColumnIndexOrThrow("tipo_equipo")),
-            instalacion = c.getString(c.getColumnIndexOrThrow("instalacion")),
-            cliente = c.getString(c.getColumnIndexOrThrow("cliente")),
-            tecnicoId = c.getLong(c.getColumnIndexOrThrow("id_usuario_registra")),
-            tecnico = c.getString(c.getColumnIndexOrThrow("tecnico")),
-            fechaHora = c.getString(c.getColumnIndexOrThrow("fecha_hora_prueba")),
+            tipoEquipoNombre = c.getString(c.getColumnIndexOrThrow("tipo_equipo")),
+            instalacionNombre = c.getString(c.getColumnIndexOrThrow("instalacion")),
+            clienteNombre = c.getString(c.getColumnIndexOrThrow("cliente")),
+            usuarioRegistraId = c.getLong(c.getColumnIndexOrThrow("id_usuario_registra")),
+            tecnicoNombre = c.getString(c.getColumnIndexOrThrow("tecnico")),
+            fechaHoraPrueba = c.getString(c.getColumnIndexOrThrow("fecha_hora_prueba")),
             estado = EstadoProtocolo.desdeId(c.getLong(c.getColumnIndexOrThrow("id_estado"))),
             resultadoGlobal = if (c.isNull(idxRes)) null else ResultadoPrueba.desdeId(c.getLong(idxRes)),
             reemplazadoPorNumero = c.getString(c.getColumnIndexOrThrow("reemplazado_por")),
@@ -183,12 +182,12 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         )
     }
 
-    private fun consultarListado(db: SQLiteDatabase, where: String, args: Array<String>): List<ProtocoloListado> =
+    private fun consultarListado(db: SQLiteDatabase, where: String, args: Array<String>): List<Protocolo> =
         db.rawQuery("$selectListado WHERE $where ORDER BY p.fecha_hora_prueba DESC", args).use { c ->
             buildList { while (c.moveToNext()) add(leerListado(c)) }
         }
 
-    suspend fun todos(): List<ProtocoloListado> = withContext(Dispatchers.IO) {
+    suspend fun todos(): List<Protocolo> = withContext(Dispatchers.IO) {
         consultarListado(helper.readableDatabase, "1 = 1", emptyArray())
     }
 
@@ -249,7 +248,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         val maxContactos: Double?
     )
 
-    suspend fun detalle(idProtocolo: String): ProtocoloDetalle? = withContext(Dispatchers.IO) {
+    suspend fun detalle(idProtocolo: String): Protocolo? = withContext(Dispatchers.IO) {
         val db = helper.readableDatabase
         val resumen = consultarListado(db, "p.id_protocolo = ?", arrayOf(idProtocolo)).firstOrNull()
             ?: return@withContext null
@@ -269,7 +268,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             Cabecera(c.getString(0), c.realONulo(1), c.realONulo(2), c.getString(3), c.getString(4), c.realONulo(5))
         }
 
-        val previos = anteriores(db, resumen.equipoId, idProtocolo, resumen.fechaHora)
+        val previos = anteriores(db, resumen.equipoId, idProtocolo, resumen.fechaHoraPrueba)
         val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map { p ->
             val anterior = previos["${p.tipo.idDb}|${p.elemento}"]
             p.copy(
@@ -303,18 +302,21 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             }
         }
 
-        ProtocoloDetalle(
-            resumen = resumen,
+        resumen.copy(
             numeroOt = cabecera.numeroOt,
             temperatura = cabecera.temperatura,
             humedad = cabecera.humedad,
             descripcionMantenimiento = cabecera.descripcion,
             observaciones = cabecera.observaciones,
             pruebas = pruebas,
-            historialEstados = historial,
-            historialEquipo = consultarListado(db, "p.id_equipo = ?", arrayOf(resumen.equipoId.toString()))
+            historialEstados = historial
         )
     }
+
+    suspend fun historialDeEquipo(idEquipo: Long): List<Protocolo> = withContext(Dispatchers.IO){
+        consultarListado(helper.readableDatabase, "p.id_equipo = ?", arrayOf(idEquipo.toString()))
+    }
+
 
     private fun leerPruebas(db: SQLiteDatabase, idProtocolo: String, soloRealizadas: Boolean): List<Prueba> {
         val medicionesPorPrueba = mutableMapOf<Long, MutableList<Medicion>>()

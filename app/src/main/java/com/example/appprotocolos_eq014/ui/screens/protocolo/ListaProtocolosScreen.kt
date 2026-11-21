@@ -28,7 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.util.Fechas
-import com.example.appprotocolos_eq014.model.ProtocoloListado
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.util.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
@@ -176,7 +176,7 @@ private fun Indicador(titulo: String, valor: String, modifier: Modifier = Modifi
 }
 
 @Composable
-fun TarjetaProtocoloListado(protocolo: ProtocoloListado, onClick: () -> Unit) {
+fun TarjetaProtocoloListado(protocolo: Protocolo, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
@@ -193,15 +193,15 @@ fun TarjetaProtocoloListado(protocolo: ProtocoloListado, onClick: () -> Unit) {
                 )
                 EtiquetaProtocoloListado(protocolo)
             }
-            Text("${protocolo.tagEquipo} · ${protocolo.tipoEquipo}", fontWeight = FontWeight.SemiBold)
+            Text("${protocolo.tagEquipo} · ${protocolo.tipoEquipoNombre}", fontWeight = FontWeight.SemiBold)
             Text(
-                "${protocolo.cliente} · ${protocolo.instalacion}",
+                "${protocolo.clienteNombre} · ${protocolo.instalacionNombre}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "${Fechas.fechaHora(protocolo.fechaHora)} · ${protocolo.tecnico}",
+                    "${Fechas.fechaHora(protocolo.fechaHoraPrueba)} · ${protocolo.tecnicoNombre}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f)

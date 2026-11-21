@@ -7,6 +7,6 @@ object Rol{
     const val CLIENTE = "CLIENTE"
 
     fun puedeCrearProtocolos(codigo: String) = codigo == TECNICO || codigo == INGENIERO || codigo == JEFE_TECNICO
-    fun puedeFormalizar(codigo: String) = codigo == TECNICO || codigo == INGENIERO
+    fun puedeFormalizar(codigo: String) = codigo == INGENIERO || codigo == JEFE_TECNICO
     fun esPersonalInduztek(codigo: String) = codigo.isNotBlank() && codigo != CLIENTE
 }

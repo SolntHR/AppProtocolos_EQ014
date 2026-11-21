@@ -1,7 +1,6 @@
 package com.example.appprotocolos_eq014.model.uistate
 
-import com.example.appprotocolos_eq014.model.ProtocoloDetalle
-import com.example.appprotocolos_eq014.model.ProtocoloListado
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 
@@ -9,7 +8,7 @@ data class ListaProtocolosUiState(
     val cargando: Boolean = true,
     val idUsuario: Long = -1,
     val rolUsuario: String = "",
-    val protocolos: List<ProtocoloListado> = emptyList(),
+    val protocolos: List<Protocolo> = emptyList(),
     val filtroEstado: EstadoProtocolo? = null,
     val busqueda: String = "",
     val soloMios: Boolean = false,
@@ -21,19 +20,19 @@ data class ListaProtocolosUiState(
         get() = protocolos.count { it.estado == EstadoProtocolo.REGISTRADO_TERRENO || it.estado == EstadoProtocolo.OBSERVADO }
     val atrasados: Int get() = protocolos.count { it.atrasado }
 
-    val filtrados: List<ProtocoloListado>
+    val filtrados: List<Protocolo>
         get() {
             val q = busqueda.trim()
             return protocolos.filter { p ->
                 (filtroEstado == null || p.estado == filtroEstado) &&
-                        (!soloMios || p.tecnicoId == idUsuario) &&
+                        (!soloMios || p.usuarioRegistraId == idUsuario) &&
                         (!soloAtrasados || p.atrasado) &&
                         (q.isEmpty() ||
                                 p.numero.contains(q, true) ||
                                 p.tagEquipo.contains(q, true) ||
-                                p.cliente.contains(q, true) ||
-                                p.instalacion.contains(q, true) ||
-                                p.tecnico.contains(q, true))
+                                p.clienteNombre.contains(q, true) ||
+                                p.instalacionNombre.contains(q, true) ||
+                                p.tecnicoNombre.contains(q, true))
             }
         }
 }
@@ -43,7 +42,8 @@ data class DetalleProtocoloUiState(
     val procesando: Boolean = false,
     val idUsuario: Long = -1,
     val rolUsuario: String = "",
-    val detalle: ProtocoloDetalle? = null,
+    val detalle: Protocolo? = null,
+    val historialEquipo: List<Protocolo> = emptyList(),
     val error: String? = null,
     val mensaje: String? = null
 ) {
@@ -51,16 +51,16 @@ data class DetalleProtocoloUiState(
         get() {
             val d = detalle ?: return false
             return Rol.puedeCrearProtocolos(rolUsuario) &&
-                    d.resumen.tecnicoId == idUsuario &&
-                    (d.resumen.estado == EstadoProtocolo.BORRADOR || d.resumen.estado == EstadoProtocolo.OBSERVADO)
+                    d.usuarioRegistraId == idUsuario &&
+                    (d.estado == EstadoProtocolo.BORRADOR || d.estado == EstadoProtocolo.OBSERVADO)
         }
 
     val puedeRevisar: Boolean
-        get() = Rol.puedeFormalizar(rolUsuario) && detalle?.resumen?.estado == EstadoProtocolo.REGISTRADO_TERRENO
+        get() = Rol.puedeFormalizar(rolUsuario) && detalle?.estado == EstadoProtocolo.REGISTRADO_TERRENO
 
     val puedeAnular: Boolean
         get() {
-            val estado = detalle?.resumen?.estado ?: return false
+            val estado = detalle?.estado ?: return false
             return Rol.puedeFormalizar(rolUsuario) &&
                     estado != EstadoProtocolo.FORMALIZADO && estado != EstadoProtocolo.ANULADO
         }
