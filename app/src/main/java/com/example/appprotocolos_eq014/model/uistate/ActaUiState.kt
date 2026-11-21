@@ -1,8 +1,10 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.uistate
+
+import com.example.appprotocolos_eq014.model.entidades.Visita
 
 data class ActaUiState(
     val isLoading: Boolean = true,
-    val acta: ActaVisita? = null,
+    val acta: Visita? = null,
     val puedeRegistrarRecepcion: Boolean = false,
     val receptorNombre: String = "",
     val receptorRut: String = "",

@@ -1,4 +1,6 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.uistate
+
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 
 data class FilaHistorial(
     val numero: String,

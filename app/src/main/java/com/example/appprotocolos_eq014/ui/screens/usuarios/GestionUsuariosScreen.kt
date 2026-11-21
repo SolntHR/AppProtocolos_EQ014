@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,9 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.GestionUsuariosUiState
-import com.example.appprotocolos_eq014.model.PestanaUsuarios
-import com.example.appprotocolos_eq014.model.UsuarioFila
+import com.example.appprotocolos_eq014.model.uistate.GestionUsuariosUiState
+import com.example.appprotocolos_eq014.model.uistate.PestanaUsuarios
+import com.example.appprotocolos_eq014.model.uistate.UsuarioFila
 import com.example.appprotocolos_eq014.ui.components.AvatarIniciales
 import com.example.appprotocolos_eq014.ui.theme.AppProtocolos_EQ014Theme
 import com.example.appprotocolos_eq014.viewmodel.GestionUsuariosViewModel

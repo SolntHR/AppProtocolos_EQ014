@@ -3,20 +3,20 @@ package com.example.appprotocolos_eq014.repository
 import android.content.ContentValues
 import android.database.Cursor
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.EquipoDetalle
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.ProtocoloResumen
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class ProtocoloRepository(private val dbHelper: InduztekDbHelper) {
 
-    suspend fun obtenerEquipo(idEquipo: Long): EquipoDetalle? = withContext(Dispatchers.IO) {
+    suspend fun obtenerEquipo(idEquipo: Long): Equipo? = withContext(Dispatchers.IO) {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
-            SELECT e.id_equipo, e.tag, t.nombre AS tipo, e.marca, e.modelo, e.numero_serie,
-                   i.nombre AS instalacion, e.potencia_kva, e.tensiones
+            SELECT e.id_equipo, e.id_instalacion, e.id_tipo_equipo, e.tag, t.nombre AS tipo,
+                   e.marca, e.modelo, e.numero_serie, i.nombre AS instalacion, e.potencia_kva, e.tensiones
             FROM EQUIPO e
             INNER JOIN TIPO_EQUIPO t ON e.id_tipo_equipo = t.id_tipo_equipo
             INNER JOIN INSTALACION i ON e.id_instalacion = i.id_instalacion
@@ -25,16 +25,18 @@ class ProtocoloRepository(private val dbHelper: InduztekDbHelper) {
             arrayOf(idEquipo.toString())
         )
         val equipo = if (cursor.moveToFirst()) {
-            EquipoDetalle(
+            Equipo(
                 id = cursor.getLong(0),
-                tag = cursor.getString(1),
-                tipo = cursor.getString(2),
-                marca = cursor.getString(3),
-                modelo = cursor.getString(4),
-                numeroSerie = cursor.getString(5),
-                instalacion = cursor.getString(6),
-                potenciaKva = cursor.doubleONulo(7),
-                tensionKv = cursor.getString(8)
+                instalacionId = cursor.getLong(1),
+                tipoEquipoId = cursor.getLong(2),
+                tag = cursor.getString(3),
+                tipoEquipoNombre = cursor.getString(4),
+                marca = cursor.getString(5),
+                modelo = cursor.getString(6),
+                numeroSerie = cursor.getString(7),
+                instalacionNombre = cursor.getString(8),
+                potenciaKva = cursor.doubleONulo(9),
+                tensiones = cursor.getString(10)
             )
         } else {
             null
@@ -43,7 +45,7 @@ class ProtocoloRepository(private val dbHelper: InduztekDbHelper) {
         equipo
     }
 
-    suspend fun historialEquipo(idEquipo: Long): List<ProtocoloResumen> = withContext(Dispatchers.IO) {
+    suspend fun historialEquipo(idEquipo: Long): List<Protocolo> = withContext(Dispatchers.IO) {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
             SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.observaciones,
@@ -56,25 +58,28 @@ class ProtocoloRepository(private val dbHelper: InduztekDbHelper) {
                    (SELECT m.valor FROM MEDICION m
                     INNER JOIN PRUEBA pr ON m.id_prueba = pr.id_prueba
                     INNER JOIN PARAMETRO pa ON m.id_parametro = pa.id_parametro
-                    WHERE pr.id_protocolo = p.id_protocolo AND pa.codigo = 'LECTURA_10MIN' LIMIT 1) AS lectura_10
+                    WHERE pr.id_protocolo = p.id_protocolo AND pa.codigo = 'LECTURA_10MIN' LIMIT 1) AS lectura_10,
+                    p.id_visita
             FROM PROTOCOLO p
             WHERE p.id_equipo = ?
             ORDER BY p.fecha_hora_prueba DESC
             """,
             arrayOf(idEquipo.toString())
         )
-        val protocolos = mutableListOf<ProtocoloResumen>()
+        val protocolos = mutableListOf<Protocolo>()
         while (cursor.moveToNext()) {
             protocolos.add(
-                ProtocoloResumen(
+                Protocolo(
                     id = cursor.getString(0),
                     numero = cursor.getString(1),
-                    fecha = cursor.getString(2),
+                    fechaHoraPrueba = cursor.getString(2),
                     estado = EstadoProtocolo.desdeId(cursor.getLong(3)),
                     observaciones = cursor.getString(4),
-                    resultado = ResultadoPrueba.desdeId(cursor.longONulo(5)),
+                    resultadoGlobal = ResultadoPrueba.desdeId(cursor.longONulo(5)),
                     lectura1Min = cursor.doubleONulo(6),
-                    lectura10Min = cursor.doubleONulo(7)
+                    lectura10Min = cursor.doubleONulo(7),
+                    visitaId = cursor.getLong(8),
+                    equipoId = idEquipo
                 )
             )
         }

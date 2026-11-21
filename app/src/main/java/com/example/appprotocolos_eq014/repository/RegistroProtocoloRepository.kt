@@ -4,65 +4,26 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.CambioEstado
-import com.example.appprotocolos_eq014.model.EquipoProtocolo
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.Fechas
-import com.example.appprotocolos_eq014.model.InstrumentoOpcion
-import com.example.appprotocolos_eq014.model.MedicionAnterior
-import com.example.appprotocolos_eq014.model.MedicionDetalle
-import com.example.appprotocolos_eq014.model.Parametros
-import com.example.appprotocolos_eq014.model.ProtocoloDetalle
-import com.example.appprotocolos_eq014.model.ProtocoloListado
-import com.example.appprotocolos_eq014.model.PruebaDetalle
-import com.example.appprotocolos_eq014.model.ReglasProtocolo
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.Rol
-import com.example.appprotocolos_eq014.model.TipoPrueba
-import com.example.appprotocolos_eq014.model.VisitaAbierta
+import com.example.appprotocolos_eq014.model.entidades.HistorialEstado
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
+import com.example.appprotocolos_eq014.util.Fechas
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
+import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
+import com.example.appprotocolos_eq014.model.entidades.Medicion
+import com.example.appprotocolos_eq014.model.reglas.Parametros
+import com.example.appprotocolos_eq014.model.entidades.Prueba
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
+import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.Rol
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
+import com.example.appprotocolos_eq014.model.entidades.Visita
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
-
-data class PruebaAGuardar(
-    val tipo: TipoPrueba,
-    val elemento: String,
-    val instrumentoId: Long?,
-    val resultado: ResultadoPrueba?,
-    val comentario: String?,
-    val ingresadoManualmente: Boolean,
-    val valores: Map<String, Double>,
-    val realizada: Boolean = true,
-    val motivoNoRealizada: String? = null
-)
-
-data class ProtocoloAGuardar(
-    val idProtocolo: String?,
-    val visitaId: Long,
-    val equipoId: Long,
-    val temperatura: Double?,
-    val humedad: Double?,
-    val descripcionMantenimiento: String?,
-    val observaciones: String?,
-    val pruebas: List<PruebaAGuardar>
-)
-
-data class ProtocoloEditable(
-    val idProtocolo: String,
-    val numero: String,
-    val estado: EstadoProtocolo,
-    val visitaId: Long,
-    val equipoId: Long,
-    val creadorId: Long,
-    val fechaHoraPrueba: String,
-    val temperatura: Double?,
-    val humedad: Double?,
-    val descripcionMantenimiento: String?,
-    val observaciones: String?,
-    val pruebas: List<PruebaAGuardar>
-)
 
 class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
     suspend fun numeroDe(idProtocolo: String): String = withContext(Dispatchers.IO) {
@@ -77,14 +38,15 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
 
     private val selectVisita = """
         SELECT v.id_visita, v.numero_ot, v.fecha, v.tipo_visita, v.id_instalacion,
-               i.nombre AS instalacion, c.nombre AS cliente, ing.nombre AS ingeniero
+               i.nombre AS instalacion, c.nombre AS cliente, ing.nombre AS ingeniero,
+               v.id_ingeniero_cargo, v.fecha_hora_cierre
         FROM VISITA v
         INNER JOIN INSTALACION i ON i.id_instalacion = v.id_instalacion
         INNER JOIN USUARIO c ON c.id_usuario = i.id_usuario_cliente
         INNER JOIN USUARIO ing ON ing.id_usuario = v.id_ingeniero_cargo
     """
 
-    suspend fun visitasAbiertas(usuarioId: Long, rol: String): List<VisitaAbierta> = withContext(Dispatchers.IO) {
+    suspend fun visitasAbiertas(usuarioId: Long, rol: String): List<Visita> = withContext(Dispatchers.IO) {
         val todas = if (rol == Rol.JEFE_TECNICO) "1" else "0"
         val sql = """
             $selectVisita
@@ -99,12 +61,12 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             .use { c -> buildList { while (c.moveToNext()) add(leerVisita(c)) } }
     }
 
-    suspend fun visita(idVisita: Long): VisitaAbierta? = withContext(Dispatchers.IO) {
+    suspend fun visita(idVisita: Long): Visita? = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery("$selectVisita WHERE v.id_visita = ?", arrayOf(idVisita.toString()))
             .use { c -> if (c.moveToFirst()) leerVisita(c) else null }
     }
 
-    private fun leerVisita(c: Cursor) = VisitaAbierta(
+    private fun leerVisita(c: Cursor) = Visita(
         id = c.getLong(0),
         numeroOt = c.getString(1),
         fecha = c.getString(2),
@@ -112,14 +74,16 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         instalacionId = c.getLong(4),
         instalacionNombre = c.getString(5),
         clienteNombre = c.getString(6),
-        ingenieroNombre = c.getString(7)
+        ingenieroNombre = c.getString(7),
+        ingenieroCargoId = c.getLong(8),
+        fechaHoraCierre = c.getString(9)
     )
 
     suspend fun equiposDisponibles(
         idVisita: Long,
         idInstalacion: Long,
         idProtocoloEditando: String?
-    ): List<EquipoProtocolo> = withContext(Dispatchers.IO) {
+    ): List<Equipo> = withContext(Dispatchers.IO) {
         val sql = """
             SELECT e.id_equipo, e.tag, e.id_tipo_equipo, t.nombre, e.marca, e.numero_serie,
                    e.potencia_kva, e.tensiones, e.corriente, e.max_contactos_uohm
@@ -138,8 +102,9 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             buildList {
                 while (c.moveToNext()) {
                     add(
-                        EquipoProtocolo(
+                        Equipo(
                             id = c.getLong(0),
+                            instalacionId = idInstalacion,
                             tag = c.getString(1),
                             tipoEquipoId = c.getLong(2),
                             tipoEquipoNombre = c.getString(3),
@@ -156,7 +121,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    suspend fun instrumentos(): List<InstrumentoOpcion> = withContext(Dispatchers.IO) {
+    suspend fun instrumentos(): List<Instrumento> = withContext(Dispatchers.IO) {
         val sql = """
             SELECT ins.id_instrumento, ins.nombre_tipo, ins.marca, ins.modelo, ins.numero_serie,
                    (SELECT MAX(c.fecha_vencimiento) FROM CALIBRACION c WHERE c.id_instrumento = ins.id_instrumento)
@@ -166,14 +131,23 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         helper.readableDatabase.rawQuery(sql, null).use { c ->
             buildList {
                 while (c.moveToNext()) {
-                    add(InstrumentoOpcion(c.getLong(0), c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getString(5)))
+                    add(
+                        Instrumento(
+                            c.getLong(0),
+                            c.getString(1),
+                            c.getString(2),
+                            c.getString(3),
+                            c.getString(4),
+                            fechaVencimiento = c.getString(5)
+                        )
+                    )
                 }
             }
         }
     }
 
     private val selectListado = """
-        SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.id_usuario_registra,
+        SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.id_usuario_registra, p.id_visita,
                e.id_equipo, e.tag, te.nombre AS tipo_equipo, i.nombre AS instalacion,
                c.nombre AS cliente, u.nombre AS tecnico,
                (SELECT MAX(pr.id_resultado) FROM PRUEBA pr WHERE pr.id_protocolo = p.id_protocolo AND pr.realizada = 1) AS resultado,
@@ -187,19 +161,20 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         INNER JOIN USUARIO u ON u.id_usuario = p.id_usuario_registra
     """
 
-    private fun leerListado(c: Cursor): ProtocoloListado {
+    private fun leerListado(c: Cursor): Protocolo {
         val idxRes = c.getColumnIndexOrThrow("resultado")
-        return ProtocoloListado(
+        return Protocolo(
             id = c.getString(c.getColumnIndexOrThrow("id_protocolo")),
             numero = c.getString(c.getColumnIndexOrThrow("numero")),
+            visitaId = c.getLong(c.getColumnIndexOrThrow("id_visita")),
             equipoId = c.getLong(c.getColumnIndexOrThrow("id_equipo")),
             tagEquipo = c.getString(c.getColumnIndexOrThrow("tag")),
-            tipoEquipo = c.getString(c.getColumnIndexOrThrow("tipo_equipo")),
-            instalacion = c.getString(c.getColumnIndexOrThrow("instalacion")),
-            cliente = c.getString(c.getColumnIndexOrThrow("cliente")),
-            tecnicoId = c.getLong(c.getColumnIndexOrThrow("id_usuario_registra")),
-            tecnico = c.getString(c.getColumnIndexOrThrow("tecnico")),
-            fechaHora = c.getString(c.getColumnIndexOrThrow("fecha_hora_prueba")),
+            tipoEquipoNombre = c.getString(c.getColumnIndexOrThrow("tipo_equipo")),
+            instalacionNombre = c.getString(c.getColumnIndexOrThrow("instalacion")),
+            clienteNombre = c.getString(c.getColumnIndexOrThrow("cliente")),
+            usuarioRegistraId = c.getLong(c.getColumnIndexOrThrow("id_usuario_registra")),
+            tecnicoNombre = c.getString(c.getColumnIndexOrThrow("tecnico")),
+            fechaHoraPrueba = c.getString(c.getColumnIndexOrThrow("fecha_hora_prueba")),
             estado = EstadoProtocolo.desdeId(c.getLong(c.getColumnIndexOrThrow("id_estado"))),
             resultadoGlobal = if (c.isNull(idxRes)) null else ResultadoPrueba.desdeId(c.getLong(idxRes)),
             reemplazadoPorNumero = c.getString(c.getColumnIndexOrThrow("reemplazado_por")),
@@ -207,12 +182,12 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         )
     }
 
-    private fun consultarListado(db: SQLiteDatabase, where: String, args: Array<String>): List<ProtocoloListado> =
+    private fun consultarListado(db: SQLiteDatabase, where: String, args: Array<String>): List<Protocolo> =
         db.rawQuery("$selectListado WHERE $where ORDER BY p.fecha_hora_prueba DESC", args).use { c ->
             buildList { while (c.moveToNext()) add(leerListado(c)) }
         }
 
-    suspend fun todos(): List<ProtocoloListado> = withContext(Dispatchers.IO) {
+    suspend fun todos(): List<Protocolo> = withContext(Dispatchers.IO) {
         consultarListado(helper.readableDatabase, "1 = 1", emptyArray())
     }
 
@@ -273,14 +248,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         val maxContactos: Double?
     )
 
-    private data class PruebaLeida(
-        val datos: PruebaAGuardar,
-        val instrumento: String?,
-        val realizada: Boolean,
-        val motivoNoRealizada: String?
-    )
-
-    suspend fun detalle(idProtocolo: String): ProtocoloDetalle? = withContext(Dispatchers.IO) {
+    suspend fun detalle(idProtocolo: String): Protocolo? = withContext(Dispatchers.IO) {
         val db = helper.readableDatabase
         val resumen = consultarListado(db, "p.id_protocolo = ?", arrayOf(idProtocolo)).firstOrNull()
             ?: return@withContext null
@@ -300,29 +268,29 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             Cabecera(c.getString(0), c.realONulo(1), c.realONulo(2), c.getString(3), c.getString(4), c.realONulo(5))
         }
 
-        val previos = anteriores(db, resumen.equipoId, idProtocolo, resumen.fechaHora)
-        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map { leida ->
-            val p = leida.datos
+        val previos = anteriores(db, resumen.equipoId, idProtocolo, resumen.fechaHoraPrueba)
+        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map { p ->
             val anterior = previos["${p.tipo.idDb}|${p.elemento}"]
-            PruebaDetalle(
-                tipo = p.tipo,
-                elemento = p.elemento,
-                instrumento = leida.instrumento,
-                resultado = p.resultado,
-                comentario = p.comentario,
-                ingresadoManualmente = p.ingresadoManualmente,
-                realizada = leida.realizada,
-                motivoNoRealizada = leida.motivoNoRealizada,
-                mediciones = p.valores.mapNotNull { (codigo, valor) ->
-                    Parametros.porCodigo(codigo)?.let { MedicionDetalle(codigo, it.etiqueta, valor, it.unidad) }
-                },
+            p.copy(
                 calculo = ReglasProtocolo.resumenCalculo(p.tipo, p.valores, cabecera.maxContactos),
-                comparaciones = if (anterior == null || !leida.realizada) emptyList()
+                comparaciones = if (anterior == null || !p.realizada) emptyList()
                 else ReglasProtocolo.comparar(p.tipo, p.valores, anterior)
             )
         }
 
-        val historial = db.rawQuery(
+        resumen.copy(
+            numeroOt = cabecera.numeroOt,
+            temperatura = cabecera.temperatura,
+            humedad = cabecera.humedad,
+            descripcionMantenimiento = cabecera.descripcion,
+            observaciones = cabecera.observaciones,
+            pruebas = pruebas,
+            historialEstados = leerHistorialEstados(db, idProtocolo)
+        )
+    }
+
+    private fun leerHistorialEstados(db: SQLiteDatabase, idProtocolo: String): List<HistorialEstado> =
+        db.rawQuery(
             """
             SELECT h.id_estado_anterior, h.id_estado_nuevo, u.nombre, h.fecha_hora, h.motivo
             FROM HISTORIAL_ESTADO h INNER JOIN USUARIO u ON u.id_usuario = h.id_usuario
@@ -331,10 +299,10 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             """.trimIndent(),
             arrayOf(idProtocolo)
         ).use { c ->
-            buildList {
+            buildList{
                 while (c.moveToNext()) {
                     add(
-                        CambioEstado(
+                        HistorialEstado(
                             anterior = if (c.isNull(0)) null else EstadoProtocolo.desdeId(c.getLong(0)),
                             nuevo = EstadoProtocolo.desdeId(c.getLong(1)),
                             usuario = c.getString(2),
@@ -346,24 +314,16 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             }
         }
 
-        ProtocoloDetalle(
-            resumen = resumen,
-            numeroOt = cabecera.numeroOt,
-            temperatura = cabecera.temperatura,
-            humedad = cabecera.humedad,
-            descripcionMantenimiento = cabecera.descripcion,
-            observaciones = cabecera.observaciones,
-            pruebas = pruebas,
-            historialEstados = historial,
-            historialEquipo = consultarListado(db, "p.id_equipo = ?", arrayOf(resumen.equipoId.toString()))
-        )
+    suspend fun historialDeEquipo(idEquipo: Long): List<Protocolo> = withContext(Dispatchers.IO){
+        consultarListado(helper.readableDatabase, "p.id_equipo = ?", arrayOf(idEquipo.toString()))
     }
 
-    private fun leerPruebas(db: SQLiteDatabase, idProtocolo: String, soloRealizadas: Boolean): List<PruebaLeida> {
-        val valoresPorPrueba = mutableMapOf<Long, MutableMap<String, Double>>()
+
+    private fun leerPruebas(db: SQLiteDatabase, idProtocolo: String, soloRealizadas: Boolean): List<Prueba> {
+        val medicionesPorPrueba = mutableMapOf<Long, MutableList<Medicion>>()
         db.rawQuery(
             """
-            SELECT m.id_prueba, m.id_parametro, m.valor
+            SELECT m.id_medicion, m.id_prueba, m.id_parametro, m.elemento, m.valor, m.unidad, m.orden
             FROM MEDICION m INNER JOIN PRUEBA pr ON pr.id_prueba = m.id_prueba
             WHERE pr.id_protocolo = ?
             ORDER BY m.id_prueba, m.orden
@@ -371,16 +331,30 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             arrayOf(idProtocolo)
         ).use { c ->
             while (c.moveToNext()) {
-                val campo = Parametros.porId(c.getLong(1)) ?: continue
-                valoresPorPrueba.getOrPut(c.getLong(0)) { linkedMapOf() }[campo.codigo] = c.getDouble(2)
+                val campo = Parametros.porId(c.getLong(2)) ?: continue
+                medicionesPorPrueba.getOrPut((c.getLong(1))) {mutableListOf()}.add(
+                    Medicion(
+                        id = c.getLong(0),
+                        pruebaId = c.getLong(1),
+                        parametroId = c.getLong(2),
+                        parametroCodigo = campo.codigo,
+                        parametroNombre = campo.etiqueta,
+                        elemento = c.getString(3),
+                        valor = c.getDouble(4),
+                        unidad = c.getString(5),
+                        orden = c.getInt(6)
+                    )
+                )
+
             }
         }
+
         val filtro = if (soloRealizadas) " AND pr.realizada = 1" else ""
         return db.rawQuery(
             """
             SELECT pr.id_prueba, pr.id_tipo_prueba, pr.elemento, pr.id_instrumento, pr.id_resultado,
                    pr.comentario, pr.ingresado_manualmente, pr.realizada, pr.motivo_no_realizada,
-                   ins.marca, ins.modelo, ins.numero_serie
+                   ins.marca, ins.modelo, ins.numero_serie, pr.momento
             FROM PRUEBA pr LEFT JOIN INSTRUMENTO ins ON ins.id_instrumento = pr.id_instrumento
             WHERE pr.id_protocolo = ?$filtro
             ORDER BY pr.id_tipo_prueba, pr.id_prueba
@@ -394,19 +368,20 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                         listOfNotNull(c.getString(9), c.getString(10)).joinToString(" ") +
                                 (c.getString(11)?.let { " · Serie $it" } ?: "")
                     add(
-                        PruebaLeida(
-                            datos = PruebaAGuardar(
-                                tipo = tipo,
-                                elemento = c.getString(2),
-                                instrumentoId = if (c.isNull(3)) null else c.getLong(3),
-                                resultado = if (c.isNull(4)) null else ResultadoPrueba.desdeId(c.getLong(4)),
-                                comentario = c.getString(5),
-                                ingresadoManualmente = c.getInt(6) == 1,
-                                valores = valoresPorPrueba[c.getLong(0)].orEmpty()
-                            ),
-                            instrumento = instrumento,
+                        Prueba(
+                            id = c.getLong(0),
+                            protocoloId = idProtocolo,
+                            tipo = tipo,
+                            elemento = c.getString(2),
+                            momento = c.getString(12) ?: "UNICA",
+                            instrumentoId = if (c.isNull(3)) null else c.getLong(3),
+                            resultado = if (c.isNull(4)) null else ResultadoPrueba.desdeId(c.getLong(4)),
+                            comentario = c.getString(5),
+                            ingresadoManualmente = c.getInt(6) == 1,
                             realizada = c.getInt(7) == 1,
-                            motivoNoRealizada = c.getString(8)
+                            motivoNoRealizada = c.getString(8),
+                            instrumentoNombre = instrumento,
+                            mediciones = medicionesPorPrueba[c.getLong(0)].orEmpty()
                         )
                     )
                 }
@@ -414,11 +389,9 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    suspend fun paraEditar(idProtocolo: String): ProtocoloEditable? = withContext(Dispatchers.IO) {
+    suspend fun paraEditar(idProtocolo: String): Protocolo? = withContext(Dispatchers.IO) {
         val db = helper.readableDatabase
-        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false).map {
-            it.datos.copy(realizada = it.realizada, motivoNoRealizada = it.motivoNoRealizada)
-        }
+        val pruebas = leerPruebas(db, idProtocolo, soloRealizadas = false)
         db.rawQuery(
             """
             SELECT id_protocolo, numero, id_estado, id_visita, id_equipo, id_usuario_registra,
@@ -428,25 +401,26 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             arrayOf(idProtocolo)
         ).use { c ->
             if (!c.moveToFirst()) return@use null
-            ProtocoloEditable(
-                idProtocolo = c.getString(0),
+            Protocolo(
+                id = c.getString(0),
                 numero = c.getString(1),
                 estado = EstadoProtocolo.desdeId(c.getLong(2)),
                 visitaId = c.getLong(3),
                 equipoId = c.getLong(4),
-                creadorId = c.getLong(5),
+                usuarioRegistraId = c.getLong(5),
                 fechaHoraPrueba = c.getString(6),
                 temperatura = c.realONulo(7),
                 humedad = c.realONulo(8),
                 descripcionMantenimiento = c.getString(9),
                 observaciones = c.getString(10),
-                pruebas = pruebas
+                pruebas = pruebas,
+                historialEstados = leerHistorialEstados(db,idProtocolo)
             )
         }
     }
 
     suspend fun guardar(
-        datos: ProtocoloAGuardar,
+        datos: Protocolo,
         usuarioId: Long,
         rol: String,
         registrarEnTerreno: Boolean
@@ -467,7 +441,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             val idProtocolo: String
             val estadoActual: EstadoProtocolo
 
-            if (datos.idProtocolo == null) {
+            if (datos.esNuevo) {
                 validarVisitaAsignada(db, datos.visitaId, datos.equipoId, usuarioId, rol)
                 val yaExiste = db.rawQuery(
                     "SELECT 1 FROM PROTOCOLO WHERE id_visita = ? AND id_equipo = ? LIMIT 1",
@@ -490,7 +464,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 insertarHistorial(db, idProtocolo, null, EstadoProtocolo.BORRADOR, usuarioId, ahora, "Creación del protocolo")
                 estadoActual = EstadoProtocolo.BORRADOR
             } else {
-                idProtocolo = datos.idProtocolo
+                idProtocolo = datos.id
                 val (estado, creador) = db.rawQuery(
                     "SELECT id_estado, id_usuario_registra FROM PROTOCOLO WHERE id_protocolo = ?",
                     arrayOf(idProtocolo)
@@ -512,7 +486,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                     put("id_protocolo", idProtocolo)
                     put("id_tipo_prueba", prueba.tipo.idDb)
                     put("elemento", prueba.elemento)
-                    put("momento", "UNICA")
+                    put("momento", prueba.momento)
                     put("realizada", if (prueba.realizada) 1 else 0)
                     put("motivo_no_realizada", prueba.motivoNoRealizada)
                     if (prueba.instrumentoId != null) put("id_instrumento", prueba.instrumentoId) else putNull("id_instrumento")
@@ -553,7 +527,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
         }
     }
 
-    private fun ContentValues.putCabecera(datos: ProtocoloAGuardar) {
+    private fun ContentValues.putCabecera(datos: Protocolo) {
         if (datos.temperatura != null) put("temperatura_c", datos.temperatura) else putNull("temperatura_c")
         if (datos.humedad != null) put("humedad_pct", datos.humedad) else putNull("humedad_pct")
         put("descripcion_mantenimiento", datos.descripcionMantenimiento?.ifBlank { null })

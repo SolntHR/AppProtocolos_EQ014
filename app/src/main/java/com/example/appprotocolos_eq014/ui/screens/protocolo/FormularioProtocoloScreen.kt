@@ -30,20 +30,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.CampoMedicion
-import com.example.appprotocolos_eq014.model.Comparacion
-import com.example.appprotocolos_eq014.model.EstadoFila
-import com.example.appprotocolos_eq014.model.Fechas
-import com.example.appprotocolos_eq014.model.FilaPruebaUi
-import com.example.appprotocolos_eq014.model.FormularioProtocoloUiState
-import com.example.appprotocolos_eq014.model.InstrumentoOpcion
-import com.example.appprotocolos_eq014.model.Parametros
-import com.example.appprotocolos_eq014.model.ReglasProtocolo
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.Rol
-import com.example.appprotocolos_eq014.model.SeccionPruebaUi
-import com.example.appprotocolos_eq014.model.TipoPrueba
-import com.example.appprotocolos_eq014.model.formatoCl
+import com.example.appprotocolos_eq014.model.reglas.CampoMedicion
+import com.example.appprotocolos_eq014.model.reglas.Comparacion
+import com.example.appprotocolos_eq014.model.reglas.EstadoFila
+import com.example.appprotocolos_eq014.util.Fechas
+import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
+import com.example.appprotocolos_eq014.model.uistate.FormularioProtocoloUiState
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
+import com.example.appprotocolos_eq014.model.reglas.Parametros
+import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.Rol
+import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
+import com.example.appprotocolos_eq014.util.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
@@ -124,6 +124,9 @@ fun FormularioProtocoloScreen(
                 MensajeAvisoProtocolo("Tu perfil es de solo consulta. No puedes registrar protocolos.")
             }
             state.error?.let { MensajeAvisoProtocolo(it) }
+            state.motivoObservacion?.let {
+                MensajeAvisoProtocolo("Observado: $it. Corrige lo indicado y vuelve a registrar.", esError = false)
+            }
             state.estadoActual?.let { estado ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Estado actual: ", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -305,7 +308,7 @@ private fun SeccionAmbiente(state: FormularioProtocoloUiState, viewModel: Formul
 private fun TarjetaPrueba(
     seccion: SeccionPruebaUi,
     tipoEquipoId: Long,
-    instrumentos: List<InstrumentoOpcion>,
+    instrumentos: List<Instrumento>,
     puedeResultadoManual: Boolean,
     viewModel: FormularioProtocoloViewModel
 ) {

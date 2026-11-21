@@ -1,5 +1,8 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.reglas
 
+
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.util.formatoCl
 import kotlin.math.abs
 
 data class CampoMedicion(
@@ -138,7 +141,14 @@ sealed class ReglaPrueba(val tipo: TipoPrueba) {
         valoresPrincipales.mapNotNull { campo ->
             val actual = actuales[campo.codigo] ?: return@mapNotNull null
             val previo = anterior.valores[campo.codigo] ?: return@mapNotNull null
-            Comparacion(campo.codigo, campo.etiqueta, previo, actual, campo.unidad, anterior.numeroProtocolo)
+            Comparacion(
+                campo.codigo,
+                campo.etiqueta,
+                previo,
+                actual,
+                campo.unidad,
+                anterior.numeroProtocolo
+            )
         }
 
     protected fun invalida(mensaje: String, campo: CampoMedicion? = null) =

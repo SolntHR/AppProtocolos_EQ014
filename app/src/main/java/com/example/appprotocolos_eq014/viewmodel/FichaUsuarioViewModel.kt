@@ -2,8 +2,8 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appprotocolos_eq014.model.FichaUsuarioUiState
-import com.example.appprotocolos_eq014.model.RolPersonal
+import com.example.appprotocolos_eq014.model.uistate.FichaUsuarioUiState
+import com.example.appprotocolos_eq014.model.uistate.RolPersonal
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.util.Validaciones
 import kotlinx.coroutines.flow.MutableStateFlow

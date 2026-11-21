@@ -1,4 +1,15 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.uistate
+
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
+import com.example.appprotocolos_eq014.model.entidades.Visita
+import com.example.appprotocolos_eq014.model.reglas.EstadoFila
+import com.example.appprotocolos_eq014.model.reglas.Evaluacion
+import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
+import com.example.appprotocolos_eq014.model.reglas.peorResultado
 
 data class FilaPruebaUi(
     val elemento: String,
@@ -40,21 +51,22 @@ data class FormularioProtocoloUiState(
     val idProtocolo: String? = null,
     val numero: String? = null,
     val estadoActual: EstadoProtocolo? = null,
+    val motivoObservacion: String? = null,
     val fechaHoraPrueba: String = "",
     val tecnicoNombre: String = "",
     val rolUsuario: String = "",
 
-    val visitas: List<VisitaAbierta> = emptyList(),
-    val visitaSeleccionada: VisitaAbierta? = null,
-    val equipos: List<EquipoProtocolo> = emptyList(),
-    val equipoSeleccionado: EquipoProtocolo? = null,
+    val visitas: List<Visita> = emptyList(),
+    val visitaSeleccionada: Visita? = null,
+    val equipos: List<Equipo> = emptyList(),
+    val equipoSeleccionado: Equipo? = null,
 
     val temperatura: String = "",
     val humedad: String = "",
     val errorTemperatura: String? = null,
     val errorHumedad: String? = null,
 
-    val instrumentos: List<InstrumentoOpcion> = emptyList(),
+    val instrumentos: List<Instrumento> = emptyList(),
     val secciones: List<SeccionPruebaUi> = emptyList(),
     val anteriores: Map<String, MedicionAnterior> = emptyMap(),
 

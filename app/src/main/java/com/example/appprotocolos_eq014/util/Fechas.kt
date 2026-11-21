@@ -1,4 +1,4 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.util
 
 import java.text.SimpleDateFormat
 import java.util.Calendar

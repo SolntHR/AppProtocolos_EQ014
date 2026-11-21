@@ -1,14 +1,11 @@
-package com.example.appprotocolos_eq014.model
+package com.example.appprotocolos_eq014.model.uistate
+
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 
 data class OpcionCatalogo(
     val id: Long,
     val nombre: String
-)
-
-data class EquipoExistente(
-    val id: Long,
-    val tag: String,
-    val descripcion: String
 )
 
 data class FormularioEquipoUiState(
@@ -30,7 +27,7 @@ data class FormularioEquipoUiState(
     val maxContactos: String = "",
     val observaciones: String = "",
     val errores: Map<String, String> = emptyMap(),
-    val equipoExistente: EquipoExistente? = null,
+    val equipoExistente: Equipo? = null,
     val error: String? = null,
     val equipoGuardadoId: Long? = null
 ) {

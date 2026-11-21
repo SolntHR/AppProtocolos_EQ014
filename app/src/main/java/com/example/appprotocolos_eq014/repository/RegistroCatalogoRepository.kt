@@ -2,34 +2,12 @@ package com.example.appprotocolos_eq014.repository
 
 import android.content.ContentValues
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.EquipoExistente
-import com.example.appprotocolos_eq014.model.OpcionCatalogo
-import com.example.appprotocolos_eq014.model.VisitaResumen
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Instalacion
+import com.example.appprotocolos_eq014.model.uistate.OpcionCatalogo
+import com.example.appprotocolos_eq014.model.entidades.Visita
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-data class EquipoAGuardar(
-    val idInstalacion: Long,
-    val idTipoEquipo: Long,
-    val tag: String,
-    val marca: String?,
-    val modelo: String?,
-    val numeroSerie: String?,
-    val anio: Int?,
-    val potenciaKva: Double?,
-    val tensiones: String?,
-    val corriente: Double?,
-    val maxContactosUohm: Double?,
-    val observaciones: String?
-)
-
-data class InstalacionAGuardar(
-    val idCliente: Long,
-    val nombre: String,
-    val ubicacion: String?,
-    val idComuna: Long,
-    val observacionesAcceso: String?
-)
 
 class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
     private fun opciones(sql: String, args: Array<String>? = null): List<OpcionCatalogo> =
@@ -71,7 +49,7 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         )
     }
 
-    suspend fun buscarEquipo(idInstalacion: Long, tag: String): EquipoExistente? = withContext(Dispatchers.IO) {
+    suspend fun buscarEquipo(idInstalacion: Long, tag: String): Equipo? = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(
             """
             SELECT e.id_equipo, e.tag, t.nombre, e.marca, e.numero_serie
@@ -81,19 +59,21 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
             arrayOf(idInstalacion.toString(), tag)
         ).use { c ->
             if (!c.moveToFirst()) null
-            else EquipoExistente(
+            else Equipo(
                 id = c.getLong(0),
+                instalacionId = idInstalacion,
                 tag = c.getString(1),
-                descripcion = listOfNotNull(c.getString(2), c.getString(3), c.getString(4)?.let { "Serie $it" })
-                    .joinToString(" · ")
+                tipoEquipoNombre = c.getString(2),
+                marca = c.getString(3),
+                numeroSerie = c.getString(4),
             )
         }
     }
 
-    suspend fun crearEquipo(e: EquipoAGuardar): Long = withContext(Dispatchers.IO) {
+    suspend fun crearEquipo(e: Equipo): Long = withContext(Dispatchers.IO) {
         val valores = ContentValues().apply {
-            put("id_instalacion", e.idInstalacion)
-            put("id_tipo_equipo", e.idTipoEquipo)
+            put("id_instalacion", e.instalacionId)
+            put("id_tipo_equipo", e.tipoEquipoId)
             put("tag", e.tag)
             put("marca", e.marca)
             put("modelo", e.modelo)
@@ -115,23 +95,24 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
         ).use { it.moveToFirst() }
     }
 
-    suspend fun crearInstalacion(i: InstalacionAGuardar): Long = withContext(Dispatchers.IO) {
+    suspend fun crearInstalacion(instalacion: Instalacion): Long = withContext(Dispatchers.IO) {
         val valores = ContentValues().apply {
-            put("id_usuario_cliente", i.idCliente)
-            put("nombre", i.nombre)
-            put("ubicacion", i.ubicacion)
-            put("id_comuna", i.idComuna)
-            put("observaciones_acceso", i.observacionesAcceso)
+            put("id_usuario_cliente", instalacion.clienteId)
+            put("nombre", instalacion.nombre)
+            put("ubicacion", instalacion.ubicacion)
+            put("id_comuna", instalacion.comunaId)
+            put("observaciones_acceso", instalacion.observacionesAcceso)
         }
         helper.writableDatabase.insertOrThrow("INSTALACION", null, valores)
     }
 
-    suspend fun visitasCerradasDeCliente(idCliente: Long): List<VisitaResumen> = withContext(Dispatchers.IO) {
+    suspend fun visitasCerradasDeCliente(idCliente: Long): List<Visita> = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(
             """
-            SELECT v.id_visita, v.numero_ot, c.nombre, i.nombre, v.fecha,
+            SELECT v.id_visita, v.numero_ot, c.nombre, i.nombre, v.fecha, v.fecha_hora_cierre,
                    (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado NOT IN (1, 5)),
-                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado = 4)
+                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado = 4),
+                   v.id_instalacion, v.tipo_visita
             FROM VISITA v
             INNER JOIN INSTALACION i ON i.id_instalacion = v.id_instalacion
             INNER JOIN USUARIO c ON c.id_usuario = i.id_usuario_cliente
@@ -143,15 +124,17 @@ class RegistroCatalogoRepository(private val helper: InduztekDbHelper) {
             buildList {
                 while (c.moveToNext()) {
                     add(
-                        VisitaResumen(
+                        Visita(
                             id = c.getLong(0),
                             numeroOt = c.getString(1),
-                            cliente = c.getString(2),
-                            instalacion = c.getString(3),
+                            clienteNombre = c.getString(2),
+                            instalacionNombre = c.getString(3),
                             fecha = c.getString(4),
-                            cerrada = true,
-                            totalProtocolos = c.getInt(5),
-                            protocolosRegistrados = c.getInt(6)
+                            fechaHoraCierre = c.getString(5),
+                            totalProtocolos = c.getInt(6),
+                            protocolosFormalizados = c.getInt(7),
+                            instalacionId = c.getLong(8),
+                            tipoVisita = c.getString(9)
                         )
                     )
                 }

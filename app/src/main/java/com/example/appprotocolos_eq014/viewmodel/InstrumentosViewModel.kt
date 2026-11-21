@@ -2,8 +2,8 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appprotocolos_eq014.model.InstrumentoCalibracion
-import com.example.appprotocolos_eq014.model.InstrumentosUiState
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
+import com.example.appprotocolos_eq014.model.uistate.InstrumentosUiState
 import com.example.appprotocolos_eq014.repository.InstrumentoRepository
 import com.example.appprotocolos_eq014.util.Formato
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +30,7 @@ class InstrumentosViewModel(
         }
     }
 
-    fun onRegistrarCalibracion(instrumento: InstrumentoCalibracion) {
+    fun onRegistrarCalibracion(instrumento: Instrumento) {
         _uiState.update {
             it.copy(
                 instrumentoEditando = instrumento,
@@ -86,7 +86,7 @@ class InstrumentosViewModel(
                     guardando = false,
                     instrumentos = instrumentos,
                     instrumentoEditando = if (guardado) null else it.instrumentoEditando,
-                    mensaje = if (guardado) "Calibración registrada para ${instrumento.nombre}" else "No se pudo registrar la calibración"
+                    mensaje = if (guardado) "Calibración registrada para ${instrumento.nombreTipo}" else "No se pudo registrar la calibración"
                 )
             }
         }

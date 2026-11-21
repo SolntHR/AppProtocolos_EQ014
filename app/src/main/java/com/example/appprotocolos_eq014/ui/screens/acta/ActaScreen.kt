@@ -39,14 +39,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.ActaUiState
-import com.example.appprotocolos_eq014.model.ActaVisita
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.MedicionActa
-import com.example.appprotocolos_eq014.model.ProtocoloActa
-import com.example.appprotocolos_eq014.model.PruebaActa
-import com.example.appprotocolos_eq014.model.RecepcionActa
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.uistate.ActaUiState
+import com.example.appprotocolos_eq014.model.entidades.Visita
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.entidades.Medicion
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
+import com.example.appprotocolos_eq014.model.entidades.Prueba
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
+import com.example.appprotocolos_eq014.model.entidades.RecepcionActa
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.CampoBloqueado
@@ -184,7 +185,7 @@ fun ActaContent(
 }
 
 @Composable
-private fun DocumentoActa(acta: ActaVisita, onAbrirEquipo: (Long) -> Unit) {
+private fun DocumentoActa(acta: Visita, onAbrirEquipo: (Long) -> Unit) {
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
@@ -229,12 +230,12 @@ private fun DocumentoActa(acta: ActaVisita, onAbrirEquipo: (Long) -> Unit) {
             SelloPendiente()
 
             val datos = listOf(
-                stringResource(R.string.acta_cliente) to acta.cliente,
-                stringResource(R.string.acta_instalacion) to acta.instalacion,
+                stringResource(R.string.acta_cliente) to acta.clienteNombre,
+                stringResource(R.string.acta_instalacion) to acta.instalacionNombre,
                 stringResource(R.string.acta_fecha) to Formato.fecha(acta.fecha),
-                stringResource(R.string.acta_tipo_visita) to acta.tipoVisita,
+                stringResource(R.string.acta_tipo_visita) to acta.tipoVisitaTexto,
                 stringResource(R.string.acta_tecnico) to acta.tecnicos,
-                stringResource(R.string.acta_ingeniero) to acta.ingenieroCargo
+                stringResource(R.string.acta_ingeniero) to acta.ingenieroNombre
             )
             datos.chunked(2).forEach { par ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -256,7 +257,7 @@ private fun DocumentoActa(acta: ActaVisita, onAbrirEquipo: (Long) -> Unit) {
             )
             acta.protocolos.forEach { protocolo ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-                ProtocoloDocumento(protocolo = protocolo, onClick = { onAbrirEquipo(protocolo.idEquipo) })
+                ProtocoloDocumento(protocolo = protocolo, onClick = { onAbrirEquipo(protocolo.equipoId) })
             }
         }
     }
@@ -280,7 +281,7 @@ private fun SelloPendiente() {
 }
 
 @Composable
-private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
+private fun ProtocoloDocumento(protocolo: Protocolo, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -291,7 +292,7 @@ private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "${protocolo.numero} · ${protocolo.tag}",
+                text = "${protocolo.numero} · ${protocolo.tagEquipo}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -303,7 +304,7 @@ private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
             }
         }
         Text(
-            text = protocolo.descripcionEquipo,
+            text = protocolo.equipoDescripcion,
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -325,7 +326,7 @@ private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
 }
 
 @Composable
-private fun PruebaDocumento(prueba: PruebaActa) {
+private fun PruebaDocumento(prueba: Prueba) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -336,7 +337,7 @@ private fun PruebaDocumento(prueba: PruebaActa) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "${prueba.nombre} · ${prueba.elemento}",
+                text = "${prueba.tipo.nombre} · ${prueba.elemento}",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f)
@@ -358,9 +359,9 @@ private fun PruebaDocumento(prueba: PruebaActa) {
     }
 }
 
-private fun describir(medicion: MedicionActa): String {
+private fun describir(medicion: Medicion): String {
     val unidad = if (medicion.unidad == "-") "" else " ${medicion.unidad}"
-    return "${medicion.parametro}: ${Formato.numeroAutomatico(medicion.valor)}$unidad"
+    return "${medicion.parametroNombre}: ${Formato.numeroAutomatico(medicion.valor)}$unidad"
 }
 
 @Composable
@@ -483,23 +484,28 @@ private fun ActaPreview() {
                 isLoading = false,
                 puedeRegistrarRecepcion = true,
                 fechaHora = "27-10-2026 21:15",
-                acta = ActaVisita(
-                    idVisita = 1,
+                acta = Visita(
+                    id = 1,
                     numeroOt = "OT-2026-1187",
-                    cliente = "Envasadora del Pacífico S.A.",
-                    instalacion = "Planta Lampa",
                     fecha = "2026-09-26",
-                    tipoVisita = "Solo pruebas",
+                    instalacionId = 1,
+                    clienteNombre = "Envasadora del Pacífico S.A.",
+                    instalacionNombre = "Planta Lampa",
+                    tipoVisita = Visita.SOLO_PRUEBAS,
                     tecnicos = "Matías Godoy Herrera",
-                    ingenieroCargo = "Andrea Contreras Silva",
+                    ingenieroNombre = "Andrea Contreras Silva",
                     protocolos = listOf(
-                        ProtocoloActa(
-                            "PT-2026-0401", 1, "TR-01", "Transformador Rhona · serie RH-18733",
-                            EstadoProtocolo.REGISTRADO_TERRENO,
-                            listOf(
-                                PruebaActa(
-                                    "Resistencia de aislación", "AT-T", true, null, ResultadoPrueba.OBSERVADO,
-                                    listOf(MedicionActa("Lectura a 1 min", 6100.0, "MΩ"), MedicionActa("Lectura a 10 min", 10980.0, "MΩ"))
+                        Protocolo(
+                            numero = "PT-2026-0401", visitaId = 1, equipoId = 1,
+                            tagEquipo = "TR-01", equipoDescripcion = "Transformador Rhona · serie RH-18733",
+                            estado = EstadoProtocolo.REGISTRADO_TERRENO,
+                            resultadoGlobal = ResultadoPrueba.OBSERVADO,
+                            pruebas = listOf(
+                                Prueba(
+                                    tipo = TipoPrueba.AISLACION,
+                                    elemento = "AT-T",
+                                    resultado = ResultadoPrueba.OBSERVADO,
+                                    mediciones = listOf(Medicion(parametroNombre = "Lectura a 1 min", valor = 6100.0, unidad = "MΩ"), Medicion(parametroNombre = "Lectura a 10 min", valor = 10980.0, unidad = "MΩ"))
                                 )
                             )
                         )

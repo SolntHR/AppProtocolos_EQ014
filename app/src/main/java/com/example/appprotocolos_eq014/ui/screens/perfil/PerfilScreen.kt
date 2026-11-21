@@ -56,8 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.DatoPerfil
-import com.example.appprotocolos_eq014.model.PerfilUiState
+import com.example.appprotocolos_eq014.model.uistate.DatoPerfil
+import com.example.appprotocolos_eq014.model.uistate.PerfilUiState
 import com.example.appprotocolos_eq014.ui.components.AvatarIniciales
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario

@@ -44,8 +44,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.InicioUiState
-import com.example.appprotocolos_eq014.model.VisitaResumen
+import com.example.appprotocolos_eq014.model.uistate.InicioUiState
+import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.ui.components.AvatarIniciales
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
 import com.example.appprotocolos_eq014.ui.components.TituloSeccion
@@ -175,7 +175,7 @@ private fun EncabezadoInicio(uiState: InicioUiState) {
 
 @Composable
 private fun TarjetaVisita(
-    visita: VisitaResumen,
+    visita: Visita,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -223,9 +223,9 @@ private fun TarjetaVisita(
                         tono = if (visita.cerrada) TonoEstado.NEUTRO else TonoEstado.AVISO
                     )
                 }
-                Text(text = visita.cliente, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(text = visita.clienteNombre, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    text = "${visita.instalacion} · ${Formato.fecha(visita.fecha)}",
+                    text = "${visita.instalacionNombre} · ${Formato.fecha(visita.fecha)}",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -277,8 +277,27 @@ private fun InicioPersonalTerrenoPreview() {
                 rolNombre = "Técnico de terreno",
                 fechaHoy = "MARTES, 27 OCT 2026",
                 visitas = listOf(
-                    VisitaResumen(1, "OT-2026-1187", "Envasadora del Pacífico S.A.", "Planta Lampa", "2026-09-26", false, 2, 2),
-                    VisitaResumen(3, "OT-2024-0951", "Envasadora del Pacífico S.A.", "Planta Lampa", "2024-09-14", true, 1, 1)
+                    Visita(
+                        id = 1,
+                        numeroOt = "OT-2026-1187",
+                        instalacionId = 1,
+                        fecha = "2026-09-26",
+                        tipoVisita = "SOLO_PRUEBAS",
+                        clienteNombre = "Envasadora del Pacífico S.A.",
+                        instalacionNombre = "Planta Lampa",
+                        totalProtocolos = 2,
+                        protocolosRegistrados = 2),
+                    Visita(
+                        id = 3,
+                        numeroOt = "OT-2024-0951",
+                        instalacionId = 1,
+                        fecha = "2024-09-14",
+                        tipoVisita = "PRUEBAS_Y_MANT",
+                        fechaHoraCierre = "2024-09-14 12:10",
+                        clienteNombre = "Envasadora del Pacífico S.A.",
+                        instalacionNombre = "Planta Lampa",
+                        totalProtocolos = 1,
+                        protocolosRegistrados = 1)
                 )
             ),
             onAbrirVisita = {}

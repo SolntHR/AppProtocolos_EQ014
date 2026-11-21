@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.theme.AmarilloAviso
 import com.example.appprotocolos_eq014.ui.theme.AmarilloSuave
 import com.example.appprotocolos_eq014.ui.theme.AzulPrimario

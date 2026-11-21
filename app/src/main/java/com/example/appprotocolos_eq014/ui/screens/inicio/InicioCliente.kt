@@ -29,10 +29,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.EquipoCliente
-import com.example.appprotocolos_eq014.model.InicioUiState
-import com.example.appprotocolos_eq014.model.ProtocoloCliente
-import com.example.appprotocolos_eq014.model.VisitaResumen
+import com.example.appprotocolos_eq014.model.uistate.EquipoCliente
+import com.example.appprotocolos_eq014.model.uistate.InicioUiState
+import com.example.appprotocolos_eq014.model.uistate.ProtocoloCliente
+import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.util.Formato
 import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
@@ -138,7 +138,7 @@ fun InicioCliente(
 }
 
 @Composable
-private fun TarjetaActaCliente(visita: VisitaResumen, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun TarjetaActaCliente(visita: Visita, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
@@ -149,7 +149,7 @@ private fun TarjetaActaCliente(visita: VisitaResumen, onClick: () -> Unit, modif
         Row(modifier = Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(text = visita.numeroOt, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Text(text = visita.instalacion, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(text = visita.instalacionNombre, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = "${Formato.fecha(visita.fecha)} · ${visita.totalProtocolos} protocolos",
                     fontSize = 12.sp,
@@ -157,7 +157,7 @@ private fun TarjetaActaCliente(visita: VisitaResumen, onClick: () -> Unit, modif
                 )
             }
 
-            val todosFormalizados = visita.totalProtocolos > 0 && visita.protocolosRegistrados == visita.totalProtocolos
+            val todosFormalizados = visita.totalProtocolos > 0 && visita.protocolosFormalizados == visita.totalProtocolos
             EtiquetaEstado(
                 texto = if (todosFormalizados) "Formalizado" else "Pendiente de formalización",
                 tono = if (todosFormalizados) TonoEstado.EXITO else TonoEstado.AVISO

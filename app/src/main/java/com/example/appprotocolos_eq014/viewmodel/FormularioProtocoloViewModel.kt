@@ -5,29 +5,30 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.EquipoProtocolo
-import com.example.appprotocolos_eq014.model.EstadoProtocolo
+import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
-import com.example.appprotocolos_eq014.model.EstadoFila
-import com.example.appprotocolos_eq014.model.Fechas
-import com.example.appprotocolos_eq014.model.FilaPruebaUi
-import com.example.appprotocolos_eq014.model.FormularioProtocoloUiState
-import com.example.appprotocolos_eq014.model.MedicionAnterior
-import com.example.appprotocolos_eq014.model.Parametros
-import com.example.appprotocolos_eq014.model.ReglasProtocolo
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.Rol
-import com.example.appprotocolos_eq014.model.SeccionPruebaUi
-import com.example.appprotocolos_eq014.model.TipoPrueba
-import com.example.appprotocolos_eq014.model.VisitaAbierta
-import com.example.appprotocolos_eq014.repository.ProtocoloAGuardar
-import com.example.appprotocolos_eq014.repository.PruebaAGuardar
+import com.example.appprotocolos_eq014.model.reglas.EstadoFila
+import com.example.appprotocolos_eq014.util.Fechas
+import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
+import com.example.appprotocolos_eq014.model.uistate.FormularioProtocoloUiState
+import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
+import com.example.appprotocolos_eq014.model.reglas.Parametros
+import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.Rol
+import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
+import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
+import com.example.appprotocolos_eq014.model.entidades.Visita
+import com.example.appprotocolos_eq014.model.entidades.Prueba
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToLong
 
 class FormularioProtocoloViewModel(
     private val sesion: SesionPreferencias,
@@ -79,7 +80,7 @@ class FormularioProtocoloViewModel(
             _uiState.update { it.copy(cargando = false, error = "El protocolo no existe.") }
             return
         }
-        if (p.creadorId != idUsuario) {
+        if (p.usuarioRegistraId != idUsuario) {
             _uiState.update { it.copy(cargando = false, error = "Solo quien creó el protocolo puede modificarlo (RN-17).") }
             return
         }
@@ -122,7 +123,7 @@ class FormularioProtocoloViewModel(
         _uiState.update {
             it.copy(
                 cargando = false,
-                idProtocolo = p.idProtocolo,
+                idProtocolo = p.id,
                 numero = p.numero,
                 estadoActual = p.estado,
                 fechaHoraPrueba = p.fechaHoraPrueba,
@@ -134,6 +135,7 @@ class FormularioProtocoloViewModel(
                 humedad = p.humedad?.aTexto().orEmpty(),
                 descripcionMantenimiento = p.descripcionMantenimiento.orEmpty(),
                 observaciones = p.observaciones.orEmpty(),
+                motivoObservacion = p.motivoObservacion,
                 anteriores = anteriores,
                 secciones = secciones
             )
@@ -141,7 +143,7 @@ class FormularioProtocoloViewModel(
         reevaluarTodo()
     }
 
-    fun seleccionarVisita(visita: VisitaAbierta) {
+    fun seleccionarVisita(visita: Visita) {
         if (_uiState.value.esEdicion) return
         _uiState.update {
             it.copy(visitaSeleccionada = visita, equipoSeleccionado = null, equipos = emptyList(), secciones = emptyList(), error = null)
@@ -161,7 +163,7 @@ class FormularioProtocoloViewModel(
         }
     }
 
-    fun seleccionarEquipo(equipo: EquipoProtocolo) {
+    fun seleccionarEquipo(equipo: Equipo) {
         if (_uiState.value.esEdicion) return
         _uiState.update { it.copy(equipoSeleccionado = equipo, secciones = seccionesVacias(equipo), anteriores = emptyMap(), error = null) }
         viewModelScope.launch {
@@ -171,7 +173,7 @@ class FormularioProtocoloViewModel(
         }
     }
 
-    private fun seccionesVacias(equipo: EquipoProtocolo): List<SeccionPruebaUi> {
+    private fun seccionesVacias(equipo: Equipo): List<SeccionPruebaUi> {
         val instrumentos = _uiState.value.instrumentos
         return ReglasProtocolo.pruebasPara(equipo.tipoEquipoId).map { tipo ->
             val filas = ReglasProtocolo.elementosPara(tipo, equipo.tipoEquipoId).map { elemento ->
@@ -195,7 +197,7 @@ class FormularioProtocoloViewModel(
                 it.nombreTipo.lowercase().contains(ReglasProtocolo.palabraInstrumento(tipo))
             }
             val hoy = Fechas.hoy()
-            val sugerido = sugeridos.firstOrNull { it.vigenteEn(hoy) } ?: sugeridos.firstOrNull()
+            val sugerido = sugeridos.firstOrNull { it.vigenteEn(hoy) }
             SeccionPruebaUi(tipo = tipo, filas = filas, comunes = comunes, instrumentoId = sugerido?.id)
         }
     }
@@ -205,7 +207,7 @@ class FormularioProtocoloViewModel(
         val error = when {
             valor.isBlank() -> null
             n == null -> "Ingresa un número"
-            n < -30 || n > 60 -> "Rango permitido: -30 a 60 °C"
+            n !in -30.0..60.0 -> "Rango permitido: -30 a 60 °C"
             else -> null
         }
         _uiState.update { it.copy(temperatura = valor, errorTemperatura = error, error = null) }
@@ -216,7 +218,7 @@ class FormularioProtocoloViewModel(
         val error = when {
             valor.isBlank() -> null
             n == null -> "Ingresa un número"
-            n < 0 || n > 100 -> "Rango permitido: 0 a 100 %"
+            n !in 0.0..100.0 -> "Rango permitido: 0 a 100 %"
             else -> null
         }
         _uiState.update { it.copy(humedad = valor, errorHumedad = error, error = null) }
@@ -292,10 +294,11 @@ class FormularioProtocoloViewModel(
         val hayCompletas = filas.any { it.evaluacion.estado == EstadoFila.COMPLETA }
         val instrumento = estado.instrumentos.firstOrNull { it.id == seccion.instrumentoId }
         val errorInstrumento = when {
-            seccion.noRealizada || !hayCompletas -> null
-            instrumento == null -> "Selecciona el instrumento utilizado (RF-05)"
-            !instrumento.vigenteEn(estado.fechaHoraPrueba) ->
-                "Calibración vencida el ${Fechas.fecha(instrumento.fechaVencimiento)}. No se puede usar (RN-11)"
+            seccion.noRealizada -> null
+            instrumento != null && !instrumento.vigenteEn(estado.fechaHoraPrueba) ->
+                "Calibración vencida el ${Fechas.fecha(instrumento.fechaVencimiento)}. No se puede usar."
+            !hayCompletas -> null
+            instrumento == null -> "Selecciona el instrumento utilizado"
             else -> null
         }
         return seccion.copy(filas = filas, errorInstrumento = errorInstrumento)
@@ -336,28 +339,27 @@ class FormularioProtocoloViewModel(
         }
 
         val noRealizadas = s.secciones.filter { it.noRealizada }.map { sec ->
-            PruebaAGuardar(
+            Prueba(
                 tipo = sec.tipo,
                 elemento = "Todos los elementos",
                 instrumentoId = null,
                 resultado = null,
                 comentario = sec.comentario.ifBlank { null },
                 ingresadoManualmente = false,
-                valores = emptyMap(),
                 realizada = false,
                 motivoNoRealizada = sec.motivoNoRealizada.trim()
             )
         }
         val pruebas = noRealizadas + s.secciones.flatMap { sec ->
             sec.filasCompletas.map { f ->
-                PruebaAGuardar(
+                Prueba(
                     tipo = sec.tipo,
                     elemento = f.elemento,
                     instrumentoId = sec.instrumentoId,
                     resultado = f.evaluacion.resultado,
                     comentario = sec.comentario.ifBlank { null },
                     ingresadoManualmente = sec.tipo == TipoPrueba.DEVANADOS,
-                    valores = f.evaluacion.calculados
+                    mediciones = Prueba.medicionesDesde(f.evaluacion.calculados)
                 )
             }
         }
@@ -366,8 +368,8 @@ class FormularioProtocoloViewModel(
             _uiState.update { it.copy(guardando = true, error = null) }
             try {
                 val id = repository.guardar(
-                    datos = ProtocoloAGuardar(
-                        idProtocolo = s.idProtocolo,
+                    datos = Protocolo(
+                        id = s.idProtocolo.orEmpty(),
                         visitaId = visita.id,
                         equipoId = equipo.id,
                         temperatura = temperatura,
@@ -415,5 +417,5 @@ private fun Double.aTexto(): String =
 private fun Double.redondear(decimales: Int): String {
     var factor = 1.0
     repeat(decimales) { factor *= 10 }
-    return (Math.round(this * factor) / factor).aTexto()
+    return ((this * factor).roundToLong() / factor).aTexto()
 }

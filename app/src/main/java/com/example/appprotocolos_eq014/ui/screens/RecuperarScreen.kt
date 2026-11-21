@@ -34,8 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.PasoRecuperacion
-import com.example.appprotocolos_eq014.model.RecuperarUiState
+import com.example.appprotocolos_eq014.model.uistate.PasoRecuperacion
+import com.example.appprotocolos_eq014.model.uistate.RecuperarUiState
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.MensajeAvisoProtocolo

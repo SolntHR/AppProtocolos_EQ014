@@ -40,10 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
-import com.example.appprotocolos_eq014.model.FilaComparacion
-import com.example.appprotocolos_eq014.model.FilaHistorial
-import com.example.appprotocolos_eq014.model.HistorialUiState
-import com.example.appprotocolos_eq014.model.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.uistate.FilaComparacion
+import com.example.appprotocolos_eq014.model.uistate.FilaHistorial
+import com.example.appprotocolos_eq014.model.uistate.HistorialUiState
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
 import com.example.appprotocolos_eq014.ui.components.CampoTexto
