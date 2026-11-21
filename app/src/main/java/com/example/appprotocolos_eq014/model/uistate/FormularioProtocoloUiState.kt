@@ -51,6 +51,7 @@ data class FormularioProtocoloUiState(
     val idProtocolo: String? = null,
     val numero: String? = null,
     val estadoActual: EstadoProtocolo? = null,
+    val motivoObservacion: String? = null,
     val fechaHoraPrueba: String = "",
     val tecnicoNombre: String = "",
     val rolUsuario: String = "",

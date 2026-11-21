@@ -135,6 +135,7 @@ class FormularioProtocoloViewModel(
                 humedad = p.humedad?.aTexto().orEmpty(),
                 descripcionMantenimiento = p.descripcionMantenimiento.orEmpty(),
                 observaciones = p.observaciones.orEmpty(),
+                motivoObservacion = p.motivoObservacion,
                 anteriores = anteriores,
                 secciones = secciones
             )
@@ -217,7 +218,7 @@ class FormularioProtocoloViewModel(
         val error = when {
             valor.isBlank() -> null
             n == null -> "Ingresa un número"
-            n < 0 || n > 100 -> "Rango permitido: 0 a 100 %"
+            n !in 0.0..100.0 -> "Rango permitido: 0 a 100 %"
             else -> null
         }
         _uiState.update { it.copy(humedad = valor, errorHumedad = error, error = null) }

@@ -278,7 +278,19 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             )
         }
 
-        val historial = db.rawQuery(
+        resumen.copy(
+            numeroOt = cabecera.numeroOt,
+            temperatura = cabecera.temperatura,
+            humedad = cabecera.humedad,
+            descripcionMantenimiento = cabecera.descripcion,
+            observaciones = cabecera.observaciones,
+            pruebas = pruebas,
+            historialEstados = leerHistorialEstados(db, idProtocolo)
+        )
+    }
+
+    private fun leerHistorialEstados(db: SQLiteDatabase, idProtocolo: String): List<HistorialEstado> =
+        db.rawQuery(
             """
             SELECT h.id_estado_anterior, h.id_estado_nuevo, u.nombre, h.fecha_hora, h.motivo
             FROM HISTORIAL_ESTADO h INNER JOIN USUARIO u ON u.id_usuario = h.id_usuario
@@ -287,7 +299,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             """.trimIndent(),
             arrayOf(idProtocolo)
         ).use { c ->
-            buildList {
+            buildList{
                 while (c.moveToNext()) {
                     add(
                         HistorialEstado(
@@ -301,17 +313,6 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 }
             }
         }
-
-        resumen.copy(
-            numeroOt = cabecera.numeroOt,
-            temperatura = cabecera.temperatura,
-            humedad = cabecera.humedad,
-            descripcionMantenimiento = cabecera.descripcion,
-            observaciones = cabecera.observaciones,
-            pruebas = pruebas,
-            historialEstados = historial
-        )
-    }
 
     suspend fun historialDeEquipo(idEquipo: Long): List<Protocolo> = withContext(Dispatchers.IO){
         consultarListado(helper.readableDatabase, "p.id_equipo = ?", arrayOf(idEquipo.toString()))
@@ -412,7 +413,8 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
                 humedad = c.realONulo(8),
                 descripcionMantenimiento = c.getString(9),
                 observaciones = c.getString(10),
-                pruebas = pruebas
+                pruebas = pruebas,
+                historialEstados = leerHistorialEstados(db,idProtocolo)
             )
         }
     }

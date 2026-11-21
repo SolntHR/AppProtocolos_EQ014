@@ -124,6 +124,9 @@ fun FormularioProtocoloScreen(
                 MensajeAvisoProtocolo("Tu perfil es de solo consulta. No puedes registrar protocolos.")
             }
             state.error?.let { MensajeAvisoProtocolo(it) }
+            state.motivoObservacion?.let {
+                MensajeAvisoProtocolo("Observado: $it. Corrige lo indicado y vuelve a registrar.", esError = false)
+            }
             state.estadoActual?.let { estado ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Estado actual: ", color = MaterialTheme.colorScheme.onSurfaceVariant)
