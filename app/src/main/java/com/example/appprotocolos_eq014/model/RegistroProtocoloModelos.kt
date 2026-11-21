@@ -2,19 +2,10 @@ package com.example.appprotocolos_eq014.model
 
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.entidades.HistorialEstado
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.util.Fechas
 
-object Rol {
-    const val TECNICO = "TECNICO"
-    const val INGENIERO = "INGENIERO"
-    const val JEFE_TECNICO = "JEFE_TECNICO"
-    const val CLIENTE = "CLIENTE"
-
-    fun puedeCrearProtocolos(codigo: String) = codigo == TECNICO || codigo == INGENIERO || codigo == JEFE_TECNICO
-    fun puedeFormalizar(codigo: String) = codigo == INGENIERO || codigo == JEFE_TECNICO
-    fun esPersonalInduztek(codigo: String) = codigo.isNotBlank() && codigo != CLIENTE
-}
 
 data class ProtocoloListado(
     val id: String,
@@ -39,28 +30,6 @@ data class ProtocoloListado(
                 Fechas.diasHabilesDesde(fechaHora) > 2
 }
 
-data class Comparacion(
-    val codigo: String,
-    val nombre: String,
-    val valorAnterior: Double,
-    val valorActual: Double,
-    val unidad: String,
-    val numeroAnterior: String?
-) {
-    val variacionPct: Double
-        get() = if (valorAnterior == 0.0) 0.0 else (valorActual - valorAnterior) / valorAnterior * 100.0
-
-    val significativa: Boolean get() = kotlin.math.abs(variacionPct) > 25.0
-}
-
-data class CambioEstado(
-    val anterior: EstadoProtocolo?,
-    val nuevo: EstadoProtocolo,
-    val usuario: String,
-    val fechaHora: String,
-    val motivo: String?
-)
-
 data class ProtocoloDetalle(
     val resumen: ProtocoloListado,
     val numeroOt: String,
@@ -69,7 +38,7 @@ data class ProtocoloDetalle(
     val descripcionMantenimiento: String?,
     val observaciones: String?,
     val pruebas: List<Prueba>,
-    val historialEstados: List<CambioEstado>,
+    val historialEstados: List<HistorialEstado>,
     val historialEquipo: List<ProtocoloListado>
 ) {
     val tieneVariacionSignificativa: Boolean

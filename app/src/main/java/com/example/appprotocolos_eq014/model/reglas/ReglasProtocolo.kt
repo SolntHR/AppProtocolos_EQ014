@@ -1,6 +1,6 @@
 package com.example.appprotocolos_eq014.model.reglas
 
-import com.example.appprotocolos_eq014.model.Comparacion
+
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.util.formatoCl
 import kotlin.math.abs

@@ -29,7 +29,7 @@ import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.ProtocoloListado
-import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.util.formatoCl
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
 import com.example.appprotocolos_eq014.ui.components.CampoTexto

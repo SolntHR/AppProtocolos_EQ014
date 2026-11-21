@@ -4,7 +4,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.CambioEstado
+import com.example.appprotocolos_eq014.model.entidades.HistorialEstado
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.util.Fechas
@@ -18,7 +18,7 @@ import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import kotlinx.coroutines.Dispatchers
@@ -291,7 +291,7 @@ class RegistroProtocoloRepository(private val helper: InduztekDbHelper) {
             buildList {
                 while (c.moveToNext()) {
                     add(
-                        CambioEstado(
+                        HistorialEstado(
                             anterior = if (c.isNull(0)) null else EstadoProtocolo.desdeId(c.getLong(0)),
                             nuevo = EstadoProtocolo.desdeId(c.getLong(1)),
                             usuario = c.getString(2),

@@ -16,7 +16,7 @@ import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
 import com.example.appprotocolos_eq014.model.reglas.Parametros
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Visita

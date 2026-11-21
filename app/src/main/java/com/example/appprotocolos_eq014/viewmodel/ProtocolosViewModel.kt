@@ -8,7 +8,7 @@ import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.uistate.DetalleProtocoloUiState
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.uistate.ListaProtocolosUiState
-import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import kotlinx.coroutines.flow.MutableStateFlow

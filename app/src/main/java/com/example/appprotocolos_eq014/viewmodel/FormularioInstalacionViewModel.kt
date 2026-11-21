@@ -7,7 +7,7 @@ import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.uistate.FormularioInstalacionUiState
 import com.example.appprotocolos_eq014.model.entidades.Instalacion
 import com.example.appprotocolos_eq014.model.uistate.OpcionCatalogo
-import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.ValidacionesCatalogo
 import kotlinx.coroutines.flow.MutableStateFlow

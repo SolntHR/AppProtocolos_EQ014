@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.reglas.CampoMedicion
-import com.example.appprotocolos_eq014.model.Comparacion
+import com.example.appprotocolos_eq014.model.reglas.Comparacion
 import com.example.appprotocolos_eq014.model.reglas.EstadoFila
 import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
@@ -40,7 +40,7 @@ import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.reglas.Parametros
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.Rol
+import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 import com.example.appprotocolos_eq014.util.formatoCl
