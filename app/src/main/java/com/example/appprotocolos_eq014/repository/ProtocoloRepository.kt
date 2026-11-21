@@ -5,7 +5,7 @@ import android.database.Cursor
 import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.ProtocoloResumen
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,7 +45,7 @@ class ProtocoloRepository(private val dbHelper: InduztekDbHelper) {
         equipo
     }
 
-    suspend fun historialEquipo(idEquipo: Long): List<ProtocoloResumen> = withContext(Dispatchers.IO) {
+    suspend fun historialEquipo(idEquipo: Long): List<Protocolo> = withContext(Dispatchers.IO) {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
             SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.observaciones,
@@ -58,25 +58,28 @@ class ProtocoloRepository(private val dbHelper: InduztekDbHelper) {
                    (SELECT m.valor FROM MEDICION m
                     INNER JOIN PRUEBA pr ON m.id_prueba = pr.id_prueba
                     INNER JOIN PARAMETRO pa ON m.id_parametro = pa.id_parametro
-                    WHERE pr.id_protocolo = p.id_protocolo AND pa.codigo = 'LECTURA_10MIN' LIMIT 1) AS lectura_10
+                    WHERE pr.id_protocolo = p.id_protocolo AND pa.codigo = 'LECTURA_10MIN' LIMIT 1) AS lectura_10,
+                    p.id_visita
             FROM PROTOCOLO p
             WHERE p.id_equipo = ?
             ORDER BY p.fecha_hora_prueba DESC
             """,
             arrayOf(idEquipo.toString())
         )
-        val protocolos = mutableListOf<ProtocoloResumen>()
+        val protocolos = mutableListOf<Protocolo>()
         while (cursor.moveToNext()) {
             protocolos.add(
-                ProtocoloResumen(
+                Protocolo(
                     id = cursor.getString(0),
                     numero = cursor.getString(1),
-                    fecha = cursor.getString(2),
+                    fechaHoraPrueba = cursor.getString(2),
                     estado = EstadoProtocolo.desdeId(cursor.getLong(3)),
                     observaciones = cursor.getString(4),
-                    resultado = ResultadoPrueba.desdeId(cursor.longONulo(5)),
+                    resultadoGlobal = ResultadoPrueba.desdeId(cursor.longONulo(5)),
                     lectura1Min = cursor.doubleONulo(6),
-                    lectura10Min = cursor.doubleONulo(7)
+                    lectura10Min = cursor.doubleONulo(7),
+                    visitaId = cursor.getLong(8),
+                    equipoId = idEquipo
                 )
             )
         }

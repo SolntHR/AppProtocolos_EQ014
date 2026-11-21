@@ -43,10 +43,10 @@ import com.example.appprotocolos_eq014.model.uistate.ActaUiState
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Medicion
-import com.example.appprotocolos_eq014.model.ProtocoloActa
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
-import com.example.appprotocolos_eq014.model.RecepcionActa
+import com.example.appprotocolos_eq014.model.entidades.RecepcionActa
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
@@ -257,7 +257,7 @@ private fun DocumentoActa(acta: Visita, onAbrirEquipo: (Long) -> Unit) {
             )
             acta.protocolos.forEach { protocolo ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-                ProtocoloDocumento(protocolo = protocolo, onClick = { onAbrirEquipo(protocolo.idEquipo) })
+                ProtocoloDocumento(protocolo = protocolo, onClick = { onAbrirEquipo(protocolo.equipoId) })
             }
         }
     }
@@ -281,7 +281,7 @@ private fun SelloPendiente() {
 }
 
 @Composable
-private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
+private fun ProtocoloDocumento(protocolo: Protocolo, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -292,7 +292,7 @@ private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "${protocolo.numero} · ${protocolo.tag}",
+                text = "${protocolo.numero} · ${protocolo.tagEquipo}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -304,7 +304,7 @@ private fun ProtocoloDocumento(protocolo: ProtocoloActa, onClick: () -> Unit) {
             }
         }
         Text(
-            text = protocolo.descripcionEquipo,
+            text = protocolo.equipoDescripcion,
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -495,10 +495,12 @@ private fun ActaPreview() {
                     tecnicos = "Matías Godoy Herrera",
                     ingenieroNombre = "Andrea Contreras Silva",
                     protocolos = listOf(
-                        ProtocoloActa(
-                            "PT-2026-0401", 1, "TR-01", "Transformador Rhona · serie RH-18733",
-                            EstadoProtocolo.REGISTRADO_TERRENO,
-                            listOf(
+                        Protocolo(
+                            numero = "PT-2026-0401", visitaId = 1, equipoId = 1,
+                            tagEquipo = "TR-01", equipoDescripcion = "Transformador Rhona · serie RH-18733",
+                            estado = EstadoProtocolo.REGISTRADO_TERRENO,
+                            resultadoGlobal = ResultadoPrueba.OBSERVADO,
+                            pruebas = listOf(
                                 Prueba(
                                     tipo = TipoPrueba.AISLACION,
                                     elemento = "AT-T",

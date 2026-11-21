@@ -67,7 +67,7 @@ class InicioViewModel(
                 .map {
                     ProtocoloCliente(
                         numero = it.numero,
-                        fecha = Formato.fecha(it.fecha),
+                        fecha = Formato.fecha(it.fechaHoraPrueba),
                         estado = it.estado.etiquetaCliente,
                         formalizado = it.estado == EstadoProtocolo.FORMALIZADO
                     )

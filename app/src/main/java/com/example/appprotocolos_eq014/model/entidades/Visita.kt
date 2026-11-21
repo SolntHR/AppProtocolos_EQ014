@@ -1,8 +1,5 @@
 package com.example.appprotocolos_eq014.model.entidades
 
-import com.example.appprotocolos_eq014.model.ProtocoloActa
-import com.example.appprotocolos_eq014.model.RecepcionActa
-
 data class Visita(
     val id: Long = 0,
     val numeroOt: String,
@@ -21,7 +18,7 @@ data class Visita(
     val protocolosRegistrados: Int = 0,
     val protocolosFormalizados: Int = 0,
 
-    val protocolos: List<ProtocoloActa> = emptyList(),
+    val protocolos: List<Protocolo> = emptyList(),
     val recepcion: RecepcionActa? = null
 ){
     val cerrada: Boolean get() = fechaHoraCierre != null

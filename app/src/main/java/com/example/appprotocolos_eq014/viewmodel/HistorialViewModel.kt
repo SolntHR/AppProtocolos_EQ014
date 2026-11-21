@@ -7,7 +7,7 @@ import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.uistate.FilaComparacion
 import com.example.appprotocolos_eq014.model.uistate.FilaHistorial
 import com.example.appprotocolos_eq014.model.uistate.HistorialUiState
-import com.example.appprotocolos_eq014.model.ProtocoloResumen
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
@@ -93,7 +93,7 @@ class HistorialViewModel(
         }
     }
 
-    private fun construirComparacion(protocolos: List<ProtocoloResumen>): List<FilaComparacion> {
+    private fun construirComparacion(protocolos: List<Protocolo>): List<FilaComparacion> {
         val conLectura = protocolos.filter { it.lectura1Min != null }
         return conLectura.mapIndexed { indice, protocolo ->
             val actual = protocolo.lectura1Min!!
@@ -101,7 +101,7 @@ class HistorialViewModel(
             val variacion = anterior?.let { (actual - it) / it * 100 }
             FilaComparacion(
                 numero = protocolo.numero,
-                fecha = Formato.fecha(protocolo.fecha),
+                fecha = Formato.fecha(protocolo.fechaHoraPrueba),
                 valor = "${Formato.numero(actual)} MΩ",
                 anterior = anterior?.let { "Ant. ${Formato.numero(it)} MΩ" },
                 variacion = variacion?.let { "${Formato.numero(it, 1)} %" },
@@ -110,7 +110,7 @@ class HistorialViewModel(
         }
     }
 
-    private fun aFila(protocolo: ProtocoloResumen, esCliente: Boolean): FilaHistorial {
+    private fun aFila(protocolo: Protocolo, esCliente: Boolean): FilaHistorial {
         val detalle = if (protocolo.lectura1Min != null && protocolo.lectura10Min != null) {
             val ip = protocolo.lectura10Min / protocolo.lectura1Min
             "${Formato.numero(protocolo.lectura1Min)} MΩ / ${Formato.numero(protocolo.lectura10Min)} MΩ · IP ${Formato.numero(ip, 2)}"
@@ -119,10 +119,10 @@ class HistorialViewModel(
         }
         return FilaHistorial(
             numero = protocolo.numero,
-            fecha = Formato.fecha(protocolo.fecha),
+            fecha = Formato.fecha(protocolo.fechaHoraPrueba),
             estado = if (esCliente) protocolo.estado.etiquetaCliente else protocolo.estado.etiqueta,
             formalizado = protocolo.estado == EstadoProtocolo.FORMALIZADO,
-            resultado = protocolo.resultado,
+            resultado = protocolo.resultadoGlobal,
             detalle = detalle
         )
     }

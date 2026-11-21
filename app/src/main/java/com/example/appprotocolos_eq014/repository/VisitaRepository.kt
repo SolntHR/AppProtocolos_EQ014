@@ -5,10 +5,10 @@ import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Medicion
-import com.example.appprotocolos_eq014.model.ProtocoloActa
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
-import com.example.appprotocolos_eq014.model.RecepcionActa
+import com.example.appprotocolos_eq014.model.entidades.RecepcionActa
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -151,7 +151,7 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
         return recepcion
     }
 
-    private fun protocolosDeVisita(idVisita: Long): List<ProtocoloActa> {
+    private fun protocolosDeVisita(idVisita: Long): List<Protocolo> {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
             SELECT p.id_protocolo, p.numero, e.id_equipo, e.tag, t.nombre, e.marca, e.numero_serie, p.id_estado
@@ -163,20 +163,26 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
             """,
             arrayOf(idVisita.toString())
         )
-        val protocolos = mutableListOf<ProtocoloActa>()
+        val protocolos = mutableListOf<Protocolo>()
         while (cursor.moveToNext()) {
             val descripcion = listOfNotNull(
                 listOfNotNull(cursor.getString(4), cursor.getString(5)).joinToString(" "),
                 cursor.getString(6)?.let { "serie $it" }
             ).joinToString(" · ")
+            val pruebas = pruebasDeProtocolo(cursor.getString(0))
             protocolos.add(
-                ProtocoloActa(
+                Protocolo(
+                    id = cursor.getString(0),
                     numero = cursor.getString(1),
-                    idEquipo = cursor.getLong(2),
-                    tag = cursor.getString(3),
-                    descripcionEquipo = descripcion,
+                    visitaId = idVisita,
+                    equipoId = cursor.getLong(2),
+                    tagEquipo = cursor.getString(3),
+                    equipoDescripcion = descripcion,
                     estado = EstadoProtocolo.desdeId(cursor.getLong(7)),
-                    pruebas = pruebasDeProtocolo(cursor.getString(0))
+                    pruebas = pruebas,
+                    resultadoGlobal = pruebas.filter { it. realizada }
+                        .mapNotNull { it.resultado }
+                        .maxByOrNull { it.idDb }
                 )
             )
         }
