@@ -1,14 +1,12 @@
 package com.example.appprotocolos_eq014.viewmodel
 
+import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.model.uistate.EquipoCliente
-import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.uistate.InicioUiState
-import com.example.appprotocolos_eq014.model.uistate.ProtocoloCliente
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
-import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
@@ -22,7 +20,6 @@ import kotlinx.coroutines.launch
 class InicioViewModel(
     private val sesionPreferencias: SesionPreferencias,
     private val catalogoRepository: CatalogoRepository,
-    private val protocoloRepository: ProtocoloRepository,
     private val visitaRepository: VisitaRepository,
     private val usuarioRepository: UsuarioRepository,
     private val catalogoClienteRepository: RegistroCatalogoRepository
@@ -35,9 +32,10 @@ class InicioViewModel(
         val idUsuario = sesionPreferencias.leerIdUsuario()
         val rol = sesionPreferencias.leerRolUsuario().orEmpty()
 
-        _uiState.update { it.copy(rolUsuario = rol, isLoading = it.primerNombre.isEmpty(), fechaHoy = Formato.encabezadoHoy()) }
+        _uiState.update { it.copy(rolUsuario = rol, isLoading = it.primerNombre.isEmpty(), fechaHoy = Formato.encabezadoHoy(), error = null) }
 
         viewModelScope.launch {
+          try {
             val usuario = usuarioRepository.obtenerPorId(idUsuario)
             val nombrePersona = if (rol == "CLIENTE") usuario?.contactoNombre ?: usuario?.nombre else usuario?.nombre
             _uiState.update {
@@ -51,42 +49,31 @@ class InicioViewModel(
 
             when (rol) {
                 "CLIENTE" -> cargarEquiposCliente(idUsuario)
-                "TECNICO", "INGENIERO" -> {
-                    val visitas = visitaRepository.visitasDeUsuario(idUsuario)
+                "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
+                    val visitas = visitaRepository.visitasDeUsuario(idUsuario, verTodas = rol == "JEFE_TECNICO")
                     _uiState.update { it.copy(visitas = visitas, isLoading = false) }
                 }
                 else -> _uiState.update { it.copy(isLoading = false) }
             }
+          } catch (e: SQLiteException) {
+              _uiState.update { it.copy(isLoading = false, error = "No se pudieron cargar los datos. Inténtalo nuevamente.") }
+          }
         }
     }
 
     private suspend fun cargarEquiposCliente(idCliente: Long) {
         val equipos = catalogoRepository.obtenerEquiposPorCliente(idCliente).map { equipo ->
-            val protocolos = protocoloRepository.historialEquipo(equipo.id)
-                .filter { it.estado.visibleParaCliente }
-                .map {
-                    ProtocoloCliente(
-                        numero = it.numero,
-                        fecha = Formato.fecha(it.fechaHoraPrueba),
-                        estado = it.estado.etiquetaCliente,
-                        formalizado = it.estado == EstadoProtocolo.FORMALIZADO
-                    )
-                }
             EquipoCliente(
                 id = equipo.id,
                 tag = equipo.tag,
                 descripcion = listOfNotNull(
                     listOfNotNull(equipo.tipoEquipoNombre, equipo.marca).joinToString(" "),
                     equipo.instalacionNombre.ifEmpty { null }
-                ).joinToString(" · "),
-                protocolos = protocolos
+                ).joinToString(" · ")
             )
         }
         val actas = catalogoClienteRepository.visitasCerradasDeCliente(idCliente)
         _uiState.update { it.copy(equiposCliente = equipos, actasCliente = actas, isLoading = false) }
     }
 
-    fun onBusquedaCambia(query: String) {
-        _uiState.update { it.copy(busqueda = query) }
-    }
 }

@@ -3,14 +3,17 @@
 
     <string name="marca_induztek">INDUZTEK</string>
     <string name="marca_protocolos">PROTOCOLOS</string>
-    <string name="login_bienvenido">Bienvenido</string>
-    <string name="login_subtitulo">Registra pruebas incluso sin conexión.</string>
+    <string name="login_bienvenido">Iniciar sesión</string>
+    <string name="login_subtitulo">Ingresa con tu correo y contraseña para ver tus visitas y registrar pruebas.</string>
+    <string name="login_ingresando">Ingresando…</string>
     <string name="campo_correo">Correo electrónico</string>
     <string name="campo_contrasena">Contraseña</string>
     <string name="btn_ingresar">Ingresar</string>
     <string name="olvido_contrasena">¿Olvidaste tu contraseña?</string>
 
     <string name="nav_inicio">Inicio</string>
+    <string name="nav_visitas">Visitas</string>
+    <string name="nav_actas">Actas</string>
     <string name="nav_equipos">Equipos</string>
     <string name="nav_perfil">Perfil</string>
     <string name="nav_protocolos">Protocolos</string>
@@ -165,4 +168,30 @@
     <string name="error_campo_obligatorio">Este campo es obligatorio</string>
     <string name="menu_cerrar_sesion">Cerrar sesión</string>
     <string name="dialogo_cancelar">Cancelar</string>
+    <string name="registro_nuevo">¿Eres nuevo?</string>
+    <string name="registro_crear_cuenta">Crear una cuenta</string>
+    <string name="registro_titulo">Crear cuenta</string>
+    <string name="registro_introduccion">Completa tus datos personales. El administrador te asignará tu rol después del registro.</string>
+    <string name="registro_nombre">Nombre completo</string>
+    <string name="registro_telefono">Teléfono</string>
+    <string name="registro_telefono_ayuda">Celular chileno. Ejemplo: +56 9 1234 5678.</string>
+    <string name="registro_correo_personal">Correo personal</string>
+    <string name="registro_correo_ayuda">Usaremos este correo para enviarte las instrucciones de acceso.</string>
+    <string name="registro_correo_interno">Correo interno sugerido</string>
+    <string name="registro_correo_confirmado">Correo interno</string>
+    <string name="registro_correo_sin_nombre">Completa tu nombre y apellido</string>
+    <string name="registro_correo_sugerido">Será tu usuario para iniciar sesión. El correo definitivo se confirmará al crear tu cuenta.</string>
+    <string name="registro_seguridad">Pregunta de seguridad</string>
+    <string name="registro_seguridad_ayuda">Elige una pregunta y una respuesta que puedas recordar para verificar tu identidad al recuperar el acceso.</string>
+    <string name="registro_pregunta">Selecciona tu pregunta</string>
+    <string name="registro_respuesta">Tu respuesta</string>
+    <string name="registro_mostrar_respuesta">Mostrar respuesta</string>
+    <string name="registro_ocultar_respuesta">Ocultar respuesta</string>
+    <string name="registro_revisar_campos">Revisa los campos marcados antes de crear tu cuenta.</string>
+    <string name="registro_creando">Creando cuenta…</string>
+    <string name="registro_ya_tengo_cuenta">Ya tengo una cuenta</string>
+    <string name="registro_volver_login">Volver a iniciar sesión</string>
+    <string name="registro_exito">Cuenta creada</string>
+    <string name="registro_exito_detalle">Tu cuenta quedó registrada. Espera las instrucciones de acceso en tu correo personal y la asignación de tu rol.</string>
+    <string name="registro_rol_pendiente">El administrador debe asignarte un rol antes de que puedas ingresar.</string>
 </resources>

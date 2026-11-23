@@ -18,8 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,11 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.ui.theme.AppProtocolos_EQ014Theme
-import com.example.appprotocolos_eq014.ui.theme.AzulOscuro
 import com.example.appprotocolos_eq014.ui.theme.AzulPrimario
-import com.example.appprotocolos_eq014.ui.theme.AzulTextoCabecera
 import com.example.appprotocolos_eq014.ui.theme.Blanco
-import com.example.appprotocolos_eq014.ui.theme.NaranjaAcento
 
 @Composable
 fun EncabezadoInduztek(
@@ -43,27 +38,21 @@ fun EncabezadoInduztek(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 34.dp, bottomEnd = 34.dp))
-            .background(
-                Brush.linearGradient(
-                    0.15f to AzulPrimario,
-                    1f to AzulOscuro
-                )
-            )
-            .padding(start = 24.dp, end = 24.dp, top = 28.dp, bottom = 30.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(start = 24.dp, end = 24.dp, top = 28.dp, bottom = 20.dp)
     ) {
         LogoInduztek()
-        Spacer(Modifier.height(58.dp))
+        Spacer(Modifier.height(36.dp))
         Text(
             text = titulo,
             style = MaterialTheme.typography.headlineLarge,
-            color = Blanco
+            color = MaterialTheme.colorScheme.onSurface
         )
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(8.dp))
         Text(
             text = subtitulo,
             style = MaterialTheme.typography.bodyMedium,
-            color = AzulTextoCabecera
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -78,31 +67,31 @@ fun LogoInduztek(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .size(52.dp)
-                .shadow(8.dp, RoundedCornerShape(16.dp), spotColor = NaranjaAcento)
-                .clip(RoundedCornerShape(16.dp))
-                .background(NaranjaAcento),
+                .clip(RoundedCornerShape(12.dp))
+                .background(AzulPrimario),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_rayo),
                 contentDescription = stringResource(R.string.cd_logo_induztek),
                 tint = Blanco,
-                modifier = Modifier.size(29.dp)
+                modifier = Modifier.size(26.dp)
             )
         }
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = stringResource(R.string.marca_induztek),
-                color = Blanco,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.ExtraBold
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.5.sp
             )
             Text(
                 text = stringResource(R.string.marca_protocolos),
-                color = AzulTextoCabecera,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 2.5.sp
             )
         }
     }
@@ -113,8 +102,8 @@ fun LogoInduztek(modifier: Modifier = Modifier) {
 private fun EncabezadoInduztekPreview() {
     AppProtocolos_EQ014Theme {
         EncabezadoInduztek(
-            titulo = "Bienvenido",
-            subtitulo = "Registra pruebas incluso sin conexión."
+            titulo = "Iniciar sesión",
+            subtitulo = "Ingresa con tu correo y contraseña para ver tus visitas y registrar pruebas."
         )
     }
 }

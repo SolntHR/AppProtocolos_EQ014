@@ -10,7 +10,6 @@ import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.example.appprotocolos_eq014.ui.theme.Dimens
@@ -23,23 +22,24 @@ object EstilosBoton {
     fun coloresPrincipal(): ButtonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
-        disabledContainerColor = Color.LightGray,
-        disabledContentColor = Color.White
+        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
     )
 
     @Composable
     fun coloresSecundario(): ButtonColors = ButtonDefaults.outlinedButtonColors(
+        containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.primary
     )
 
     @Composable
     fun bordeSecundario(): BorderStroke =
-        BorderStroke(Dimens.bordeBoton, MaterialTheme.colorScheme.primary)
+        BorderStroke(Dimens.bordeBoton, MaterialTheme.colorScheme.outline)
 
     @Composable
     fun elevacion(): ButtonElevation = ButtonDefaults.buttonElevation(
         defaultElevation = Dimens.elevacionBoton,
-        pressedElevation = 1.dp
+        pressedElevation = 0.dp
     )
 }
 

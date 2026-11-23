@@ -68,14 +68,15 @@ fun FormularioProtocoloScreen(
     onGuardado: (String) -> Unit,
     onRegistrarEquipo: (idInstalacion: Long) -> Unit = {},
     equipoCreado: Long? = null,
-    onEquipoCreadoConsumido: () -> Unit = {}
+    onEquipoCreadoConsumido: () -> Unit = {},
+    idEquipoInicial: Long? = null
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     SolicitarPermisoNotificaciones()
 
-    LaunchedEffect(idVisita, idProtocolo) { viewModel.iniciar(idVisita, idProtocolo) }
+    LaunchedEffect(idVisita, idProtocolo, idEquipoInicial) { viewModel.iniciar(idVisita, idProtocolo, idEquipoInicial) }
 
     LaunchedEffect(equipoCreado) {
         val id = equipoCreado ?: return@LaunchedEffect

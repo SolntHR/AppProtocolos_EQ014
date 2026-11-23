@@ -15,7 +15,8 @@ data class Equipo(
     val maxContactosUohm: Double? = null,
     val observaciones: String? = null,
     val tipoEquipoNombre: String = "",
-    val instalacionNombre: String = ""
+    val instalacionNombre: String = "",
+    val clienteNombre: String = ""
 ){
     val descripcion: String
         get() = listOfNotNull(

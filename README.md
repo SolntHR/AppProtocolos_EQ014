@@ -64,6 +64,14 @@ app/src/main/java/com/example/appprotocolos_eq014/
 
 Tecnologías: Kotlin, Jetpack Compose, Material 3, Navigation Compose, Lifecycle ViewModel, SQLite.
 
+### Registro de usuarios y futura conexión al servicio
+
+El login permite abrir un registro público basado en el prototipo: nombre, RUT, celular chileno, correo personal y pregunta/respuesta de seguridad. El correo interno mostrado es una **sugerencia**; el servicio deberá confirmar el dominio y resolver duplicados. El usuario no elige rol ni credenciales en este formulario.
+
+La pantalla usa `RegistroViewModel` y la interfaz `RegistroUsuarioRepository`, independiente de SQLite. Mientras no exista el microservicio se inyecta `RegistroUsuarioNoDisponibleRepository`: valida el formulario y muestra que el registro no está disponible, sin crear cuentas ni simular correos. Los datos del formulario solo permanecen en memoria mientras la pantalla está abierta.
+
+Para conectar el backend, implementar el adaptador HTTP y reemplazar la dependencia en `AppViewModelFactory`. Acordar primero el contrato y sus errores (por ejemplo, RUT/correo duplicado), la asignación de roles por el administrador y el envío de instrucciones de acceso por correo. El servidor debe validar nuevamente los datos, proteger la respuesta de seguridad y almacenar las credenciales con hash y sal. La recuperación actual aún usa el flujo local anterior; su migración al correo requiere el servicio correspondiente.
+
 ## Cómo ejecutar
 
 1. Instalar **Android Studio** (versión estable reciente) con el **Android SDK 37**.

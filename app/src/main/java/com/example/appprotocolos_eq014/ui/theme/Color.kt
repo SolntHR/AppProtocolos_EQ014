@@ -4,18 +4,18 @@ import androidx.compose.ui.graphics.Color
 
 val AzulPrimario = Color(0xFF0B3C6F)
 val AzulOscuro = Color(0xFF092D52)
-val AzulSuave = Color(0xFFDCEAF7)
+val AzulSuave = Color(0xFFE6EEF6)
 val AzulTextoCabecera = Color(0xFFC9D9E8)
 
-val NaranjaAcento = Color(0xFFF28C28)
+val NaranjaAcento = Color(0xFFD97A16)
 val NaranjaSuave = Color(0xFFFFF0DC)
 
 val Blanco = Color.White
-val Superficie = Color(0xFFF5F7F9)
-val SuperficieFuerte = Color(0xFFE8EDF2)
-val TextoPrincipal = Color(0xFF17212B)
-val TextoSecundario = Color(0xFF64717D)
-val Borde = Color(0xFFC7D0D8)
+val Superficie = Color(0xFFF4F5F7)
+val SuperficieFuerte = Color(0xFFE7E9ED)
+val TextoPrincipal = Color(0xFF20262D)
+val TextoSecundario = Color(0xFF66717D)
+val Borde = Color(0xFFD6DAE0)
 
 val VerdeExito = Color(0xFF16794B)
 val VerdeSuave = Color(0xFFDFF3E8)

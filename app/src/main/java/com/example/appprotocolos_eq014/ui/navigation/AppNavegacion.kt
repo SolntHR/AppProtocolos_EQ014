@@ -20,6 +20,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.ui.screens.LoginScreen
+import com.example.appprotocolos_eq014.ui.screens.RegistroScreen
+import com.example.appprotocolos_eq014.viewmodel.RegistroViewModel
 import com.example.appprotocolos_eq014.ui.screens.inicio.InicioScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -57,10 +59,24 @@ import com.example.appprotocolos_eq014.viewmodel.ARG_ID_INSTALACION
 import com.example.appprotocolos_eq014.viewmodel.SIN_INSTALACION
 import com.example.appprotocolos_eq014.viewmodel.FormularioEquipoViewModel
 import com.example.appprotocolos_eq014.viewmodel.FormularioInstalacionViewModel
+import com.example.appprotocolos_eq014.viewmodel.EquiposViewModel
+import com.example.appprotocolos_eq014.viewmodel.DetalleEquipoViewModel
+import com.example.appprotocolos_eq014.viewmodel.VisitasViewModel
+import com.example.appprotocolos_eq014.viewmodel.DetalleVisitaViewModel
+import com.example.appprotocolos_eq014.ui.screens.equipos.EquiposScreen
+import com.example.appprotocolos_eq014.ui.screens.equipos.DetalleEquipoScreen
+import com.example.appprotocolos_eq014.ui.screens.visitas.VisitasScreen
+import com.example.appprotocolos_eq014.ui.screens.visitas.DetalleVisitaScreen
 
 object Rutas {
     const val LOGIN = "login"
+    const val REGISTRO = "registro"
     const val INICIO = "inicio"
+    const val VISITAS = "visitas"
+    const val EQUIPOS = "equipos"
+    const val USUARIOS = "usuarios"
+    const val DETALLE_VISITA = "visita/{$ARG_ID_VISITA}"
+    const val DETALLE_EQUIPO = "equipo/{$ARG_ID_EQUIPO}"
     const val PERFIL = "perfil"
     const val EDITAR_PERFIL = "editar_perfil"
     const val FICHA_USUARIO = "ficha_usuario/{$ARG_ID_USUARIO}"
@@ -72,7 +88,7 @@ object Rutas {
 
     const val ARG_ID_PROTOCOLO = "idProtocolo"
     const val PROTOCOLOS = "protocolos"
-    const val FORMULARIO = "formulario?$ARG_ID_PROTOCOLO={$ARG_ID_PROTOCOLO}"
+    const val FORMULARIO = "formulario?$ARG_ID_PROTOCOLO={$ARG_ID_PROTOCOLO}&$ARG_ID_VISITA={$ARG_ID_VISITA}&$ARG_ID_EQUIPO={$ARG_ID_EQUIPO}"
     const val DETALLE_PROTOCOLO = "protocolo/{$ARG_ID_PROTOCOLO}"
 
     const val EQUIPO_NUEVO = "equipo_nuevo?$ARG_ID_INSTALACION={$ARG_ID_INSTALACION}"
@@ -81,8 +97,16 @@ object Rutas {
     fun fichaUsuario(idUsuario: Long) = "ficha_usuario/$idUsuario"
     fun historial(idEquipo: Long) = "historial/$idEquipo"
     fun acta(idVisita: Long) = "acta/$idVisita"
-    fun formulario(idProtocolo: String? = null) =
-        if (idProtocolo == null) "formulario" else "formulario?$ARG_ID_PROTOCOLO=$idProtocolo"
+    fun visita(idVisita: Long) = "visita/$idVisita"
+    fun equipo(idEquipo: Long) = "equipo/$idEquipo"
+    fun formulario(idProtocolo: String? = null, idVisita: Long? = null, idEquipo: Long? = null): String {
+        val argumentos = buildList {
+            idProtocolo?.let { add("$ARG_ID_PROTOCOLO=$it") }
+            idVisita?.let { add("$ARG_ID_VISITA=$it") }
+            idEquipo?.let { add("$ARG_ID_EQUIPO=$it") }
+        }
+        return "formulario" + if (argumentos.isEmpty()) "" else "?${argumentos.joinToString("&")}"
+    }
     fun detalleProtocolo(idProtocolo: String) = "protocolo/$idProtocolo"
     fun equipoNuevo(idInstalacion: Long? = null) =
         if (idInstalacion == null) "equipo_nuevo" else "equipo_nuevo?$ARG_ID_INSTALACION=$idInstalacion"
@@ -93,7 +117,8 @@ private const val CLAVE_USUARIO_GUARDADO = "usuario_guardado"
 private const val CLAVE_EQUIPO_CREADO = "equipo_creado"
 private const val CLAVE_INSTALACION_CREADA = "instalacion_creada"
 
-private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.PROTOCOLOS, Rutas.INSTRUMENTOS, Rutas.PERFIL)
+private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.VISITAS, Rutas.EQUIPOS, Rutas.PERFIL,
+    Rutas.DETALLE_VISITA, Rutas.DETALLE_EQUIPO, Rutas.PROTOCOLOS, Rutas.INSTRUMENTOS, Rutas.USUARIOS)
 
 @Composable
 fun AppNavegacion(modifier: Modifier = Modifier) {
@@ -113,7 +138,11 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             if (rutaActual != null && rutaActual in rutasConBarraInferior) {
                 BarraNavegacionInferior(
                     destinos = destinosInferiores(rolUsuario),
-                    rutaActual = rutaActual,
+                    rutaActual = when (rutaActual) {
+                        Rutas.DETALLE_VISITA -> Rutas.VISITAS
+                        Rutas.DETALLE_EQUIPO -> Rutas.EQUIPOS
+                        else -> rutaActual
+                    },
                     onNavegar = { ruta -> navController.navegarPestana(ruta) }
                 )
             }
@@ -137,8 +166,13 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                             popUpTo(Rutas.LOGIN) { inclusive = true }
                         }
                     },
-                    onOlvidasteContrasena = { navController.navigate(Rutas.RECUPERAR) }
+                    onOlvidasteContrasena = { navController.navigate(Rutas.RECUPERAR) },
+                    onCrearCuenta = { navController.navigate(Rutas.REGISTRO) { launchSingleTop = true } }
                 )
+            }
+            composable(Rutas.REGISTRO) {
+                val registroViewModel: RegistroViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                RegistroScreen(viewModel = registroViewModel, onVolver = { navController.popBackStack() })
             }
             composable(Rutas.INSTRUMENTOS) {
                 val instrumentosViewModel: InstrumentosViewModel = viewModel(factory = AppViewModelFactory.Factory)
@@ -169,34 +203,59 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 ActaScreen(
                     viewModel = actaViewModel,
                     onVolver = { navController.popBackStack() },
-                    onAbrirEquipo = { idEquipo -> navController.navigate(Rutas.historial(idEquipo)) }
+                    onAbrirEquipo = { idEquipo -> navController.navigate(Rutas.equipo(idEquipo)) }
                 )
             }
-            composable(Rutas.INICIO) { entrada ->
+            composable(Rutas.INICIO) {
                 val inicioViewModel: InicioViewModel = viewModel(factory = AppViewModelFactory.Factory)
                 InicioScreen(
                     viewModel = inicioViewModel,
-                    onAbrirVisita = { idVisita -> navController.navigate(Rutas.acta(idVisita)) },
-                    onAbrirEquipo = { idEquipo -> navController.navigate(Rutas.historial(idEquipo)) },
+                    onAbrirVisita = { idVisita -> navController.navigate(Rutas.visita(idVisita)) },
+                    onAbrirEquipo = { idEquipo -> navController.navigate(Rutas.equipo(idEquipo)) },
                     onNuevoProtocolo = { navController.navigate(Rutas.formulario()) },
-                    contenidoJefeTecnico = {
-                        val gestionViewModel: GestionUsuariosViewModel =
-                            viewModel(factory = AppViewModelFactory.Factory)
-                        val resultadoGuardado by entrada.savedStateHandle
-                            .getStateFlow<Boolean?>(CLAVE_USUARIO_GUARDADO, null)
-                            .collectAsStateWithLifecycle()
-                        GestionUsuariosScreen(
-                            viewModel = gestionViewModel,
-                            onAgregarUsuario = {
-                                navController.navigate(Rutas.fichaUsuario(FichaUsuarioViewModel.NUEVO))
-                            },
-                            onAbrirUsuario = { id -> navController.navigate(Rutas.fichaUsuario(id)) },
-                            resultadoGuardado = resultadoGuardado,
-                            onResultadoConsumido = {
-                                entrada.savedStateHandle[CLAVE_USUARIO_GUARDADO] = null
-                            }
-                        )
-                    }
+                    onAbrirPerfil = { navController.navegarPestana(Rutas.PERFIL) },
+                    onVerVisitas = { navController.navegarPestana(Rutas.VISITAS) },
+                    onVerEquipos = { navController.navegarPestana(Rutas.EQUIPOS) },
+                    onVerProtocolos = { navController.navigate(Rutas.PROTOCOLOS) },
+                    onGestionUsuarios = { navController.navigate(Rutas.USUARIOS) },
+                    onInstrumentos = { navController.navigate(Rutas.INSTRUMENTOS) }
+                )
+            }
+            composable(Rutas.VISITAS) {
+                val vm: VisitasViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                VisitasScreen(vm, { navController.navigate(Rutas.visita(it)) }, { navController.navigate(Rutas.PROTOCOLOS) })
+            }
+            composable(Rutas.EQUIPOS) {
+                val vm: EquiposViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                EquiposScreen(vm, { navController.navigate(Rutas.equipo(it)) }, { navController.navigate(Rutas.equipoNuevo()) })
+            }
+            composable(Rutas.DETALLE_EQUIPO, arguments = listOf(navArgument(ARG_ID_EQUIPO) { type = NavType.LongType })) {
+                val vm: DetalleEquipoViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                DetalleEquipoScreen(vm, { navController.popBackStack() }, { navController.navigate(Rutas.historial(it)) })
+            }
+            composable(Rutas.DETALLE_VISITA, arguments = listOf(navArgument(ARG_ID_VISITA) { type = NavType.LongType })) {
+                val vm: DetalleVisitaViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                DetalleVisitaScreen(
+                    viewModel = vm, onVolver = { navController.popBackStack() },
+                    onAbrirEquipo = { navController.navigate(Rutas.equipo(it)) },
+                    onAbrirProtocolo = { navController.navigate(Rutas.detalleProtocolo(it)) },
+                    onRegistrar = { visita, equipo -> navController.navigate(Rutas.formulario(idVisita = visita, idEquipo = equipo)) },
+                    onEditarProtocolo = { navController.navigate(Rutas.formulario(it)) },
+                    onAgregarEquipo = { navController.navigate(Rutas.equipoNuevo(it)) },
+                    onVerActa = { navController.navigate(Rutas.acta(it)) }
+                )
+            }
+            composable(Rutas.USUARIOS) { entrada ->
+                val gestionViewModel: GestionUsuariosViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                val resultadoGuardado by entrada.savedStateHandle
+                    .getStateFlow<Boolean?>(CLAVE_USUARIO_GUARDADO, null)
+                    .collectAsStateWithLifecycle()
+                GestionUsuariosScreen(
+                    viewModel = gestionViewModel,
+                    onAgregarUsuario = { navController.navigate(Rutas.fichaUsuario(FichaUsuarioViewModel.NUEVO)) },
+                    onAbrirUsuario = { id -> navController.navigate(Rutas.fichaUsuario(id)) },
+                    resultadoGuardado = resultadoGuardado,
+                    onResultadoConsumido = { entrada.savedStateHandle[CLAVE_USUARIO_GUARDADO] = null }
                 )
             }
             composable(
@@ -232,7 +291,8 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
-                })
+                }, navArgument(ARG_ID_VISITA) { type = NavType.LongType; defaultValue = 0L },
+                    navArgument(ARG_ID_EQUIPO) { type = NavType.LongType; defaultValue = 0L })
             ) { entrada ->
                 val formularioViewModel: FormularioProtocoloViewModel = viewModel(factory = AppViewModelFactory.Factory)
                 val equipoCreado by entrada.savedStateHandle
@@ -243,7 +303,8 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     equipoCreado = equipoCreado,
                     onEquipoCreadoConsumido = { entrada.savedStateHandle[CLAVE_EQUIPO_CREADO] = null },
                     viewModel = formularioViewModel,
-                    idVisita = null,
+                    idVisita = entrada.arguments?.getLong(ARG_ID_VISITA)?.takeIf { it > 0 },
+                    idEquipoInicial = entrada.arguments?.getLong(ARG_ID_EQUIPO)?.takeIf { it > 0 },
                     idProtocolo = entrada.arguments?.getString(Rutas.ARG_ID_PROTOCOLO),
                     onVolver = { navController.popBackStack() },
                     onGuardado = { id ->
@@ -341,9 +402,9 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
 }
 
 private fun NavHostController.navegarPestana(ruta: String) {
+    if (currentDestination?.route == ruta) return
     navigate(ruta) {
-        popUpTo(Rutas.INICIO) { saveState = true }
+        popUpTo(Rutas.INICIO)
         launchSingleTop = true
-        restoreState = true
     }
 }
