@@ -204,7 +204,7 @@ private fun EditarPerfilPreview() {
                 rol = "Técnico de terreno",
                 telefono = "+56 9 8123",
                 correo = "mgodoy@induztek.ejemplo",
-                errorTelefono = "Formato: +56 9 XXXX XXXX"
+                errorTelefono = "Ingresa un celular válido. Ejemplo: 912345678"
             ),
             onNombreCambia = {},
             onRutCambia = {},

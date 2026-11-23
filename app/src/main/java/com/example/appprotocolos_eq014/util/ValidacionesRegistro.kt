@@ -9,16 +9,9 @@ import java.util.Locale
 object ValidacionesRegistro {
     fun normalizarRut(valor: String): String = valor.replace(".", "").replace("-", "").trim().uppercase(Locale.ROOT)
 
-    fun normalizarTelefono(valor: String): String {
-        val compacto = valor.replace(Regex("[\\s()+-]"), "")
-        return if (compacto.length == 11 && compacto.startsWith("56")) compacto.drop(2) else compacto
-    }
+    fun normalizarTelefono(valor: String): String = Validaciones.normalizarTelefono(valor)
 
-    fun telefonoCompleto(valor: String): String {
-        val numero = normalizarTelefono(valor)
-        return if (numero.length == 9) "+56 ${numero.take(1)} ${numero.substring(1, 5)} ${numero.takeLast(4)}" else numero
-    }
-
+    fun telefonoCompleto(valor: String): String = Validaciones.telefonoCompleto(valor)
     fun nombreNormalizado(valor: String): String = valor.trim().replace(Regex("\\s+"), " ")
 
     // Solo una sugerencia visual: el servicio resolverá dominio y colisiones.

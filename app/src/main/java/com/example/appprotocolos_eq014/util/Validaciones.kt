@@ -2,7 +2,6 @@ package com.example.appprotocolos_eq014.util
 
 object Validaciones {
 
-    private val regexTelefono = Regex("^\\+56 9 \\d{4} \\d{4}$")
     private val regexCorreo = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
 
     fun rutValido(rut: String): Boolean {
@@ -26,8 +25,6 @@ object Validaciones {
         return digitoIngresado == digitoEsperado
     }
 
-    fun telefonoValido(telefono: String): Boolean = regexTelefono.matches(telefono.trim())
-
     fun correoValido(correo: String): Boolean = regexCorreo.matches(correo.trim())
 
     fun errorNombre(nombre: String): String? =
@@ -39,10 +36,16 @@ object Validaciones {
         else -> null
     }
 
-    fun errorTelefono(telefono: String): String? = when {
-        telefono.isBlank() -> "Ingresa el teléfono"
-        !telefonoValido(telefono) -> "Formato: +56 9 XXXX XXXX"
-        else -> null
+    fun normalizarTelefono(telefono: String): String {
+        val digitos = telefono.replace(Regex("[\\s()+.-]"), "")
+        return if (digitos.length == 11 && digitos.startsWith("56")) digitos.drop(2) else digitos
+    }
+
+    fun telefonoValido(telefono: String): Boolean = Regex("^9\\d{8}$").matches(normalizarTelefono(telefono))
+
+    fun telefonoCompleto(telefono: String): String {
+        val numero = normalizarTelefono(telefono)
+        return if (telefonoValido(numero)) "+56 ${numero.take(1)} ${numero.substring(1, 5)} ${numero.takeLast(4)}" else telefono.trim()
     }
 
     fun errorCorreo(correo: String): String? = when {
