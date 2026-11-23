@@ -3,8 +3,9 @@
 
     <string name="marca_induztek">INDUZTEK</string>
     <string name="marca_protocolos">PROTOCOLOS</string>
-    <string name="login_bienvenido">Bienvenido</string>
-    <string name="login_subtitulo">Registra pruebas incluso sin conexión.</string>
+    <string name="login_bienvenido">Iniciar sesión</string>
+    <string name="login_subtitulo">Ingresa con tu correo y contraseña para ver tus visitas y registrar pruebas.</string>
+    <string name="login_ingresando">Ingresando…</string>
     <string name="campo_correo">Correo electrónico</string>
     <string name="campo_contrasena">Contraseña</string>
     <string name="btn_ingresar">Ingresar</string>

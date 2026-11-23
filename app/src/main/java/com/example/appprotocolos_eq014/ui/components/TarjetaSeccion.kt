@@ -26,7 +26,8 @@ fun TarjetaSeccion(
         modifier = modifier.fillMaxWidth(),
         shape = EstilosTarjeta.forma,
         colors = EstilosTarjeta.colores(),
-        elevation = EstilosTarjeta.elevacion()
+        elevation = EstilosTarjeta.elevacion(),
+        border = EstilosTarjeta.borde()
     ) {
         Column(
             modifier = Modifier.padding(Dimens.espacioMedio),
@@ -35,7 +36,7 @@ fun TarjetaSeccion(
             Text(
                 text = titulo,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
             contenido()
         }

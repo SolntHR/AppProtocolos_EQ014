@@ -1,5 +1,6 @@
 package com.example.appprotocolos_eq014.ui.styles
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -20,4 +21,7 @@ object EstilosTarjeta {
 
     @Composable
     fun elevacion(): CardElevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevacionTarjeta)
+
+    @Composable
+    fun borde(): BorderStroke = BorderStroke(Dimens.bordeBoton, MaterialTheme.colorScheme.outlineVariant)
 }
