@@ -2,7 +2,7 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.LoginUiState
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.util.Validaciones
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val usuarioRepository: UsuarioRepository,
-    private val sesionPreferencias: SesionPreferencias
+    private val guardarSesion: (idUsuario: Long, codigoRol: String) -> Unit
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -31,33 +31,26 @@ class LoginViewModel(
         _uiState.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
     }
 
-    fun onIngresar() {
+    fun validar(): Boolean {
         val estado = _uiState.value
-
         val errorCorreo = Validaciones.errorCorreo(estado.correo)
         val errorContrasena = Validaciones.errorObligatorio(estado.contrasena, "Ingresa tu contraseña")
+        _uiState.update { it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena) }
+        return errorCorreo == null && errorContrasena == null
+    }
 
-        if (errorCorreo != null || errorContrasena != null) {
-            _uiState.update { it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena) }
-            return
-        }
-
+    fun onIngresar() {
+        if (_uiState.value.isLoading || !validar()) return
+        val estado = _uiState.value
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorCorreo = null, errorContrasena = null) }
-            val usuario = usuarioRepository.login(estado.correo, estado.contrasena)
-            if (usuario != null) {
-                if (usuario.activo) {
-                    sesionPreferencias.guardarSesion(
-                        idUsuario = usuario.id.toLong(),
-                        codigoRol = usuario.rolCodigo
-                    )
-                    _uiState.update { it.copy(isLoading = false, loginExitoso = true) }
-                } else {
-                    _uiState.update { it.copy(isLoading = false, errorCorreo = "Usuario desactivado") }
-                }
-            } else {
-                _uiState.update { it.copy(isLoading = false, errorContrasena = "Correo o contraseña incorrectos") }
-            }
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val usuario = usuarioRepository.login(estado.correo, estado.contrasena)
+                guardarSesion(usuario.id.toLong(), usuario.rolCodigo)
+                _uiState.update { it.copy(isLoading = false, loginExitoso = true) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, errorContrasena = e.message) }
             }
         }
+    }
 }

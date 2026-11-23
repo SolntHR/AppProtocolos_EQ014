@@ -17,7 +17,6 @@ import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
-import com.example.appprotocolos_eq014.repository.RegistroUsuarioNoDisponibleRepository
 
 const val ARG_ID_USUARIO = "idUsuario"
 const val ARG_ID_EQUIPO = "idEquipo"
@@ -33,7 +32,7 @@ object AppViewModelFactory {
 
     val Factory: ViewModelProvider.Factory = viewModelFactory {
         initializer {
-            RegistroViewModel(RegistroUsuarioNoDisponibleRepository())
+            RegistroViewModel(UsuarioRepository())
         }
         initializer {
             val contexto = contexto()
@@ -91,8 +90,8 @@ object AppViewModelFactory {
         initializer {
             val contexto = contexto()
             LoginViewModel(
-                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
-                sesionPreferencias = SesionPreferencias(contexto)
+                usuarioRepository = UsuarioRepository(),
+                guardarSesion = SesionPreferencias(contexto)::guardarSesion
             )
         }
         initializer {
@@ -102,7 +101,7 @@ object AppViewModelFactory {
                 sesionPreferencias = SesionPreferencias(contexto),
                 catalogoRepository = CatalogoRepository(db),
                 visitaRepository = VisitaRepository(db),
-                usuarioRepository = UsuarioRepository(db),
+                usuarioRepository = UsuarioRepository(),
                 catalogoClienteRepository = RegistroCatalogoRepository(db)
             )
         }
@@ -129,13 +128,13 @@ object AppViewModelFactory {
             InstrumentosViewModel(instrumentoRepository = InstrumentoRepository(obtenerDbHelper(contexto())))
         }
         initializer {
-            RecuperarViewModel(usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto())))
+            RecuperarViewModel(usuarioRepository = UsuarioRepository())
         }
         initializer {
             val contexto = contexto()
             PerfilViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
-                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
+                usuarioRepository = UsuarioRepository(),
                 fotoPerfilRepository = FotoPerfilRepository(contexto)
             )
         }
@@ -143,14 +142,14 @@ object AppViewModelFactory {
             val contexto = contexto()
             GestionUsuariosViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
-                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
+                usuarioRepository = UsuarioRepository(),
                 fotoPerfilRepository = FotoPerfilRepository(contexto)
             )
         }
         initializer {
             val contexto = contexto()
             FichaUsuarioViewModel(
-                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto)),
+                usuarioRepository = UsuarioRepository(),
                 idUsuario = createSavedStateHandle().get<Long>(ARG_ID_USUARIO) ?: FichaUsuarioViewModel.NUEVO
             )
         }
@@ -158,7 +157,7 @@ object AppViewModelFactory {
             val contexto = contexto()
             EditarPerfilViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
-                usuarioRepository = UsuarioRepository(obtenerDbHelper(contexto))
+                usuarioRepository = UsuarioRepository()
             )
         }
     }

@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.EquipoCliente
 import com.example.appprotocolos_eq014.model.uistate.InicioUiState
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
@@ -46,15 +47,16 @@ class InicioViewModel(
                     empresa = if (rol == "CLIENTE") usuario?.nombre.orEmpty() else ""
                 )
             }
-
-            when (rol) {
-                "CLIENTE" -> cargarEquiposCliente(idUsuario)
-                "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
-                    val visitas = visitaRepository.visitasDeUsuario(idUsuario, verTodas = rol == "JEFE_TECNICO")
-                    _uiState.update { it.copy(visitas = visitas, isLoading = false) }
-                }
-                else -> _uiState.update { it.copy(isLoading = false) }
-            }
+              when (rol) {
+                  "CLIENTE" -> cargarEquiposCliente(idUsuario)
+                  "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
+                      val visitas = visitaRepository.visitasDeUsuario(idUsuario, verTodas = rol == "JEFE_TECNICO")
+                      _uiState.update { it.copy(visitas = visitas, isLoading = false) }
+                  }
+                  else -> _uiState.update { it.copy(isLoading = false) }
+              }
+          } catch (e: ErrorApi) {
+              _uiState.update { it.copy(isLoading = false, error = e.message) }
           } catch (e: SQLiteException) {
               _uiState.update { it.copy(isLoading = false, error = "No se pudieron cargar los datos. Inténtalo nuevamente.") }
           }

@@ -2,6 +2,7 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.FichaUsuarioUiState
 import com.example.appprotocolos_eq014.model.uistate.RolPersonal
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
@@ -20,6 +21,8 @@ class FichaUsuarioViewModel(
     private val _uiState = MutableStateFlow(FichaUsuarioUiState(esNuevo = idUsuario == NUEVO))
     val uiState: StateFlow<FichaUsuarioUiState> = _uiState.asStateFlow()
 
+    private var giro: String? = null
+
     init {
         if (idUsuario != NUEVO) cargarUsuario()
     }
@@ -27,38 +30,42 @@ class FichaUsuarioViewModel(
     private fun cargarUsuario() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val usuario = usuarioRepository.obtenerPorId(idUsuario)
-            if (usuario == null) {
-                _uiState.update { it.copy(isLoading = false, errorGeneral = "No se encontró el usuario") }
-                return@launch
-            }
-            val esCliente = usuario.rolCodigo == "CLIENTE"
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    esCliente = esCliente,
-                    rolPersonal = RolPersonal.entries.find { rol -> rol.codigo == usuario.rolCodigo } ?: RolPersonal.TECNICO,
-                    rolNombre = usuario.rolNombre,
-                    nombre = if (esCliente) usuario.contactoNombre.orEmpty() else usuario.nombre,
-                    rut = usuario.rut,
-                    empresa = if (esCliente) usuario.nombre else "",
-                    cargo = usuario.contactoCargo.orEmpty(),
-                    telefono = usuario.telefono,
-                    correo = usuario.correo
-                )
+            try {
+                val usuario = usuarioRepository.obtenerPorId(idUsuario)
+                val esCliente = usuario.rolCodigo == "CLIENTE"
+                giro = usuario.giro
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        pendiente = usuario.rolCodigo == "SIN_ASIGNAR",
+                        esCliente = esCliente,
+                        rolPersonal = RolPersonal.entries.find { rol -> rol.codigo == usuario.rolCodigo } ?: RolPersonal.TECNICO,
+                        rolNombre = usuario.rolNombre,
+                        nombre = if (esCliente) usuario.contactoNombre.orEmpty() else usuario.nombre,
+                        rut = usuario.rut,
+                        empresa = if (esCliente) usuario.nombre else "",
+                        cargo = usuario.contactoCargo.orEmpty(),
+                        telefono = usuario.telefono,
+                        correo = usuario.correo
+                    )
+                }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, errorGeneral = e.message) }
             }
         }
     }
 
+    private fun puedeCambiarPerfil(): Boolean = _uiState.value.esNuevo || _uiState.value.pendiente
+
     fun onTipoCambia(esCliente: Boolean) {
-        if (!_uiState.value.esNuevo) return
+        if (!puedeCambiarPerfil()) return
         _uiState.update {
             it.copy(esCliente = esCliente, errorEmpresa = null, errorCargo = null)
         }
     }
 
     fun onRolCambia(rol: RolPersonal) {
-        if (!_uiState.value.esNuevo) return
+        if (!puedeCambiarPerfil()) return
         _uiState.update { it.copy(rolPersonal = rol) }
     }
 
@@ -86,88 +93,79 @@ class FichaUsuarioViewModel(
         _uiState.update { it.copy(correo = valor.trim(), errorCorreo = null) }
     }
 
-    fun onGuardar() {
+    fun validar(): Boolean {
         val estado = _uiState.value
+        val errorNombre = Validaciones.errorNombre(estado.nombre)
+        val errorRut = Validaciones.errorRut(estado.rut)
+        val errorEmpresa = if (estado.esCliente) Validaciones.errorObligatorio(estado.empresa, "Ingresa la empresa cliente") else null
+        val errorCargo = if (estado.esCliente) Validaciones.errorObligatorio(estado.cargo, "Ingresa el cargo") else null
+        val errorTelefono = Validaciones.errorTelefono(estado.telefono)
+        val errorCorreo = if (estado.esNuevo) Validaciones.errorCorreo(estado.correo) else null
+        _uiState.update {
+            it.copy(
+                errorNombre = errorNombre,
+                errorRut = errorRut,
+                errorEmpresa = errorEmpresa,
+                errorCargo = errorCargo,
+                errorTelefono = errorTelefono,
+                errorCorreo = errorCorreo,
+                errorGeneral = null
+            )
+        }
+        return listOf(errorNombre, errorRut, errorEmpresa, errorCargo, errorTelefono, errorCorreo).all { it == null }
+    }
+
+    fun onGuardar() {
+        if (_uiState.value.guardando || !validar()) return
+        val estado = _uiState.value
+        val nombreRegistro = if (estado.esCliente) estado.empresa.trim() else estado.nombre.trim()
+        val contactoNombre = if (estado.esCliente) estado.nombre.trim() else null
+        val contactoCargo = if (estado.esCliente) estado.cargo.trim() else null
+        val rolCodigo = if (estado.esCliente) "CLIENTE" else estado.rolPersonal.codigo
+        val telefono = Validaciones.telefonoCompleto(estado.telefono)
+
         viewModelScope.launch {
-            _uiState.update { it.copy(guardando = true, errorGeneral = null) }
-
-            val errorNombre = Validaciones.errorNombre(estado.nombre)
-            val errorRut = Validaciones.errorRut(estado.rut)
-                ?: if (usuarioRepository.existeRut(estado.rut, idUsuario)) "Ya existe un usuario con ese RUT" else null
-            val errorEmpresa = if (estado.esCliente) {
-                Validaciones.errorObligatorio(estado.empresa, "Ingresa la empresa cliente")
-            } else {
-                null
-            }
-            val errorCargo = if (estado.esCliente) {
-                Validaciones.errorObligatorio(estado.cargo, "Ingresa el cargo")
-            } else {
-                null
-            }
-            val errorTelefono = Validaciones.errorTelefono(estado.telefono)
-            val errorCorreo = if (estado.esNuevo) errorCorreoNuevo(estado.correo) else null
-
-            val errores = listOf(errorNombre, errorRut, errorEmpresa, errorCargo, errorTelefono, errorCorreo)
-            if (errores.any { it != null }) {
+            _uiState.update { it.copy(guardando = true) }
+            try {
+                if (estado.esNuevo) {
+                    usuarioRepository.crearUsuario(
+                        rolCodigo = rolCodigo,
+                        nombre = nombreRegistro,
+                        rut = estado.rut.trim(),
+                        correoPersonal = estado.correo,
+                        telefono = telefono,
+                        contactoNombre = contactoNombre,
+                        contactoCargo = contactoCargo
+                    )
+                } else {
+                    usuarioRepository.actualizarPerfil(
+                        idUsuario = idUsuario,
+                        nombre = nombreRegistro,
+                        rut = estado.rut.trim(),
+                        telefono = telefono,
+                        giro = giro,
+                        contactoNombre = contactoNombre,
+                        contactoCargo = contactoCargo
+                    )
+                    if (estado.pendiente) usuarioRepository.cambiarRol(idUsuario, rolCodigo)
+                }
+                _uiState.update { it.copy(guardando = false, guardadoExitoso = true) }
+            } catch (e: ErrorApi) {
                 _uiState.update {
                     it.copy(
                         guardando = false,
-                        errorNombre = errorNombre,
-                        errorRut = errorRut,
-                        errorEmpresa = errorEmpresa,
-                        errorCargo = errorCargo,
-                        errorTelefono = errorTelefono,
-                        errorCorreo = errorCorreo
+                        errorNombre = e.campos["nombre"] ?: it.errorNombre,
+                        errorRut = e.campos["rut"] ?: it.errorRut,
+                        errorTelefono = e.campos["telefono"] ?: it.errorTelefono,
+                        errorCorreo = e.campos["correoPersonal"] ?: it.errorCorreo,
+                        errorGeneral = e.message
                     )
-                }
-                return@launch
-            }
-
-            val nombreRegistro = if (estado.esCliente) estado.empresa.trim() else estado.nombre.trim()
-            val contactoNombre = if (estado.esCliente) estado.nombre.trim() else null
-            val contactoCargo = if (estado.esCliente) estado.cargo.trim() else null
-
-            val exito = if (estado.esNuevo) {
-                usuarioRepository.crearUsuario(
-                    rolCodigo = if (estado.esCliente) "CLIENTE" else estado.rolPersonal.codigo,
-                    nombre = nombreRegistro,
-                    rut = estado.rut.trim(),
-                    correo = estado.correo.trim(),
-                    telefono = estado.telefono.trim(),
-                    contactoNombre = contactoNombre,
-                    contactoCargo = contactoCargo,
-                    contrasenaInicial = CONTRASENA_INICIAL
-                ) != -1L
-            } else {
-                usuarioRepository.actualizarPerfil(
-                    idUsuario = idUsuario,
-                    nombre = nombreRegistro,
-                    rut = estado.rut.trim(),
-                    telefono = estado.telefono.trim(),
-                    contactoNombre = contactoNombre,
-                    contactoCargo = contactoCargo
-                )
-            }
-
-            _uiState.update {
-                if (exito) {
-                    it.copy(guardando = false, guardadoExitoso = true)
-                } else {
-                    it.copy(guardando = false, errorGeneral = "No se pudo guardar el usuario")
                 }
             }
         }
     }
 
-    private suspend fun errorCorreoNuevo(correo: String): String? = when {
-        correo.isBlank() -> "Ingresa el correo electrónico"
-        !Validaciones.correoValido(correo) -> "Correo inválido. Ejemplo: nombre@empresa.cl"
-        usuarioRepository.existeCorreo(correo) -> "Ya existe una cuenta con ese correo"
-        else -> null
-    }
-
     companion object {
         const val NUEVO = -1L
-        const val CONTRASENA_INICIAL = "123456"
     }
 }

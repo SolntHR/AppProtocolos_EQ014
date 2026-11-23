@@ -9,6 +9,7 @@ enum class RolPersonal(val codigo: String, val etiqueta: String) {
 data class FichaUsuarioUiState(
     val isLoading: Boolean = false,
     val esNuevo: Boolean = true,
+    val pendiente: Boolean = false,
     val esCliente: Boolean = false,
     val rolPersonal: RolPersonal = RolPersonal.TECNICO,
     val rolNombre: String = "",

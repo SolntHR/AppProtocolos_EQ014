@@ -43,6 +43,11 @@ class FotoPerfilRepository(context: Context) {
         if (archivo.exists()) BitmapFactory.decodeFile(archivo.absolutePath) else null
     }
 
+    fun rutaDe(idUsuario: Long): String? =
+        carpetaFotos.listFiles { archivo -> archivo.name.startsWith("perfil_${idUsuario}_") }
+            ?.maxByOrNull { it.lastModified() }
+            ?.absolutePath
+
     suspend fun eliminar(ruta: String?) = withContext(Dispatchers.IO) {
         if (ruta != null) File(ruta).delete()
     }

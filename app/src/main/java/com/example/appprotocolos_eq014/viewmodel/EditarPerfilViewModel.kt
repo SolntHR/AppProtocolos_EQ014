@@ -3,6 +3,7 @@ package com.example.appprotocolos_eq014.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.EditarPerfilUiState
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.util.Validaciones
@@ -12,8 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
 class EditarPerfilViewModel(
-    private val sesionPreferencias: SesionPreferencias,
+    sesionPreferencias: SesionPreferencias,
     private val usuarioRepository: UsuarioRepository
 ) : ViewModel() {
 
@@ -21,6 +23,7 @@ class EditarPerfilViewModel(
     val uiState: StateFlow<EditarPerfilUiState> = _uiState.asStateFlow()
 
     private val idUsuario = sesionPreferencias.leerIdUsuario()
+    private var giro: String? = null
 
     init {
         cargarDatos()
@@ -28,25 +31,26 @@ class EditarPerfilViewModel(
 
     private fun cargarDatos() {
         viewModelScope.launch {
-            val usuario = usuarioRepository.obtenerPorId(idUsuario)
-            if (usuario == null) {
-                _uiState.update { it.copy(isLoading = false, errorGeneral = "No se encontró el usuario de la sesión") }
-                return@launch
-            }
-            val esCliente = usuario.rolCodigo == "CLIENTE"
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    esCliente = esCliente,
-                    puedeEditarDatosProtegidos = usuario.rolCodigo == "JEFE_TECNICO",
-                    nombre = if (esCliente) usuario.contactoNombre.orEmpty() else usuario.nombre,
-                    rut = usuario.rut,
-                    rol = usuario.rolNombre,
-                    empresa = usuario.nombre,
-                    cargo = usuario.contactoCargo.orEmpty(),
-                    telefono = usuario.telefono,
-                    correo = usuario.correo
-                )
+            try {
+                val usuario = usuarioRepository.obtenerPorId(idUsuario)
+                val esCliente = usuario.rolCodigo == "CLIENTE"
+                giro = usuario.giro
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        esCliente = esCliente,
+                        puedeEditarDatosProtegidos = usuario.rolCodigo == "JEFE_TECNICO",
+                        nombre = if (esCliente) usuario.contactoNombre.orEmpty() else usuario.nombre,
+                        rut = usuario.rut,
+                        rol = usuario.rolNombre,
+                        empresa = usuario.nombre,
+                        cargo = usuario.contactoCargo.orEmpty(),
+                        telefono = usuario.telefono,
+                        correo = usuario.correo
+                    )
+                }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, errorGeneral = e.message) }
             }
         }
     }
@@ -67,47 +71,37 @@ class EditarPerfilViewModel(
         _uiState.update { it.copy(telefono = valor, errorTelefono = null) }
     }
 
-    fun onGuardar() {
+    fun validar(): Boolean {
         val estado = _uiState.value
         val protegidos = estado.puedeEditarDatosProtegidos
-
         val errorNombre = Validaciones.errorNombre(estado.nombre)
         val errorRut = if (protegidos) Validaciones.errorRut(estado.rut) else null
-        val errorCargo = if (protegidos && estado.esCliente) {
-            Validaciones.errorObligatorio(estado.cargo, "Ingresa el cargo")
-        } else {
-            null
-        }
+        val errorCargo = if (protegidos && estado.esCliente) Validaciones.errorObligatorio(estado.cargo, "Ingresa el cargo") else null
         val errorTelefono = Validaciones.errorTelefono(estado.telefono)
-
-        if (listOf(errorNombre, errorRut, errorCargo, errorTelefono).any { it != null }) {
-            _uiState.update {
-                it.copy(
-                    errorNombre = errorNombre,
-                    errorRut = errorRut,
-                    errorCargo = errorCargo,
-                    errorTelefono = errorTelefono
-                )
-            }
-            return
+        _uiState.update {
+            it.copy(errorNombre = errorNombre, errorRut = errorRut, errorCargo = errorCargo, errorTelefono = errorTelefono)
         }
+        return listOf(errorNombre, errorRut, errorCargo, errorTelefono).all { it == null }
+    }
 
+    fun onGuardar() {
+        if (_uiState.value.guardando || !validar()) return
+        val estado = _uiState.value
         viewModelScope.launch {
             _uiState.update { it.copy(guardando = true, errorGeneral = null) }
-            val actualizado = usuarioRepository.actualizarPerfil(
-                idUsuario = idUsuario,
-                nombre = if (estado.esCliente) estado.empresa else estado.nombre.trim(),
-                rut = estado.rut.trim(),
-                telefono = Validaciones.telefonoCompleto(estado.telefono),
-                contactoNombre = if (estado.esCliente) estado.nombre.trim() else null,
-                contactoCargo = if (estado.esCliente) estado.cargo.trim() else null
-            )
-            _uiState.update {
-                if (actualizado) {
-                    it.copy(guardando = false, guardadoExitoso = true)
-                } else {
-                    it.copy(guardando = false, errorGeneral = "No se pudo guardar el perfil")
-                }
+            try {
+                usuarioRepository.actualizarPerfil(
+                    idUsuario = idUsuario,
+                    nombre = if (estado.esCliente) estado.empresa else estado.nombre.trim(),
+                    rut = estado.rut.trim(),
+                    telefono = Validaciones.telefonoCompleto(estado.telefono),
+                    giro = giro,
+                    contactoNombre = if (estado.esCliente) estado.nombre.trim() else null,
+                    contactoCargo = if (estado.esCliente) estado.cargo.trim() else null
+                )
+                _uiState.update { it.copy(guardando = false, guardadoExitoso = true) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(guardando = false, errorGeneral = e.message) }
             }
         }
     }

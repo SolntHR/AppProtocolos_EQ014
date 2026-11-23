@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.DatoPerfil
 import com.example.appprotocolos_eq014.model.uistate.PerfilUiState
 import com.example.appprotocolos_eq014.model.entidades.Usuario
@@ -37,14 +38,14 @@ class PerfilViewModel(
         _uiState.update { it.copy(isLoading = it.nombre.isEmpty(), error = null) }
 
         viewModelScope.launch {
-            val usuario = usuarioRepository.obtenerPorId(idUsuario)
-            if (usuario == null) {
-                _uiState.update { it.copy(isLoading = false, error = "No se encontró el usuario de la sesión") }
-                return@launch
+            try {
+                val usuario = usuarioRepository.obtenerPorId(idUsuario)
+                rutaFotoActual = fotoPerfilRepository.rutaDe(idUsuario)
+                val foto = fotoPerfilRepository.cargar(rutaFotoActual)
+                _uiState.update { construirEstado(usuario, it).copy(foto = foto) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
-            rutaFotoActual = usuario.fotoPerfil
-            val foto = fotoPerfilRepository.cargar(usuario.fotoPerfil)
-            _uiState.update { construirEstado(usuario, it).copy(foto = foto) }
         }
     }
 
@@ -72,9 +73,7 @@ class PerfilViewModel(
         val foto = _uiState.value.fotoPendiente ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(procesandoFoto = true) }
-            val ruta = fotoPerfilRepository.guardar(idUsuario, foto)
-            usuarioRepository.actualizarFoto(idUsuario, ruta)
-            rutaFotoActual = ruta
+            rutaFotoActual = fotoPerfilRepository.guardar(idUsuario, foto)
             _uiState.update {
                 it.copy(
                     foto = foto,
@@ -93,7 +92,6 @@ class PerfilViewModel(
     fun onEliminarFoto() {
         viewModelScope.launch {
             fotoPerfilRepository.eliminar(rutaFotoActual)
-            usuarioRepository.actualizarFoto(idUsuario, null)
             rutaFotoActual = null
             _uiState.update { it.copy(foto = null, mensaje = R.string.mensaje_foto_eliminada) }
         }

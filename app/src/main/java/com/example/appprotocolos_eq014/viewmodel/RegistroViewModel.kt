@@ -2,13 +2,14 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.registro.DatosRegistro
+import com.example.appprotocolos_eq014.model.registro.ErroresRegistro
 import com.example.appprotocolos_eq014.model.uistate.RegistroUiState
 import com.example.appprotocolos_eq014.repository.RegistroUsuarioRepository
 import com.example.appprotocolos_eq014.repository.ResultadoRegistroUsuario
 import com.example.appprotocolos_eq014.repository.SolicitudRegistroUsuario
 import com.example.appprotocolos_eq014.util.ValidacionesRegistro
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -35,13 +36,16 @@ class RegistroViewModel(private val repository: RegistroUsuarioRepository) : Vie
     fun onRespuestaCambia(valor: String) = actualizarDatos { it.copy(respuestaSeguridad = valor) }
     fun onAlternarRespuesta() = _uiState.update { it.copy(respuestaVisible = !it.respuestaVisible) }
 
+    fun validar(): Boolean {
+        validado = true
+        val errores = ValidacionesRegistro.validar(_uiState.value.datos)
+        _uiState.update { it.copy(errores = errores, errorGeneral = null) }
+        return !errores.hayErrores
+    }
+
     fun onRegistrar() {
         val estado = _uiState.value
-        if (estado.cargando || estado.correoCreado != null) return
-        validado = true
-        val errores = ValidacionesRegistro.validar(estado.datos)
-        _uiState.update { it.copy(errores = errores, errorGeneral = null) }
-        if (errores.hayErrores) return
+        if (estado.cargando || estado.correoCreado != null || !validar()) return
 
         val datos = estado.datos
         val solicitud = SolicitudRegistroUsuario(
@@ -59,21 +63,22 @@ class RegistroViewModel(private val repository: RegistroUsuarioRepository) : Vie
                     is ResultadoRegistroUsuario.Creado -> _uiState.update {
                         it.copy(cargando = false, correoCreado = resultado.correoInterno, datos = DatosRegistro())
                     }
-                    ResultadoRegistroUsuario.NoDisponible -> mostrarNoDisponible()
                 }
-            } catch (cancelacion: CancellationException) {
-                throw cancelacion
-            } catch (_: Exception) {
-                mostrarNoDisponible()
-            } finally {
-                _uiState.update { it.copy(cargando = false) }
+            } catch (e: ErrorApi) {
+                _uiState.update {
+                    it.copy(cargando = false, errores = erroresDelServidor(e.campos), errorGeneral = e.message)
+                }
             }
         }
+
     }
 
-    private fun mostrarNoDisponible() {
-        _uiState.update {
-            it.copy(errorGeneral = "No pudimos crear tu cuenta. El registro todavía no está disponible. Inténtalo más tarde.")
-        }
-    }
+    private fun erroresDelServidor(campos: Map<String, String>) = ErroresRegistro(
+        nombre = campos["nombre"],
+        rut = campos["rut"],
+        telefono = campos["telefono"],
+        correoPersonal = campos["correoPersonal"],
+        preguntaSeguridad = campos["preguntaSeguridad"],
+        respuestaSeguridad = campos["respuestaSeguridad"]
+    )
 }

@@ -75,7 +75,7 @@
     <string name="campo_correo_obligatorio">Correo electrónico *</string>
     <string name="ayuda_perfil_fijo">El perfil se define al crear la cuenta</string>
     <string name="ayuda_correo_cuenta">El correo identifica la cuenta y no se puede cambiar</string>
-    <string name="ayuda_contrasena_inicial">La contraseña inicial será 123456</string>
+    <string name="ayuda_contrasena_inicial">El correo de acceso se genera solo. Le enviaremos a este correo un código para que cree su contraseña.</string>
     <string name="historial_sin_protocolos">Este equipo aún no tiene protocolos visibles.</string>
     <string name="comparacion_titulo">Aislación · lectura a 1 min</string>
     <string name="comparacion_protocolo">Protocolo</string>

@@ -1,107 +1,71 @@
 package com.example.appprotocolos_eq014.repository
 
-import android.content.ContentValues
-import android.database.Cursor
-import android.database.sqlite.SQLiteConstraintException
-import com.example.appprotocolos_eq014.data.InduztekDbHelper
+import com.example.appprotocolos_eq014.data.remote.ActualizarUsuarioRequest
+import com.example.appprotocolos_eq014.data.remote.CambiarActivoRequest
+import com.example.appprotocolos_eq014.data.remote.CambiarRolRequest
+import com.example.appprotocolos_eq014.data.remote.CrearUsuarioRequest
+import com.example.appprotocolos_eq014.data.remote.LoginRequest
+import com.example.appprotocolos_eq014.data.remote.RegistroRequest
+import com.example.appprotocolos_eq014.data.remote.RestablecerConCodigoRequest
+import com.example.appprotocolos_eq014.data.remote.RestablecerConPreguntaRequest
+import com.example.appprotocolos_eq014.data.remote.RetrofitClient
+import com.example.appprotocolos_eq014.data.remote.SolicitarCodigoRequest
+import com.example.appprotocolos_eq014.data.remote.UsuarioApi
+import com.example.appprotocolos_eq014.data.remote.VerificarCodigoRequest
+import com.example.appprotocolos_eq014.data.remote.VerificarPreguntaRequest
+import com.example.appprotocolos_eq014.data.remote.aUsuario
+import com.example.appprotocolos_eq014.data.remote.listaApi
+import com.example.appprotocolos_eq014.data.remote.llamarApi
+import com.example.appprotocolos_eq014.data.remote.sinContenidoApi
 import com.example.appprotocolos_eq014.model.entidades.Usuario
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.appprotocolos_eq014.util.Seguridad
 
-class UsuarioRepository(private val dbHelper: InduztekDbHelper) {
+class UsuarioRepository(private val usuarioApi: UsuarioApi = RetrofitClient.usuarioApi): RegistroUsuarioRepository{
 
-    private val consultaBase = """
-        SELECT u.*, r.codigo AS rol_codigo, r.nombre AS rol_nombre
-        FROM USUARIO u
-        INNER JOIN ROL r ON u.id_rol = r.id_rol
-    """
-
-    suspend fun login(correo: String, pass: String): Usuario? = withContext(Dispatchers.IO) {
-        buscarUno("$consultaBase WHERE u.correo = ? AND u.password_hash = ?", arrayOf(correo, pass))
+    suspend fun login(correo: String, contrasena: String): Usuario {
+        val datos = LoginRequest(correo.trim(), Seguridad.cifrarContrasena(correo, contrasena))
+        return llamarApi { usuarioApi.login(datos) }.aUsuario()
     }
 
-    suspend fun obtenerPorId(idUsuario: Long): Usuario? = withContext(Dispatchers.IO) {
-        buscarUno("$consultaBase WHERE u.id_usuario = ?", arrayOf(idUsuario.toString()))
-    }
-
-    suspend fun obtenerPorCorreo(correo: String): Usuario? = withContext(Dispatchers.IO) {
-        buscarUno("$consultaBase WHERE lower(u.correo) = lower(?)", arrayOf(correo.trim()))
-    }
-
-    suspend fun actualizarContrasena(idUsuario: Long, contrasena: String): Boolean = withContext(Dispatchers.IO) {
-        val valores = ContentValues().apply { put("password_hash", contrasena) }
-        dbHelper.writableDatabase.update(
-            "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
-        ) > 0
-    }
-
-    suspend fun listarUsuarios(): List<Usuario> = withContext(Dispatchers.IO) {
-        val cursor = dbHelper.readableDatabase.rawQuery(
-            "$consultaBase ORDER BY u.id_rol, u.nombre",
-            null
+    override suspend fun registrar(solicitud: SolicitudRegistroUsuario): ResultadoRegistroUsuario {
+        val datos = RegistroRequest(
+            nombre = solicitud.nombre,
+            rut = solicitud.rut,
+            correoPersonal = solicitud.correoPersonal,
+            telefono = solicitud.telefono,
+            preguntaSeguridad = solicitud.preguntaSeguridad,
+            respuestaSeguridad = solicitud.respuestaSeguridad
         )
-        val usuarios = mutableListOf<Usuario>()
-        while (cursor.moveToNext()) {
-            usuarios.add(cursor.aUsuario())
-        }
-        cursor.close()
-        usuarios
+        val respuesta = llamarApi { usuarioApi.registrar(datos) }
+        return ResultadoRegistroUsuario.Creado(respuesta.correoInterno)
     }
 
-    suspend fun cambiarActivo(idUsuario: Long, activo: Boolean): Boolean = withContext(Dispatchers.IO) {
-        val valores = ContentValues().apply { put("activo", if (activo) 1 else 0) }
-        dbHelper.writableDatabase.update(
-            "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
-        ) > 0
-    }
+    suspend fun obtenerPorId(idUsuario: Long): Usuario =
+        llamarApi { usuarioApi.obtener(idUsuario) }.aUsuario()
 
-    suspend fun existeCorreo(correo: String, excluirId: Long = -1): Boolean = withContext(Dispatchers.IO) {
-        existe("SELECT 1 FROM USUARIO WHERE lower(correo) = lower(?) AND id_usuario <> ?", correo, excluirId)
-    }
-
-    suspend fun existeRut(rut: String, excluirId: Long = -1): Boolean = withContext(Dispatchers.IO) {
-        existe("SELECT 1 FROM USUARIO WHERE upper(rut) = upper(?) AND id_usuario <> ?", rut, excluirId)
-    }
+    suspend fun listarUsuarios(buscar: String = ""): List<Usuario> =
+        listaApi { usuarioApi.listar(null, null, buscar.trim().ifBlank { null }) }.map { it.aUsuario() }
 
     suspend fun crearUsuario(
         rolCodigo: String,
         nombre: String,
         rut: String,
-        correo: String,
+        correoPersonal: String,
         telefono: String,
         contactoNombre: String?,
-        contactoCargo: String?,
-        contrasenaInicial: String
-    ): Long = withContext(Dispatchers.IO) {
-        val db = dbHelper.writableDatabase
-        val cursorRol = db.rawQuery("SELECT id_rol FROM ROL WHERE codigo = ?", arrayOf(rolCodigo))
-        val idRol = if (cursorRol.moveToFirst()) cursorRol.getLong(0) else -1L
-        cursorRol.close()
-        if (idRol == -1L) return@withContext -1L
-
-        val valores = ContentValues().apply {
-            put("id_rol", idRol)
-            put("nombre", nombre)
-            put("rut", rut)
-            put("correo", correo)
-            put("telefono", telefono)
-            put("password_hash", contrasenaInicial)
-            put("activo", 1)
-            put("contacto_nombre", contactoNombre)
-            put("contacto_cargo", contactoCargo)
-        }
-        try {
-            db.insertOrThrow("USUARIO", null, valores)
-        } catch (e: SQLiteConstraintException) {
-            -1L
-        }
-    }
-
-    private fun existe(query: String, valor: String, excluirId: Long): Boolean {
-        val cursor = dbHelper.readableDatabase.rawQuery(query, arrayOf(valor.trim(), excluirId.toString()))
-        val encontrado = cursor.moveToFirst()
-        cursor.close()
-        return encontrado
+        contactoCargo: String?
+    ): Usuario {
+        val datos = CrearUsuarioRequest(
+            rol = rolCodigo,
+            nombre = nombre,
+            rut = rut,
+            correoPersonal = correoPersonal.trim(),
+            telefono = telefono,
+            giro = null,
+            contactoNombre = contactoNombre,
+            contactoCargo = contactoCargo
+        )
+        return llamarApi { usuarioApi.crear(datos) }.aUsuario()
     }
 
     suspend fun actualizarPerfil(
@@ -109,55 +73,45 @@ class UsuarioRepository(private val dbHelper: InduztekDbHelper) {
         nombre: String,
         rut: String,
         telefono: String,
+        giro: String?,
         contactoNombre: String?,
         contactoCargo: String?
-    ): Boolean = withContext(Dispatchers.IO) {
-        val valores = ContentValues().apply {
-            put("nombre", nombre)
-            put("rut", rut)
-            put("telefono", telefono)
-            put("contacto_nombre", contactoNombre)
-            put("contacto_cargo", contactoCargo)
-        }
-        try {
-            dbHelper.writableDatabase.update(
-                "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
-            ) > 0
-        } catch (e: SQLiteConstraintException) {
-            false
-        }
+    ): Usuario {
+        val datos = ActualizarUsuarioRequest(nombre, rut, telefono, giro, contactoNombre, contactoCargo)
+        return llamarApi { usuarioApi.actualizar(idUsuario, datos) }.aUsuario()
     }
 
-    suspend fun actualizarFoto(idUsuario: Long, rutaFoto: String?): Boolean = withContext(Dispatchers.IO) {
-        val valores = ContentValues().apply { put("foto_perfil", rutaFoto) }
-        dbHelper.writableDatabase.update(
-            "USUARIO", valores, "id_usuario = ?", arrayOf(idUsuario.toString())
-        ) > 0
+    suspend fun cambiarRol(idUsuario: Long, rolCodigo: String): Usuario =
+        llamarApi { usuarioApi.cambiarRol(idUsuario, CambiarRolRequest(rolCodigo)) }.aUsuario()
+
+    suspend fun cambiarActivo(idUsuario: Long, activo: Boolean): Usuario =
+        llamarApi { usuarioApi.cambiarActivo(idUsuario, CambiarActivoRequest(activo)) }.aUsuario()
+
+    suspend fun verificarPregunta(correo: String, pregunta: String, respuesta: String) =
+        sinContenidoApi { usuarioApi.verificarPregunta(VerificarPreguntaRequest(correo.trim(), pregunta, respuesta.trim())) }
+
+    suspend fun restablecerConPregunta(correo: String, pregunta: String, respuesta: String, nueva: String) {
+        val datos = RestablecerConPreguntaRequest(
+            correo = correo.trim(),
+            pregunta = pregunta,
+            respuesta = respuesta.trim(),
+            nuevaContrasena = Seguridad.cifrarContrasena(correo, nueva)
+        )
+        sinContenidoApi { usuarioApi.restablecerConPregunta(datos) }
     }
 
-    private fun buscarUno(query: String, argumentos: Array<String>): Usuario? {
-        val cursor = dbHelper.readableDatabase.rawQuery(query, argumentos)
-        val usuario = if (cursor.moveToFirst()) cursor.aUsuario() else null
-        cursor.close()
-        return usuario
-    }
+    suspend fun solicitarCodigo(correo: String): String =
+        llamarApi { usuarioApi.solicitarCodigo(SolicitarCodigoRequest(correo.trim())) }.mensaje
 
-    private fun Cursor.aUsuario(): Usuario = Usuario(
-        id = getInt(getColumnIndexOrThrow("id_usuario")),
-        idRol = getInt(getColumnIndexOrThrow("id_rol")),
-        rolCodigo = getString(getColumnIndexOrThrow("rol_codigo")),
-        rolNombre = getString(getColumnIndexOrThrow("rol_nombre")),
-        rut = getString(getColumnIndexOrThrow("rut")),
-        nombre = getString(getColumnIndexOrThrow("nombre")),
-        correo = getString(getColumnIndexOrThrow("correo")),
-        telefono = getString(getColumnIndexOrThrow("telefono")),
-        passwordHash = getString(getColumnIndexOrThrow("password_hash")),
-        activo = getInt(getColumnIndexOrThrow("activo")) == 1,
-        giro = getString(getColumnIndexOrThrow("giro")),
-        contactoNombre = getString(getColumnIndexOrThrow("contacto_nombre")),
-        contactoCargo = getString(getColumnIndexOrThrow("contacto_cargo")),
-        preguntaSeguridad = getString(getColumnIndexOrThrow("pregunta_seguridad")),
-        respuestaSeguridad = getString(getColumnIndexOrThrow("respuesta_seguridad")),
-        fotoPerfil = getString(getColumnIndexOrThrow("foto_perfil"))
-    )
+    suspend fun verificarCodigo(correo: String, codigo: String) =
+        sinContenidoApi { usuarioApi.verificarCodigo(VerificarCodigoRequest(correo.trim(), codigo.trim())) }
+
+    suspend fun restablecerConCodigo(correo: String, codigo: String, nueva: String) {
+        val datos = RestablecerConCodigoRequest(
+            correo = correo.trim(),
+            codigo = codigo.trim(),
+            nuevaContrasena = Seguridad.cifrarContrasena(correo, nueva)
+        )
+        sinContenidoApi { usuarioApi.restablecerConCodigo(datos) }
+    }
 }

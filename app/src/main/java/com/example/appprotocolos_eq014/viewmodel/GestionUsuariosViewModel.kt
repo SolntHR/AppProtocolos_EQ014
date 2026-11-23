@@ -3,9 +3,10 @@ package com.example.appprotocolos_eq014.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
+import com.example.appprotocolos_eq014.model.entidades.Usuario
 import com.example.appprotocolos_eq014.model.uistate.GestionUsuariosUiState
 import com.example.appprotocolos_eq014.model.uistate.PestanaUsuarios
-import com.example.appprotocolos_eq014.model.entidades.Usuario
 import com.example.appprotocolos_eq014.model.uistate.UsuarioFila
 import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
@@ -32,16 +33,20 @@ class GestionUsuariosViewModel(
 
     fun cargarUsuarios() {
         viewModelScope.launch {
-            val usuarios = usuarioRepository.listarUsuarios()
-            val filas = usuarios.associateWith { aFila(it) }
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    personal = usuarios.filter { u -> u.rolCodigo != "CLIENTE" }.map { u -> filas.getValue(u) },
-                    clientes = usuarios.filter { u -> u.rolCodigo == "CLIENTE" }.map { u -> filas.getValue(u) },
-                    activos = usuarios.count { u -> u.activo },
-                    inactivos = usuarios.count { u -> !u.activo }
-                )
+            try {
+                val usuarios = usuarioRepository.listarUsuarios()
+                val filas = usuarios.associateWith { aFila(it) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        personal = usuarios.filter { u -> u.rolCodigo != "CLIENTE" }.map { u -> filas.getValue(u) },
+                        clientes = usuarios.filter { u -> u.rolCodigo == "CLIENTE" }.map { u -> filas.getValue(u) },
+                        activos = usuarios.count { u -> u.activo },
+                        inactivos = usuarios.count { u -> !u.activo }
+                    )
+                }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, mensaje = e.message) }
             }
         }
     }
@@ -54,12 +59,15 @@ class GestionUsuariosViewModel(
         if (fila.esUsuarioActual) return
         val nuevoEstado = !fila.activo
         viewModelScope.launch {
-            if (usuarioRepository.cambiarActivo(fila.id, nuevoEstado)) {
+            try {
+                usuarioRepository.cambiarActivo(fila.id, nuevoEstado)
                 val primerNombre = fila.nombre.substringBefore(" ")
                 cargarUsuarios()
                 _uiState.update {
                     it.copy(mensaje = "$primerNombre quedó ${if (nuevoEstado) "activo" else "inactivo"}")
                 }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(mensaje = e.message) }
             }
         }
     }
@@ -78,14 +86,14 @@ class GestionUsuariosViewModel(
         return UsuarioFila(
             id = usuario.id.toLong(),
             nombre = if (esCliente) usuario.contactoNombre ?: usuario.nombre else usuario.nombre,
-            detalle = if (esCliente) {
-                listOfNotNull(usuario.nombre, usuario.contactoCargo).joinToString(" · ")
-            } else {
-                usuario.rolNombre
+            detalle = when {
+                esCliente -> listOfNotNull(usuario.nombre, usuario.contactoCargo).joinToString(" · ")
+                usuario.rolCodigo == "SIN_ASIGNAR" -> "Pendiente: asignar perfil"
+                else -> usuario.rolNombre
             },
             activo = usuario.activo,
             esUsuarioActual = usuario.id.toLong() == idUsuarioActual,
-            foto = fotoPerfilRepository.cargar(usuario.fotoPerfil)
+            foto = fotoPerfilRepository.cargar(fotoPerfilRepository.rutaDe(usuario.id.toLong()))
         )
     }
 }

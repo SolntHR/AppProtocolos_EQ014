@@ -2,9 +2,9 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.PasoRecuperacion
 import com.example.appprotocolos_eq014.model.uistate.RecuperarUiState
-import com.example.appprotocolos_eq014.model.entidades.Usuario
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.util.Validaciones
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,8 +19,6 @@ class RecuperarViewModel(
     private val _uiState = MutableStateFlow(RecuperarUiState())
     val uiState: StateFlow<RecuperarUiState> = _uiState.asStateFlow()
 
-    private var usuario: Usuario? = null
-
     fun onCorreoCambia(valor: String) {
         _uiState.update { it.copy(correo = valor.trim(), errorCorreo = null, errorGeneral = null) }
     }
@@ -33,34 +31,27 @@ class RecuperarViewModel(
         _uiState.update { it.copy(respuesta = valor, errorRespuesta = null, errorGeneral = null) }
     }
 
-    fun onVerificar() {
+    fun validarVerificacion(): Boolean {
         val estado = _uiState.value
         val errorCorreo = Validaciones.errorCorreo(estado.correo)
         val errorPregunta = if (estado.pregunta == null) "Selecciona tu pregunta de seguridad" else null
         val errorRespuesta = Validaciones.errorObligatorio(estado.respuesta, "Ingresa tu respuesta")
-        if (errorCorreo != null || errorPregunta != null || errorRespuesta != null) {
-            _uiState.update {
-                it.copy(errorCorreo = errorCorreo, errorPregunta = errorPregunta, errorRespuesta = errorRespuesta)
-            }
-            return
+        _uiState.update {
+            it.copy(errorCorreo = errorCorreo, errorPregunta = errorPregunta, errorRespuesta = errorRespuesta)
         }
+        return errorCorreo == null && errorPregunta == null && errorRespuesta == null
+    }
+
+    fun onVerificar() {
+        if (_uiState.value.cargando || !validarVerificacion()) return
+        val estado = _uiState.value
         viewModelScope.launch {
             _uiState.update { it.copy(cargando = true, errorGeneral = null) }
-            val encontrado = usuarioRepository.obtenerPorCorreo(estado.correo)
-            val coincide = encontrado != null &&
-                    encontrado.preguntaSeguridad?.trim() == estado.pregunta?.trim() &&
-                    encontrado.respuestaSeguridad?.trim().equals(estado.respuesta.trim(), ignoreCase = true)
-            when {
-                !coincide -> _uiState.update {
-                    it.copy(cargando = false, errorGeneral = "Los datos no coinciden con ninguna cuenta. Revisa el correo, la pregunta y la respuesta.")
-                }
-                encontrado?.activo != true -> _uiState.update {
-                    it.copy(cargando = false, errorGeneral = "La cuenta está desactivada. Contacta al Jefe técnico.")
-                }
-                else -> {
-                    usuario = encontrado
-                    _uiState.update { it.copy(cargando = false, paso = PasoRecuperacion.NUEVA_CONTRASENA) }
-                }
+            try {
+                usuarioRepository.verificarPregunta(estado.correo, checkNotNull(estado.pregunta), estado.respuesta)
+                _uiState.update { it.copy(cargando = false, paso = PasoRecuperacion.NUEVA_CONTRASENA) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(cargando = false, errorGeneral = e.message) }
             }
         }
     }
@@ -77,7 +68,7 @@ class RecuperarViewModel(
         _uiState.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
     }
 
-    fun onGuardarContrasena() {
+    fun validarNuevaContrasena(): Boolean {
         val estado = _uiState.value
         val errorNueva = Validaciones.errorContrasena(estado.nuevaContrasena)
         val errorConfirmacion = when {
@@ -85,20 +76,22 @@ class RecuperarViewModel(
             estado.confirmacion != estado.nuevaContrasena -> "Las contraseñas no coinciden"
             else -> null
         }
-        if (errorNueva != null || errorConfirmacion != null) {
-            _uiState.update { it.copy(errorNueva = errorNueva, errorConfirmacion = errorConfirmacion) }
-            return
-        }
-        val idUsuario = usuario?.id?.toLong() ?: return
+        _uiState.update { it.copy(errorNueva = errorNueva, errorConfirmacion = errorConfirmacion) }
+        return errorNueva == null && errorConfirmacion == null
+    }
+
+    fun onGuardarContrasena() {
+        if (_uiState.value.cargando || !validarNuevaContrasena()) return
+        val estado = _uiState.value
         viewModelScope.launch {
-            _uiState.update { it.copy(cargando = true) }
-            val guardada = usuarioRepository.actualizarContrasena(idUsuario, estado.nuevaContrasena)
-            _uiState.update {
-                if (guardada) {
-                    it.copy(cargando = false, paso = PasoRecuperacion.LISTO)
-                } else {
-                    it.copy(cargando = false, errorNueva = "No se pudo actualizar la contraseña")
-                }
+            _uiState.update { it.copy(cargando = true, errorGeneral = null) }
+            try {
+                usuarioRepository.restablecerConPregunta(
+                    estado.correo, checkNotNull(estado.pregunta), estado.respuesta, estado.nuevaContrasena
+                )
+                _uiState.update { it.copy(cargando = false, paso = PasoRecuperacion.LISTO) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(cargando = false, errorNueva = e.message) }
             }
         }
     }

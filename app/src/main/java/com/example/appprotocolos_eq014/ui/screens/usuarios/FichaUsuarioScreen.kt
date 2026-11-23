@@ -114,7 +114,7 @@ fun FichaUsuarioContent(
                 .padding(horizontal = 16.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            if (uiState.esNuevo) {
+            if (uiState.esNuevo || uiState.pendiente) {
                 SelectorSegmentado(
                     etiqueta = stringResource(R.string.etiqueta_tipo_usuario),
                     opciones = listOf(false, true),
@@ -147,7 +147,7 @@ fun FichaUsuarioContent(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                if (uiState.esNuevo) {
+                if (uiState.esNuevo || uiState.pendiente) {
                     SelectorSegmentado(
                         etiqueta = stringResource(R.string.etiqueta_perfil_acceso),
                         opciones = RolPersonal.entries.toList(),
@@ -200,7 +200,7 @@ fun FichaUsuarioContent(
                 CampoTexto(
                     valor = uiState.correo,
                     onValorCambia = onCorreoCambia,
-                    etiqueta = stringResource(R.string.campo_correo_obligatorio),
+                    etiqueta = stringResource(R.string.registro_correo_personal),
                     icono = R.drawable.ic_correo,
                     error = uiState.errorCorreo,
                     tipoTeclado = KeyboardType.Email
