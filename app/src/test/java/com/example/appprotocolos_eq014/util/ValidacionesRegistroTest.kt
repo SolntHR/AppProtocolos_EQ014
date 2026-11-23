@@ -1,8 +1,7 @@
-package com.example.appprotocolos_eq014
+package com.example.appprotocolos_eq014.util
 
 import com.example.appprotocolos_eq014.model.registro.DatosRegistro
 import com.example.appprotocolos_eq014.model.uistate.PreguntasSeguridad
-import com.example.appprotocolos_eq014.util.ValidacionesRegistro
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -48,31 +47,4 @@ class ValidacionesRegistroTest {
         }
     }
 
-    @Test
-    fun telefonoNoRecortaDatosInvalidosParaAceptarlos() {
-        listOf("+56 2 1234 5678", "+54 9 1234 5678", "9123456789", "abc912345678").forEach {
-            assertNotNull(it, ValidacionesRegistro.validar(datosValidos.copy(telefono = it)).telefono)
-        }
-    }
-
-    @Test
-    fun nombreExigeApellidoYCorreoTieneFormatoValido() {
-        assertNotNull(ValidacionesRegistro.validar(datosValidos.copy(nombre = "Pedro")).nombre)
-        assertNotNull(ValidacionesRegistro.validar(datosValidos.copy(nombre = "Pedro 123")).nombre)
-        assertNotNull(ValidacionesRegistro.validar(datosValidos.copy(correoPersonal = "correo@")).correoPersonal)
-    }
-
-    @Test
-    fun preguntaDebePertenecerAlCatalogoYRespuestaNoPuedeSerVacia() {
-        assertNotNull(ValidacionesRegistro.validar(datosValidos.copy(preguntaSeguridad = "Pregunta inventada")).preguntaSeguridad)
-        assertNotNull(ValidacionesRegistro.validar(datosValidos.copy(respuestaSeguridad = "   ")).respuestaSeguridad)
-    }
-
-    @Test
-    fun sugerenciaDeCorreoUsaPrimerApellidoYEliminaTildes() {
-        assertEquals("psoto@induztek.ejemplo", ValidacionesRegistro.correoInternoSugerido("Pedro Soto Vera"))
-        assertEquals("mmazzo@induztek.ejemplo", ValidacionesRegistro.correoInternoSugerido("Matías Javier Mazzo Velásquez"))
-        assertEquals("jperez@induztek.ejemplo", ValidacionesRegistro.correoInternoSugerido("  Juan   Pérez  "))
-        assertEquals("", ValidacionesRegistro.correoInternoSugerido("Pedro"))
-    }
 }

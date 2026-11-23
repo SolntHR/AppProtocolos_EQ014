@@ -1,10 +1,9 @@
-package com.example.appprotocolos_eq014
+package com.example.appprotocolos_eq014.viewmodel
 
 import com.example.appprotocolos_eq014.model.uistate.PreguntasSeguridad
 import com.example.appprotocolos_eq014.repository.RegistroUsuarioRepository
 import com.example.appprotocolos_eq014.repository.ResultadoRegistroUsuario
 import com.example.appprotocolos_eq014.repository.SolicitudRegistroUsuario
-import com.example.appprotocolos_eq014.viewmodel.RegistroViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
