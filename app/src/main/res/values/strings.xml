@@ -12,6 +12,8 @@
     <string name="olvido_contrasena">¿Olvidaste tu contraseña?</string>
 
     <string name="nav_inicio">Inicio</string>
+    <string name="nav_visitas">Visitas</string>
+    <string name="nav_actas">Actas</string>
     <string name="nav_equipos">Equipos</string>
     <string name="nav_perfil">Perfil</string>
     <string name="nav_protocolos">Protocolos</string>

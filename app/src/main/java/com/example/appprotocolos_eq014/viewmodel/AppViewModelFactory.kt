@@ -33,6 +33,27 @@ object AppViewModelFactory {
     val Factory: ViewModelProvider.Factory = viewModelFactory {
         initializer {
             val contexto = contexto()
+            EquiposViewModel(SesionPreferencias(contexto), CatalogoRepository(obtenerDbHelper(contexto)))
+        }
+        initializer {
+            val contexto = contexto()
+            val db = obtenerDbHelper(contexto)
+            DetalleEquipoViewModel(SesionPreferencias(contexto), CatalogoRepository(db), ProtocoloRepository(db),
+                checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_EQUIPO)))
+        }
+        initializer {
+            val contexto = contexto()
+            val db = obtenerDbHelper(contexto)
+            VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(db))
+        }
+        initializer {
+            val contexto = contexto()
+            val db = obtenerDbHelper(contexto)
+            DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(db),
+                CatalogoRepository(db), checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA)))
+        }
+        initializer {
+            val contexto = contexto()
             FormularioProtocoloViewModel(
                 sesion = SesionPreferencias(contexto),
                 repository = RegistroProtocoloRepository(obtenerDbHelper(contexto)),
@@ -76,7 +97,6 @@ object AppViewModelFactory {
             InicioViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
                 catalogoRepository = CatalogoRepository(db),
-                protocoloRepository = ProtocoloRepository(db),
                 visitaRepository = VisitaRepository(db),
                 usuarioRepository = UsuarioRepository(db),
                 catalogoClienteRepository = RegistroCatalogoRepository(db)

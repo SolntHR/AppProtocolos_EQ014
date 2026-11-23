@@ -2,18 +2,10 @@ package com.example.appprotocolos_eq014.model.uistate
 
 import com.example.appprotocolos_eq014.model.entidades.Visita
 
-data class ProtocoloCliente(
-    val numero: String,
-    val fecha: String,
-    val estado: String,
-    val formalizado: Boolean
-)
-
 data class EquipoCliente(
     val id: Long,
     val tag: String,
-    val descripcion: String,
-    val protocolos: List<ProtocoloCliente>
+    val descripcion: String
 )
 
 data class InicioUiState(
@@ -25,10 +17,7 @@ data class InicioUiState(
     val empresa: String = "",
     val fechaHoy: String = "",
     val equiposCliente: List<EquipoCliente> = emptyList(),
-    val busqueda: String = "",
     val visitas: List<Visita> = emptyList(),
-    val actasCliente: List<Visita> = emptyList()
-) {
-    val equiposFiltrados: List<EquipoCliente>
-        get() = equiposCliente.filter { it.tag.contains(busqueda.trim(), ignoreCase = true) }
-}
+    val actasCliente: List<Visita> = emptyList(),
+    val error: String? = null
+)

@@ -44,8 +44,8 @@ class FormularioProtocoloViewModel(
         claveActual = null
     }
 
-    fun iniciar(idVisita: Long?, idProtocolo: String?) {
-        val clave = "$idVisita|$idProtocolo"
+    fun iniciar(idVisita: Long?, idProtocolo: String?, idEquipoInicial: Long? = null) {
+        val clave = "$idVisita|$idProtocolo|$idEquipoInicial"
         if (clave == claveActual) return
         claveActual = clave
         val idUsuario = sesion.leerIdUsuario()
@@ -66,7 +66,7 @@ class FormularioProtocoloViewModel(
                 } else {
                     _uiState.update { it.copy(cargando = false) }
                     val visita = visitas.firstOrNull { it.id == idVisita }
-                    if (visita != null) seleccionarVisita(visita)
+                    if (visita != null) cargarEquiposVisita(visita, idEquipoInicial)
                 }
             } catch (e: SQLiteException) {
                 _uiState.update { it.copy(cargando = false, error = "No se pudo cargar el formulario: ${e.message}") }
@@ -144,6 +144,10 @@ class FormularioProtocoloViewModel(
     }
 
     fun seleccionarVisita(visita: Visita) {
+        cargarEquiposVisita(visita)
+    }
+
+    private fun cargarEquiposVisita(visita: Visita, idEquipoInicial: Long? = null) {
         if (_uiState.value.esEdicion) return
         _uiState.update {
             it.copy(visitaSeleccionada = visita, equipoSeleccionado = null, equipos = emptyList(), secciones = emptyList(), error = null)
@@ -151,6 +155,7 @@ class FormularioProtocoloViewModel(
         viewModelScope.launch {
             val equipos = repository.equiposDisponibles(visita.id, visita.instalacionId, null)
             _uiState.update { it.copy(equipos = equipos) }
+            equipos.firstOrNull { it.id == idEquipoInicial }?.let { seleccionarEquipo(it) }
         }
     }
 

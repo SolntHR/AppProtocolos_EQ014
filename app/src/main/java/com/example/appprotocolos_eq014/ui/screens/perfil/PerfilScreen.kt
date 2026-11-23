@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -46,7 +45,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,11 +61,7 @@ import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
 import com.example.appprotocolos_eq014.ui.components.TarjetaSeccion
 import com.example.appprotocolos_eq014.ui.theme.AppProtocolos_EQ014Theme
-import com.example.appprotocolos_eq014.ui.theme.AzulOscuro
-import com.example.appprotocolos_eq014.ui.theme.AzulPrimario
-import com.example.appprotocolos_eq014.ui.theme.AzulTextoCabecera
-import com.example.appprotocolos_eq014.ui.theme.Blanco
-import com.example.appprotocolos_eq014.ui.theme.NaranjaAcento
+import androidx.compose.ui.semantics.Role
 import com.example.appprotocolos_eq014.viewmodel.PerfilViewModel
 
 @Composable
@@ -194,6 +188,7 @@ fun PerfilContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
         EncabezadoPerfil(
@@ -210,7 +205,7 @@ fun PerfilContent(
             enter = fadeIn() + slideInVertically { it / 10 }
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 uiState.error?.let {
@@ -265,20 +260,19 @@ private fun EncabezadoPerfil(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-            .background(Brush.linearGradient(listOf(AzulPrimario, AzulOscuro)))
-            .padding(start = 18.dp, end = 18.dp, top = 26.dp, bottom = 24.dp),
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
-            modifier = Modifier.clickable(onClick = onCambiarFoto)
+            modifier = Modifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.cd_cambiar_foto), onClick = onCambiarFoto)
         ) {
             AvatarIniciales(
                 nombre = nombre,
                 tamano = 96.dp,
                 foto = foto,
-                modifier = Modifier.border(3.dp, Blanco.copy(alpha = 0.85f), CircleShape)
+                modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
             )
             Box(
                 modifier = Modifier
@@ -286,16 +280,16 @@ private fun EncabezadoPerfil(
                     .offset(x = 4.dp, y = 2.dp)
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Blanco)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(3.dp)
                     .clip(CircleShape)
-                    .background(NaranjaAcento),
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_camara),
                     contentDescription = stringResource(R.string.cd_cambiar_foto),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(16.dp)
                 )
             }
@@ -303,28 +297,17 @@ private fun EncabezadoPerfil(
 
         Text(
             text = nombre,
-            color = Blanco,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 6.dp)
         )
 
         Text(
-            text = rol,
-            color = Blanco,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(Blanco.copy(alpha = 0.18f))
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        )
-
-        Text(
-            text = correo,
-            color = AzulTextoCabecera,
-            fontSize = 13.sp
+            text = "$rol · $correo",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center
         )
     }
 }

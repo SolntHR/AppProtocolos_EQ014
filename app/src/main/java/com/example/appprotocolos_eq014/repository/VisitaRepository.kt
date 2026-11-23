@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 
 class VisitaRepository(private val dbHelper: InduztekDbHelper) {
 
-    suspend fun visitasDeUsuario(idUsuario: Long): List<Visita> = withContext(Dispatchers.IO) {
+    suspend fun visitasDeUsuario(idUsuario: Long, verTodas: Boolean = false): List<Visita> = withContext(Dispatchers.IO) {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
             SELECT v.id_visita, v.numero_ot, c.nombre, i.nombre, v.fecha, v.fecha_hora_cierre,
@@ -25,11 +25,11 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
             FROM VISITA v
             INNER JOIN INSTALACION i ON v.id_instalacion = i.id_instalacion
             INNER JOIN USUARIO c ON i.id_usuario_cliente = c.id_usuario
-            WHERE v.id_ingeniero_cargo = ?
+            WHERE ? = '1' OR v.id_ingeniero_cargo = ?
                OR v.id_visita IN (SELECT vp.id_visita FROM VISITA_PARTICIPANTE vp WHERE vp.id_usuario = ?)
             ORDER BY v.fecha_hora_cierre IS NOT NULL, v.fecha DESC
             """,
-            arrayOf(idUsuario.toString(), idUsuario.toString())
+            arrayOf(if (verTodas) "1" else "0", idUsuario.toString(), idUsuario.toString())
         )
         val visitas = mutableListOf<Visita>()
         while (cursor.moveToNext()) {
@@ -154,7 +154,8 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
     private fun protocolosDeVisita(idVisita: Long): List<Protocolo> {
         val cursor = dbHelper.readableDatabase.rawQuery(
             """
-            SELECT p.id_protocolo, p.numero, e.id_equipo, e.tag, t.nombre, e.marca, e.numero_serie, p.id_estado
+            SELECT p.id_protocolo, p.numero, e.id_equipo, e.tag, t.nombre, e.marca, e.numero_serie, p.id_estado,
+                   p.id_usuario_registra
             FROM PROTOCOLO p
             INNER JOIN EQUIPO e ON p.id_equipo = e.id_equipo
             INNER JOIN TIPO_EQUIPO t ON e.id_tipo_equipo = t.id_tipo_equipo
@@ -179,6 +180,7 @@ class VisitaRepository(private val dbHelper: InduztekDbHelper) {
                     tagEquipo = cursor.getString(3),
                     equipoDescripcion = descripcion,
                     estado = EstadoProtocolo.desdeId(cursor.getLong(7)),
+                    usuarioRegistraId = cursor.getLong(8),
                     pruebas = pruebas,
                     resultadoGlobal = pruebas.filter { it. realizada }
                         .mapNotNull { it.resultado }
