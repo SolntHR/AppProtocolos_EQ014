@@ -139,8 +139,8 @@ fun FormularioEquipoScreen(
                 }
                 CampoTexto(
                     valor = s.tensiones, onValorCambia = viewModel::onTensiones,
-                    etiqueta = if (s.pidePotencia) "Tensiones * (ej.: 12 / 0,4 kV)" else "Tensión nominal (ej.: 12 kV)",
-                    icono = R.drawable.ic_rayo, error = s.errores[V.CAMPO_TENSIONES]
+                    etiqueta = if (s.pidePotencia) "Tensión (kV) *" else "Tensión nominal (kV)",
+                    icono = R.drawable.ic_rayo, error = s.errores[V.CAMPO_TENSIONES], tipoTeclado = KeyboardType.Decimal
                 )
                 if (s.pideCorriente) {
                     CampoTexto(

@@ -1,9 +1,9 @@
 package com.example.appprotocolos_eq014.viewmodel
 
-import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.FormularioInstalacionUiState
 import com.example.appprotocolos_eq014.model.entidades.Instalacion
 import com.example.appprotocolos_eq014.model.uistate.OpcionCatalogo
@@ -29,8 +29,8 @@ class FormularioInstalacionViewModel(
                 _uiState.update {
                     it.copy(cargando = false, clientes = repository.clientes(), comunas = repository.comunas())
                 }
-            } catch (e: SQLiteException) {
-                _uiState.update { it.copy(cargando = false, error = "No se pudo cargar el catálogo: ${e.message}") }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(cargando = false, error = e.message) }
             }
         }
     }
@@ -80,8 +80,8 @@ class FormularioInstalacionViewModel(
                     )
                 )
                 _uiState.update { it.copy(guardando = false, instalacionGuardadaId = id) }
-            } catch (e: SQLiteException) {
-                _uiState.update { it.copy(guardando = false, error = "No se pudo guardar: ${e.message}") }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(guardando = false, error = e.message) }
             }
         }
     }

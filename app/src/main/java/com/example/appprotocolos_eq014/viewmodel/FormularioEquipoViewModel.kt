@@ -1,10 +1,9 @@
 package com.example.appprotocolos_eq014.viewmodel
 
-import android.database.sqlite.SQLiteConstraintException
-import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.uistate.FormularioEquipoUiState
 import com.example.appprotocolos_eq014.model.uistate.OpcionCatalogo
@@ -47,8 +46,8 @@ class FormularioEquipoViewModel(
                         instalacionFija = idInstalacionInicial != SIN_INSTALACION
                     )
                 }
-            } catch (e: SQLiteException) {
-                _uiState.update { it.copy(cargando = false, error = "No se pudo cargar el catálogo: ${e.message}") }
+            } catch (e: ErrorApi) {
+            _uiState.update { it.copy(cargando = false, error = e.message) }
             }
         }
     }
@@ -123,10 +122,8 @@ class FormularioEquipoViewModel(
                     )
                 )
                 _uiState.update { it.copy(guardando = false, equipoGuardadoId = id) }
-            } catch (e: SQLiteConstraintException) {
-                _uiState.update { it.copy(guardando = false, error = "Ya existe un equipo con ese TAG en la instalación (RN-01).") }
-            } catch (e: SQLiteException) {
-                _uiState.update { it.copy(guardando = false, error = "No se pudo guardar: ${e.message}") }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(guardando = false, error = e.message) }
             }
         }
     }

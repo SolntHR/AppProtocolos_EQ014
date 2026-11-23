@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.uistate.DetalleEquipoUiState
 import com.example.appprotocolos_eq014.model.uistate.EquiposUiState
@@ -34,6 +35,8 @@ class EquiposViewModel(
             try {
                 val equipos = catalogo.listarEquipos(if (rol == Rol.CLIENTE) sesion.leerIdUsuario() else null)
                 _estado.update { it.copy(cargando = false, equipos = equipos) }
+            } catch (e: ErrorApi) {
+                _estado.update { it.copy(cargando = false, error = e.message) }
             } catch (e: SQLiteException) {
                 _estado.update { it.copy(cargando = false, error = "No se pudieron cargar los equipos. Inténtalo nuevamente.") }
             }
@@ -75,6 +78,8 @@ class DetalleEquipoViewModel(
                 val historial = protocolos.historialEquipo(idEquipo)
                     .filter { rol != Rol.CLIENTE || it.estado.visibleParaCliente }
                 _estado.value = DetalleEquipoUiState(cargando = false, equipo = equipo, protocolos = historial)
+            } catch (e: ErrorApi) {
+                _estado.update { it.copy(cargando = false, error = e.message) }
             } catch (e: SQLiteException) {
                 _estado.update { it.copy(cargando = false, error = "No se pudo cargar la ficha del equipo.") }
             }

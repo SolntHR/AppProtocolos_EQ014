@@ -17,7 +17,7 @@ object RetrofitClient {
     // lazy de comunicación con cada microservicio
     // cada vez que queramos comunicarlos con ese microservicio se usará esta variable
     val usuarioApi: UsuarioApi by lazy { crear(URL_GATEWAY).create(UsuarioApi::class.java) }
-    //val instalacionApi: InstalacionApi by lazy { crear(URL_GATEWAY).create(InstalacionApi::class.java) }
+    val instalacionApi: InstalacionApi by lazy { crear(URL_GATEWAY).create(InstalacionApi::class.java) }
     //val instrumentoApi: InstrumentoApi by lazy { crear(URL_GATEWAY).create(InstrumentoApi::class.java) }
     //val protocoloApi: ProtocoloApi by lazy { crear(URL_GATEWAY).create(ProtocoloApi::class.java) }
 

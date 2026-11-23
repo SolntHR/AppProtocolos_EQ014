@@ -36,24 +36,24 @@ object AppViewModelFactory {
         }
         initializer {
             val contexto = contexto()
-            EquiposViewModel(SesionPreferencias(contexto), CatalogoRepository(obtenerDbHelper(contexto)))
+            EquiposViewModel(SesionPreferencias(contexto), CatalogoRepository())
         }
         initializer {
             val contexto = contexto()
             val db = obtenerDbHelper(contexto)
-            DetalleEquipoViewModel(SesionPreferencias(contexto), CatalogoRepository(db), ProtocoloRepository(db),
+            DetalleEquipoViewModel(SesionPreferencias(contexto), CatalogoRepository(), ProtocoloRepository(db),
                 checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_EQUIPO)))
         }
         initializer {
             val contexto = contexto()
             val db = obtenerDbHelper(contexto)
-            VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(db))
+            VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(obtenerDbHelper(contexto)))
         }
         initializer {
             val contexto = contexto()
             val db = obtenerDbHelper(contexto)
-            DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(db),
-                CatalogoRepository(db), checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA)))
+            DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                CatalogoRepository(), checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA)))
         }
         initializer {
             val contexto = contexto()
@@ -99,10 +99,10 @@ object AppViewModelFactory {
             val db = obtenerDbHelper(contexto)
             InicioViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
-                catalogoRepository = CatalogoRepository(db),
+                catalogoRepository = CatalogoRepository(),
                 visitaRepository = VisitaRepository(db),
                 usuarioRepository = UsuarioRepository(),
-                catalogoClienteRepository = RegistroCatalogoRepository(db)
+                catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto))
             )
         }
         initializer {

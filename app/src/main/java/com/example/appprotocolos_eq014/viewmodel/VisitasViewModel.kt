@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.uistate.DetalleVisitaUiState
@@ -80,6 +81,8 @@ class DetalleVisitaViewModel(
                 ).filter { it.instalacionId == visita.instalacionId }
                 _estado.update { it.copy(cargando = false, visita = visita, equipos = listaEquipos,
                     error = if (visita == null) "No se encontró la visita." else null) }
+            } catch (e: ErrorApi) {
+                _estado.update { it.copy(cargando = false, error = e.message) }
             } catch (e: SQLiteException) {
                 _estado.update { it.copy(cargando = false, error = "No se pudo cargar el detalle de la visita.") }
             }

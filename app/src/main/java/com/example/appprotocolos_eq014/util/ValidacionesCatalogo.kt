@@ -18,7 +18,7 @@ object ValidacionesCatalogo {
     const val CAMPO_COMUNA = "comuna"
     const val CAMPO_NOMBRE = "nombre"
 
-    private val regexTag = Regex("^[A-Z0-9][A-Z0-9/\\-]{1,19}$")
+    private val regexTag = Regex("^[A-Z0-9][A-Z0-9\\-]{1,19}$")
 
     fun normalizarTag(tag: String): String = tag.trim().uppercase().replace(" ", "")
 
@@ -40,9 +40,7 @@ object ValidacionesCatalogo {
         }
 
         positivo(e.potenciaKva, e.pidePotencia, "Ingresa la potencia (kVA)")?.let { errores[CAMPO_POTENCIA] = it }
-        if (e.pidePotencia && e.tensiones.isBlank()) {
-            errores[CAMPO_TENSIONES] = "Ingresa las tensiones (ej.: 12 / 0,4 kV)"
-        }
+        positivo(e.tensiones, e.pidePotencia, "Ingresa la tensión en kV (ej.: 12)")?.let { errores[CAMPO_TENSIONES] = it }
         positivo(e.corriente, false, "")?.let { errores[CAMPO_CORRIENTE] = it }
 
         positivo(e.maxContactos, e.pideContactos, "Ingresa el máximo de contactos (µΩ)")?.let { errores[CAMPO_CONTACTOS] = it }
