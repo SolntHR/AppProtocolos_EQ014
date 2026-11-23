@@ -51,13 +51,20 @@ object Validaciones {
         else -> null
     }
 
-    fun errorContrasena(contrasena: String): String? = when {
-        contrasena.isEmpty() -> "Ingresa tu contraseña"
-        contrasena.length < LARGO_MINIMO_CONTRASENA -> "La contraseña debe tener al menos $LARGO_MINIMO_CONTRASENA caracteres"
-        else -> null
+    fun errorContrasena(contrasena: String): String? {
+        if (contrasena.isEmpty()) return "Ingresa tu contraseña"
+        if (contrasena.any { it.isWhitespace() }) return "La contraseña no puede tener espacios"
+        val faltantes = buildList {
+            if (contrasena.length < LARGO_MINIMO_CONTRASENA) add("$LARGO_MINIMO_CONTRASENA caracteres")
+            if (contrasena.none { it.isUpperCase() }) add("una mayúscula")
+            if (contrasena.none { it.isLowerCase() }) add("una minúscula")
+            if (contrasena.none { it.isDigit() }) add("un número")
+            if (contrasena.none { !it.isLetterOrDigit() }) add("un carácter especial")
+        }
+        return if (faltantes.isEmpty()) null else "Debe tener al menos: " + faltantes.joinToString(", ")
     }
 
-    private const val LARGO_MINIMO_CONTRASENA = 6
+    private const val LARGO_MINIMO_CONTRASENA = 8
 
     fun errorObligatorio(valor: String, mensaje: String): String? =
         if (valor.isBlank()) mensaje else null

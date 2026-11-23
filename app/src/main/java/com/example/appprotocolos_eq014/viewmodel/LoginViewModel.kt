@@ -35,7 +35,7 @@ class LoginViewModel(
         val estado = _uiState.value
 
         val errorCorreo = Validaciones.errorCorreo(estado.correo)
-        val errorContrasena = Validaciones.errorContrasena(estado.contrasena)
+        val errorContrasena = Validaciones.errorObligatorio(estado.contrasena, "Ingresa tu contraseña")
 
         if (errorCorreo != null || errorContrasena != null) {
             _uiState.update { it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena) }
