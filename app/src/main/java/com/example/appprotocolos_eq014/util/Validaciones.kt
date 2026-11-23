@@ -48,6 +48,12 @@ object Validaciones {
         return if (telefonoValido(numero)) "+56 ${numero.take(1)} ${numero.substring(1, 5)} ${numero.takeLast(4)}" else telefono.trim()
     }
 
+    fun errorTelefono(telefono: String): String? = when {
+    telefono.isBlank() -> "Ingresa tu teléfono"
+    !telefonoValido(telefono) -> "Teléfono inválido. Ej: 912345678"
+    else -> null
+    }
+
     fun errorCorreo(correo: String): String? = when {
         correo.isBlank() -> "Ingresa tu correo electrónico"
         !correoValido(correo) -> "Correo inválido. Ejemplo: nombre@empresa.cl"

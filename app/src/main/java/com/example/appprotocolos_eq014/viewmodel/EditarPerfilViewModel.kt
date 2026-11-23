@@ -98,7 +98,7 @@ class EditarPerfilViewModel(
                 idUsuario = idUsuario,
                 nombre = if (estado.esCliente) estado.empresa else estado.nombre.trim(),
                 rut = estado.rut.trim(),
-                telefono = estado.telefono.trim(),
+                telefono = Validaciones.telefonoCompleto(estado.telefono),
                 contactoNombre = if (estado.esCliente) estado.nombre.trim() else null,
                 contactoCargo = if (estado.esCliente) estado.cargo.trim() else null
             )

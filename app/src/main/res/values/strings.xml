@@ -174,7 +174,7 @@
     <string name="registro_introduccion">Completa tus datos personales. El administrador te asignará tu rol después del registro.</string>
     <string name="registro_nombre">Nombre completo</string>
     <string name="registro_telefono">Teléfono</string>
-    <string name="registro_telefono_ayuda">Celular chileno. Ejemplo: +56 9 1234 5678.</string>
+    <string name="registro_telefono_ayuda">Celular chileno. Ejemplo: 912345678 o +56912345678.</string>
     <string name="registro_correo_personal">Correo personal</string>
     <string name="registro_correo_ayuda">Usaremos este correo para enviarte las instrucciones de acceso.</string>
     <string name="registro_correo_interno">Correo interno sugerido</string>
