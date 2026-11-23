@@ -60,8 +60,4 @@ class LoginViewModel(
             }
             }
         }
-
-    fun onLimpiar() {
-        _uiState.value = LoginUiState()
-    }
 }

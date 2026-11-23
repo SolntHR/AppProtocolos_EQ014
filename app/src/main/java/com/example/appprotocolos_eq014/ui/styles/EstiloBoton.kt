@@ -28,12 +28,6 @@ object EstilosBoton {
     )
 
     @Composable
-    fun coloresAcento(): ButtonColors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.secondary,
-        contentColor = MaterialTheme.colorScheme.onSecondary
-    )
-
-    @Composable
     fun coloresSecundario(): ButtonColors = ButtonDefaults.outlinedButtonColors(
         contentColor = MaterialTheme.colorScheme.primary
     )

@@ -3,7 +3,6 @@
 
     <string name="marca_induztek">INDUZTEK</string>
     <string name="marca_protocolos">PROTOCOLOS</string>
-    <string name="login_trabajo_terreno">TRABAJO EN TERRENO</string>
     <string name="login_bienvenido">Bienvenido</string>
     <string name="login_subtitulo">Registra pruebas incluso sin conexión.</string>
     <string name="campo_correo">Correo electrónico</string>
@@ -12,20 +11,15 @@
     <string name="olvido_contrasena">¿Olvidaste tu contraseña?</string>
 
     <string name="nav_inicio">Inicio</string>
-    <string name="nav_visitas">Visitas</string>
     <string name="nav_equipos">Equipos</string>
     <string name="nav_perfil">Perfil</string>
     <string name="nav_protocolos">Protocolos</string>
 
     <string name="saludo">Hola, %1$s</string>
-    <string name="estado_sin_conexion">Sin conexión · Perfil %1$s</string>
     <string name="datos_guardados">Datos guardados en el equipo</string>
     <string name="titulo_gestion_usuarios">Gestión de usuarios</string>
     <string name="titulo_instrumentos">Instrumentos</string>
-    <string name="titulo_visitas_hoy">Visitas de hoy</string>
-    <string name="btn_nuevo_protocolo">+ Nuevo protocolo</string>
     <string name="etiqueta_en_curso">En curso</string>
-    <string name="etiqueta_programada">Programada</string>
 
     <string name="titulo_mis_equipos">Mis equipos</string>
     <string name="subtitulo_consulta">Consulta de protocolos y resultados</string>
@@ -35,11 +29,6 @@
     <string name="seccion_comparacion">Comparación de resultados</string>
 
     <string name="estado_pendiente">Pendiente de formalización</string>
-    <string name="estado_formalizado">Formalizado</string>
-    <string name="estado_observado">Observado</string>
-    <string name="estado_aprobado">Aprobado</string>
-    <string name="estado_reemplazado">Reemplazado por nº %1$s</string>
-    <string name="estado_registrado_terreno">Registrado en terreno</string>
 
     <string name="perfil_editar">Editar perfil</string>
     <string name="perfil_usuario_cliente">Usuario cliente</string>
@@ -166,19 +155,14 @@
     <string name="nav_usuarios">Usuarios</string>
     <string name="tab_personal_induztek">Personal Induztek</string>
     <string name="tab_usuarios_cliente">Usuarios cliente</string>
-    <string name="btn_agregar_usuario">+ Agregar usuario</string>
     <string name="estado_activo">Activo</string>
 
     <string name="cd_logo_induztek">Logo Induztek</string>
     <string name="cd_mostrar_contrasena">Mostrar contraseña</string>
     <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
     <string name="cd_volver">Volver atrás</string>
-    <string name="cd_avatar_usuario">Avatar del usuario %1$s</string>
 
     <string name="error_campo_obligatorio">Este campo es obligatorio</string>
-    <string name="error_correo_invalido">Ingresa un correo válido</string>
     <string name="menu_cerrar_sesion">Cerrar sesión</string>
-    <string name="dialogo_titulo_salir">¿Cerrar sesión?</string>
-    <string name="dialogo_mensaje_salir">Deberás ingresar tus credenciales nuevamente para acceder.</string>
     <string name="dialogo_cancelar">Cancelar</string>
 </resources>

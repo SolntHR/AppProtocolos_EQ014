@@ -390,8 +390,6 @@ object ReglasProtocolo {
 
     fun elementosPara(tipo: TipoPrueba, tipoEquipoId: Long) = ReglaPrueba.para(tipo).elementos(tipoEquipoId)
     fun camposFila(tipo: TipoPrueba, tipoEquipoId: Long) = ReglaPrueba.para(tipo).camposFila(tipoEquipoId)
-    fun camposMedidos(tipo: TipoPrueba, tipoEquipoId: Long) = ReglaPrueba.para(tipo).camposMedidos(tipoEquipoId)
-    fun valoresPrincipales(tipo: TipoPrueba) = ReglaPrueba.para(tipo).valoresPrincipales
     fun palabraInstrumento(tipo: TipoPrueba) = ReglaPrueba.para(tipo).palabraInstrumento
 
     fun evaluar(

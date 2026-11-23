@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.Color
 
 val AzulPrimario = Color(0xFF0B3C6F)
 val AzulOscuro = Color(0xFF092D52)
-val AzulHover = Color(0xFF082F57)
 val AzulSuave = Color(0xFFDCEAF7)
 val AzulTextoCabecera = Color(0xFFC9D9E8)
 

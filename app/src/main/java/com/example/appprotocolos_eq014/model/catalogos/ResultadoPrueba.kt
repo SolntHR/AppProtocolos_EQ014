@@ -8,10 +8,5 @@ enum class ResultadoPrueba(val idDb: Long, val etiqueta: String) {
     companion object {
         fun desdeId(id: Long?): ResultadoPrueba? = entries.firstOrNull { it.idDb == id }
 
-        fun desdeIndicePolarizacion(ip: Double): ResultadoPrueba = when {
-            ip >= 2.0 -> APROBADO
-            ip >= 1.0 -> OBSERVADO
-            else -> RECHAZADO
-        }
     }
 }
