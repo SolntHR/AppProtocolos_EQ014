@@ -30,13 +30,16 @@ fun CampoContrasena(
     visible: Boolean,
     onAlternarVisible: () -> Unit,
     modifier: Modifier = Modifier,
-    error: String? = null
+    error: String? = null,
+    habilitado: Boolean = true,
+    descripcionVisibilidad: String? = null
 ) {
     OutlinedTextField(
         value = valor,
         onValueChange = onValorCambia,
         modifier = modifier.fillMaxWidth(),
         label = { Text(etiqueta) },
+        enabled = habilitado,
         leadingIcon = {
             Icon(
                 painter = painterResource(R.drawable.ic_candado),
@@ -45,12 +48,12 @@ fun CampoContrasena(
             )
         },
         trailingIcon = {
-            IconButton(onClick = onAlternarVisible) {
+            IconButton(onClick = onAlternarVisible, enabled = habilitado) {
                 Icon(
                     painter = painterResource(
                         if (visible) R.drawable.ic_ojo_tachado else R.drawable.ic_ojo
                     ),
-                    contentDescription = stringResource(
+                    contentDescription = descripcionVisibilidad ?: stringResource(
                         if (visible) R.string.cd_ocultar_contrasena else R.string.cd_mostrar_contrasena
                     ),
                     modifier = Modifier.size(Dimens.tamanoIcono)

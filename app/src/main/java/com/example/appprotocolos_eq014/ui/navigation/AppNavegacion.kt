@@ -20,6 +20,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.ui.screens.LoginScreen
+import com.example.appprotocolos_eq014.ui.screens.RegistroScreen
+import com.example.appprotocolos_eq014.viewmodel.RegistroViewModel
 import com.example.appprotocolos_eq014.ui.screens.inicio.InicioScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -68,6 +70,7 @@ import com.example.appprotocolos_eq014.ui.screens.visitas.DetalleVisitaScreen
 
 object Rutas {
     const val LOGIN = "login"
+    const val REGISTRO = "registro"
     const val INICIO = "inicio"
     const val VISITAS = "visitas"
     const val EQUIPOS = "equipos"
@@ -163,8 +166,13 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                             popUpTo(Rutas.LOGIN) { inclusive = true }
                         }
                     },
-                    onOlvidasteContrasena = { navController.navigate(Rutas.RECUPERAR) }
+                    onOlvidasteContrasena = { navController.navigate(Rutas.RECUPERAR) },
+                    onCrearCuenta = { navController.navigate(Rutas.REGISTRO) { launchSingleTop = true } }
                 )
+            }
+            composable(Rutas.REGISTRO) {
+                val registroViewModel: RegistroViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                RegistroScreen(viewModel = registroViewModel, onVolver = { navController.popBackStack() })
             }
             composable(Rutas.INSTRUMENTOS) {
                 val instrumentosViewModel: InstrumentosViewModel = viewModel(factory = AppViewModelFactory.Factory)

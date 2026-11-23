@@ -17,6 +17,7 @@ import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
 import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
+import com.example.appprotocolos_eq014.repository.RegistroUsuarioNoDisponibleRepository
 
 const val ARG_ID_USUARIO = "idUsuario"
 const val ARG_ID_EQUIPO = "idEquipo"
@@ -31,6 +32,9 @@ object AppViewModelFactory {
     private fun CreationExtras.contexto(): Context = checkNotNull(this[APPLICATION_KEY])
 
     val Factory: ViewModelProvider.Factory = viewModelFactory {
+        initializer {
+            RegistroViewModel(RegistroUsuarioNoDisponibleRepository())
+        }
         initializer {
             val contexto = contexto()
             EquiposViewModel(SesionPreferencias(contexto), CatalogoRepository(obtenerDbHelper(contexto)))

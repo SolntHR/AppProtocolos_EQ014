@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.appprotocolos_eq014.R
 import com.example.appprotocolos_eq014.model.uistate.LoginUiState
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
+import com.example.appprotocolos_eq014.ui.components.BotonSecundario
 import com.example.appprotocolos_eq014.ui.components.CampoContrasena
 import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.components.EncabezadoInduztek
@@ -37,7 +39,8 @@ import com.example.appprotocolos_eq014.viewmodel.LoginViewModel
 fun LoginScreen(
     viewModel: LoginViewModel,
     onLoginExitoso: () -> Unit,
-    onOlvidasteContrasena: () -> Unit = {}
+    onOlvidasteContrasena: () -> Unit = {},
+    onCrearCuenta: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -53,7 +56,8 @@ fun LoginScreen(
         onContrasenaCambia = viewModel::onContrasenaCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
         onIngresar = viewModel::onIngresar,
-        onOlvidasteContrasena = onOlvidasteContrasena
+        onOlvidasteContrasena = onOlvidasteContrasena,
+        onCrearCuenta = onCrearCuenta
     )
 }
 
@@ -64,7 +68,8 @@ fun LoginContent(
     onContrasenaCambia: (String) -> Unit,
     onAlternarVisibilidad: () -> Unit,
     onIngresar: () -> Unit,
-    onOlvidasteContrasena: () -> Unit
+    onOlvidasteContrasena: () -> Unit,
+    onCrearCuenta: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -123,6 +128,18 @@ fun LoginContent(
                     texto = stringResource(if (uiState.isLoading) R.string.login_ingresando else R.string.btn_ingresar),
                     onClick = onIngresar,
                     habilitado = !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                HorizontalDivider(modifier = Modifier.padding(top = 10.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                Text(
+                    text = stringResource(R.string.registro_nuevo),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                BotonSecundario(
+                    texto = stringResource(R.string.registro_crear_cuenta),
+                    onClick = onCrearCuenta,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

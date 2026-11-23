@@ -29,13 +29,15 @@ fun CampoTexto(
     modifier: Modifier = Modifier,
     error: String? = null,
     tipoTeclado: KeyboardType = KeyboardType.Text,
-    iconoFinal: (@Composable () -> Unit)? = null
+    iconoFinal: (@Composable () -> Unit)? = null,
+    habilitado: Boolean = true
 ) {
     OutlinedTextField(
         value = valor,
         onValueChange = onValorCambia,
         modifier = modifier.fillMaxWidth(),
         label = { Text(etiqueta) },
+        enabled = habilitado,
         leadingIcon = {
             Icon(
                 painter = painterResource(id = icono),
