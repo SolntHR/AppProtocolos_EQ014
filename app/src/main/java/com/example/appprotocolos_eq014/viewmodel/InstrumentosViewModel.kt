@@ -2,6 +2,7 @@ package com.example.appprotocolos_eq014.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.uistate.InstrumentosUiState
 import com.example.appprotocolos_eq014.repository.InstrumentoRepository
@@ -25,8 +26,12 @@ class InstrumentosViewModel(
 
     private fun cargarInstrumentos() {
         viewModelScope.launch {
-            val instrumentos = instrumentoRepository.listarConCalibracion()
-            _uiState.update { it.copy(isLoading = false, instrumentos = instrumentos) }
+            try {
+                val instrumentos = instrumentoRepository.listarConCalibracion()
+                _uiState.update { it.copy(isLoading = false, instrumentos = instrumentos) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, mensaje = e.message) }
+            }
         }
     }
 
@@ -79,15 +84,19 @@ class InstrumentosViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(guardando = true) }
-            val guardado = instrumentoRepository.registrarCalibracion(instrumento.id, calibracion!!, vencimiento!!)
-            val instrumentos = instrumentoRepository.listarConCalibracion()
-            _uiState.update {
-                it.copy(
-                    guardando = false,
-                    instrumentos = instrumentos,
-                    instrumentoEditando = if (guardado) null else it.instrumentoEditando,
-                    mensaje = if (guardado) "Calibración registrada para ${instrumento.nombreTipo}" else "No se pudo registrar la calibración"
-                )
+            try {
+                instrumentoRepository.registrarCalibracion(instrumento.id, calibracion!!, vencimiento!!)
+                val instrumentos = instrumentoRepository.listarConCalibracion()
+                _uiState.update {
+                    it.copy(
+                        guardando = false,
+                        instrumentos = instrumentos,
+                        instrumentoEditando = null,
+                        mensaje = "Calibración registrada para ${instrumento.nombreTipo}"
+                    )
+                }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(guardando = false, mensaje = e.message) }
             }
         }
     }

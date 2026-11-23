@@ -125,7 +125,7 @@ object AppViewModelFactory {
             )
         }
         initializer {
-            InstrumentosViewModel(instrumentoRepository = InstrumentoRepository(obtenerDbHelper(contexto())))
+            InstrumentosViewModel(instrumentoRepository = InstrumentoRepository())
         }
         initializer {
             RecuperarViewModel(usuarioRepository = UsuarioRepository())
