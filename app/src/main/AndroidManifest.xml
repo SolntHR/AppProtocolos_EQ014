@@ -23,7 +23,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.AppProtocolos_EQ014"
+            android:theme="@style/Theme.AppProtocolos_EQ014.Inicio"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

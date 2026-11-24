@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.AppProtocolos_EQ014" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.AppProtocolos_EQ014.Inicio" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/azul_induztek</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.AppProtocolos_EQ014</item>
+    </style>
 </resources>
