@@ -118,11 +118,18 @@ fun FormularioVisitaScreen(
                     textoVacio = "Selecciona el ingeniero"
                 )
                 Text(
-                    "Técnicos en terreno *",
+                    if (s.participantes.isEmpty()) "Técnicos en terreno *"
+                    else "Técnicos en terreno * (${s.participantes.size} elegidos)",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                s.personal.forEach { persona ->
+                CampoTexto(
+                    valor = s.busquedaTecnicos,
+                    onValorCambia = viewModel::onBusquedaTecnicos,
+                    etiqueta = "Buscar técnico por nombre",
+                    icono = R.drawable.ic_buscar
+                )
+                s.personalVisible.forEach { persona ->
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable { viewModel.onParticipante(persona.id) },
                         verticalAlignment = Alignment.CenterVertically
@@ -133,6 +140,13 @@ fun FormularioVisitaScreen(
                         )
                         Text(persona.nombre, style = MaterialTheme.typography.bodyMedium)
                     }
+                }
+                if (s.personalVisible.isEmpty()) {
+                    Text(
+                        "Ningún técnico coincide con la búsqueda.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 s.errores[V.CAMPO_PARTICIPANTES]?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)

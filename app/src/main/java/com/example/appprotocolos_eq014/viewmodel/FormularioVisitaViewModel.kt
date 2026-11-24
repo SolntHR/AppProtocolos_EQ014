@@ -78,6 +78,8 @@ class FormularioVisitaViewModel(
         it.copy(participantes = if (id in it.participantes) it.participantes - id else it.participantes + id)
     }
 
+    fun onBusquedaTecnicos(valor: String) = _uiState.update { it.copy(busquedaTecnicos = valor) }
+
     private fun actualizar(campo: String, cambio: (FormularioVisitaUiState) -> FormularioVisitaUiState) {
         _uiState.update { cambio(it).copy(errores = it.errores - campo, error = null) }
     }
