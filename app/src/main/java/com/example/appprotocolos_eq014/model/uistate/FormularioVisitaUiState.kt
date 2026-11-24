@@ -17,9 +17,17 @@ data class FormularioVisitaUiState(
     val tipoVisita: String = Visita.SOLO_PRUEBAS,
     val ingeniero: OpcionCatalogo? = null,
     val participantes: Set<Long> = emptySet(),
+    val busquedaTecnicos: String = "",
     val errores: Map<String, String> = emptyMap(),
     val error: String? = null,
     val visitaCreadaId: Long? = null
 ) {
     val editando: Boolean get() = idVisita != null
+
+    val personalVisible: List<OpcionCatalogo>
+        get() {
+            val texto = busquedaTecnicos.trim()
+            if (texto.isEmpty()) return personal
+            return personal.filter { it.id in participantes || it.nombre.contains(texto, ignoreCase = true) }
+        }
 }
