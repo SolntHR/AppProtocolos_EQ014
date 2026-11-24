@@ -107,6 +107,7 @@ object AppViewModelFactory {
                 catalogoRepository = CatalogoRepository(),
                 visitaRepository = VisitaRepository(),
                 usuarioRepository = UsuarioRepository(),
+                protocoloRepository = ProtocoloRepository(),
                 catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto))
             )
         }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.ui.screens.LoginScreen
 import com.example.appprotocolos_eq014.ui.screens.RegistroScreen
 import com.example.appprotocolos_eq014.viewmodel.RegistroViewModel
@@ -121,7 +123,7 @@ private const val CLAVE_PERFIL_ACTUALIZADO = "perfil_actualizado"
 private const val CLAVE_USUARIO_GUARDADO = "usuario_guardado"
 private const val CLAVE_EQUIPO_CREADO = "equipo_creado"
 private const val CLAVE_INSTALACION_CREADA = "instalacion_creada"
-
+private const val CLAVE_FILTRO_ESTADO = "filtro_estado"
 private val rutasConBarraInferior = setOf(Rutas.INICIO, Rutas.VISITAS, Rutas.EQUIPOS, Rutas.PERFIL,
     Rutas.DETALLE_VISITA, Rutas.DETALLE_EQUIPO, Rutas.PROTOCOLOS, Rutas.INSTRUMENTOS, Rutas.USUARIOS)
 
@@ -223,7 +225,12 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     onVerEquipos = { navController.navegarPestana(Rutas.EQUIPOS) },
                     onAsignarVisita = { navController.navigate(Rutas.formularioVisita()) },
                     onGestionUsuarios = { navController.navigate(Rutas.USUARIOS) },
-                    onInstrumentos = { navController.navigate(Rutas.INSTRUMENTOS) }
+                    onInstrumentos = { navController.navigate(Rutas.INSTRUMENTOS) },
+                    onProtocolosPorFormalizar = {
+                        navController.navegarPestana(Rutas.PROTOCOLOS)
+                        navController.currentBackStackEntry?.savedStateHandle
+                            ?.set(CLAVE_FILTRO_ESTADO, EstadoProtocolo.REGISTRADO_TERRENO.name)
+                    }
                 )
             }
             composable(Rutas.VISITAS) {
@@ -286,8 +293,15 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 )
             }
 
-            composable(Rutas.PROTOCOLOS) {
+            composable(Rutas.PROTOCOLOS) { entrada ->
                 val protocolosViewModel: ProtocolosViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                val filtro by entrada.savedStateHandle.getStateFlow<String?>(CLAVE_FILTRO_ESTADO, null).collectAsStateWithLifecycle()
+                LaunchedEffect(filtro) {
+                    filtro?.let {
+                        protocolosViewModel.onFiltroEstado(EstadoProtocolo.valueOf(it))
+                        entrada.savedStateHandle[CLAVE_FILTRO_ESTADO] = null
+                    }
+                }
                 ListaProtocolosScreen(
                     viewModel = protocolosViewModel,
                     onAbrirProtocolo = { id -> navController.navigate(Rutas.detalleProtocolo(id)) },

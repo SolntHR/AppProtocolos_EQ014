@@ -46,7 +46,8 @@ fun InicioPersonalTerreno(
     onVerVisitas: () -> Unit,
     onAsignarVisita: (() -> Unit)? = null,
     onGestionUsuarios: (() -> Unit)? = null,
-    onInstrumentos: (() -> Unit)? = null
+    onInstrumentos: (() -> Unit)? = null,
+    onPorFormalizar: (() -> Unit)? = null
 ) {
     val abiertas = uiState.visitas.filter { !it.cerrada }
     val deHoy = abiertas.filter { it.fecha.take(10) == Fechas.hoy() }
@@ -59,6 +60,14 @@ fun InicioPersonalTerreno(
         item {
             Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Accesos rápidos", style = MaterialTheme.typography.titleLarge)
+                if (onPorFormalizar != null) {
+                    val porFormalizar = uiState.protocolosPorFormalizar
+                    TarjetaAcceso(
+                        "Protocolos por formalizar ($porFormalizar)",
+                        if (porFormalizar == 0) "No hay protocolos esperando revisión" else "Registrados en terreno, esperan tu revisión",
+                        R.drawable.ic_protocolo, onPorFormalizar, destacada = porFormalizar > 0
+                    )
+                }
                 TarjetaAcceso("Nuevo protocolo", "Registra las mediciones de un equipo", R.drawable.ic_mas, onNuevoProtocolo)
                 if (onAsignarVisita != null) {
                     TarjetaAcceso("Asignar visita", "Programa una OT y asigna a los técnicos", R.drawable.ic_ubicacion, onAsignarVisita)
@@ -68,7 +77,7 @@ fun InicioPersonalTerreno(
                     TarjetaAcceso(
                         "Usuarios pendientes ($pendientes)",
                         if (pendientes == 0) "No hay cuentas esperando un perfil" else "Asigna el perfil a las cuentas nuevas",
-                        R.drawable.ic_alerta, onGestionUsuarios
+                        R.drawable.ic_alerta, onGestionUsuarios, destacada = pendientes > 0
                     )
                     TarjetaAcceso("Gestión de usuarios", "Administra el personal y los clientes", R.drawable.ic_persona, onGestionUsuarios)
                 }

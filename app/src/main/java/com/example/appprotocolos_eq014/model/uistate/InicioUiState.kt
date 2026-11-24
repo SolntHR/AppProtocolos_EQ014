@@ -20,5 +20,6 @@ data class InicioUiState(
     val visitas: List<Visita> = emptyList(),
     val actasCliente: List<Visita> = emptyList(),
     val usuariosPendientes: Int = 0,
+    val protocolosPorFormalizar: Int = 0,
     val error: String? = null
 )

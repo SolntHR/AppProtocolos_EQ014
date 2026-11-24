@@ -24,7 +24,8 @@ fun InicioScreen(
     onVerEquipos: () -> Unit,
     onAsignarVisita: () -> Unit,
     onGestionUsuarios: () -> Unit,
-    onInstrumentos: () -> Unit
+    onInstrumentos: () -> Unit,
+    onProtocolosPorFormalizar: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -58,7 +59,8 @@ fun InicioScreen(
                     onVerVisitas = onVerVisitas,
                     onAsignarVisita = if (Rol.puedeAsignarVisitas(rol)) onAsignarVisita else null,
                     onGestionUsuarios = if (rol == Rol.JEFE_TECNICO) onGestionUsuarios else null,
-                    onInstrumentos = if (rol == Rol.JEFE_TECNICO) onInstrumentos else null
+                    onInstrumentos = if (rol == Rol.JEFE_TECNICO) onInstrumentos else null,
+                    onPorFormalizar = if (Rol.puedeFormalizar(rol)) onProtocolosPorFormalizar else null
                 )
             }
             else -> {

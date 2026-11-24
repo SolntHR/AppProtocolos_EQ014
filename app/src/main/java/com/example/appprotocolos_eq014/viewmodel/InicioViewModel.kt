@@ -5,10 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.data.remote.ErrorApi
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.uistate.EquipoCliente
 import com.example.appprotocolos_eq014.model.uistate.InicioUiState
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
+import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
@@ -24,6 +26,7 @@ class InicioViewModel(
     private val catalogoRepository: CatalogoRepository,
     private val visitaRepository: VisitaRepository,
     private val usuarioRepository: UsuarioRepository,
+    private val protocoloRepository: ProtocoloRepository,
     private val catalogoClienteRepository: RegistroCatalogoRepository
 ) : ViewModel() {
 
@@ -37,33 +40,44 @@ class InicioViewModel(
         _uiState.update { it.copy(rolUsuario = rol, isLoading = it.primerNombre.isEmpty(), fechaHoy = Formato.encabezadoHoy(), error = null) }
 
         viewModelScope.launch {
-          try {
-            val usuario = usuarioRepository.obtenerPorId(idUsuario)
-            val nombrePersona = if (rol == "CLIENTE") usuario?.contactoNombre ?: usuario?.nombre else usuario?.nombre
-            _uiState.update {
-                it.copy(
-                    primerNombre = nombrePersona.orEmpty().substringBefore(" "),
-                    nombreCompleto = nombrePersona.orEmpty(),
-                    rolNombre = usuario?.rolNombre.orEmpty(),
-                    empresa = if (rol == "CLIENTE") usuario?.nombre.orEmpty() else ""
-                )
+            try {
+                val usuario = usuarioRepository.obtenerPorId(idUsuario)
+                val nombrePersona = if (rol == "CLIENTE") usuario?.contactoNombre ?: usuario?.nombre else usuario?.nombre
+                _uiState.update {
+                    it.copy(
+                        primerNombre = nombrePersona.orEmpty().substringBefore(" "),
+                        nombreCompleto = nombrePersona.orEmpty(),
+                        rolNombre = usuario?.rolNombre.orEmpty(),
+                        empresa = if (rol == "CLIENTE") usuario?.nombre.orEmpty() else ""
+                    )
+                }
+                when (rol) {
+                    "CLIENTE" -> cargarEquiposCliente(idUsuario)
+                    "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
+                        val visitas = visitaRepository.visitasDeUsuario(idUsuario)
+                        val pendientes = if (rol == Rol.JEFE_TECNICO) {
+                            usuarioRepository.listarUsuarios().count { it.rolCodigo == "SIN_ASIGNAR" }
+                        } else 0
+                        val porFormalizar = if (Rol.puedeFormalizar(rol)) {
+                            val misVisitas = visitas.map { it.id }.toSet()
+                            protocoloRepository.listar().count {
+                                it.estado == EstadoProtocolo.REGISTRADO_TERRENO && it.visitaId in misVisitas
+                            }
+                        } else 0
+                        _uiState.update {
+                            it.copy(
+                                visitas = visitas, usuariosPendientes = pendientes,
+                                protocolosPorFormalizar = porFormalizar, isLoading = false
+                            )
+                        }
+                    }
+                    else -> _uiState.update { it.copy(isLoading = false) }
+                }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            } catch (e: SQLiteException) {
+                _uiState.update { it.copy(isLoading = false, error = "No se pudieron cargar los datos. Inténtalo nuevamente.") }
             }
-              when (rol) {
-                  "CLIENTE" -> cargarEquiposCliente(idUsuario)
-                  "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
-                      val visitas = visitaRepository.visitasDeUsuario(idUsuario)
-                      val pendientes = if (rol == Rol.JEFE_TECNICO) {
-                          usuarioRepository.listarUsuarios().count { it.rolCodigo == "SIN_ASIGNAR" }
-                      } else 0
-                      _uiState.update { it.copy(visitas = visitas, usuariosPendientes = pendientes, isLoading = false) }
-                  }
-                  else -> _uiState.update { it.copy(isLoading = false) }
-              }
-          } catch (e: ErrorApi) {
-              _uiState.update { it.copy(isLoading = false, error = e.message) }
-          } catch (e: SQLiteException) {
-              _uiState.update { it.copy(isLoading = false, error = "No se pudieron cargar los datos. Inténtalo nuevamente.") }
-          }
         }
     }
 

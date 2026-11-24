@@ -10,12 +10,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.appprotocolos_eq014.R
+import com.example.appprotocolos_eq014.ui.theme.NaranjaAcento
+import com.example.appprotocolos_eq014.ui.theme.NaranjaSuave
 
 @Composable
 fun RecargarAlVolver(onRecargar: () -> Unit) {
@@ -44,12 +47,21 @@ fun CabeceraPagina(titulo: String, subtitulo: String, accion: @Composable (() ->
 }
 
 @Composable
-fun TarjetaAcceso(titulo: String, detalle: String, @DrawableRes icono: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun TarjetaAcceso(
+    titulo: String,
+    detalle: String,
+    @DrawableRes icono: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    destacada: Boolean = false
+) {
+    val acento = if (destacada) NaranjaAcento else MaterialTheme.colorScheme.primary
     Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        color = if (destacada) NaranjaSuave else MaterialTheme.colorScheme.surface,
+        border = if (destacada) BorderStroke(1.5.dp, NaranjaAcento) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(painterResource(icono), contentDescription = null, tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)).padding(10.dp).size(22.dp))
+            Icon(painterResource(icono), contentDescription = null, tint = if (destacada) Color.White else acento,
+                modifier = Modifier.background(if (destacada) NaranjaAcento else MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)).padding(10.dp).size(22.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(titulo, style = MaterialTheme.typography.titleMedium)
                 Text(detalle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
