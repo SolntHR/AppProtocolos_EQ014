@@ -8,5 +8,6 @@ object Rol{
 
     fun puedeCrearProtocolos(codigo: String) = codigo == TECNICO || codigo == INGENIERO || codigo == JEFE_TECNICO
     fun puedeFormalizar(codigo: String) = codigo == INGENIERO || codigo == JEFE_TECNICO
+    fun puedeAsignarVisitas(codigo: String) = codigo == INGENIERO || codigo == JEFE_TECNICO
     fun esPersonalInduztek(codigo: String) = codigo.isNotBlank() && codigo != CLIENTE
 }

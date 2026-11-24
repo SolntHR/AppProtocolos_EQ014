@@ -36,7 +36,13 @@ class VisitasViewModel(
     val estado = _estado.asStateFlow()
 
     fun cargar() {
-        _estado.update { it.copy(cargando = true, rol = sesion.leerRolUsuario().orEmpty(), error = null) }
+        _estado.update {
+            it.copy(
+                cargando = true,
+                rol = sesion.leerRolUsuario().orEmpty(),
+                error = null
+            )
+        }
         viewModelScope.launch {
             try {
                 val lista = visitasAccesibles(sesion, visitas, catalogo)
@@ -63,11 +69,24 @@ class DetalleVisitaViewModel(
 
     fun cargar() {
         val rol = sesion.leerRolUsuario().orEmpty()
-        _estado.update { it.copy(cargando = true, rol = rol, usuarioId = sesion.leerIdUsuario(), error = null) }
+        _estado.update {
+            it.copy(
+                cargando = true,
+                rol = rol,
+                usuarioId = sesion.leerIdUsuario(),
+                error = null
+            )
+        }
         viewModelScope.launch {
             try {
                 if (visitasAccesibles(sesion, visitas, catalogo).none { it.id == idVisita }) {
-                    _estado.update { it.copy(cargando = false, visita = null, error = "No tienes acceso a esta visita.") }
+                    _estado.update {
+                        it.copy(
+                            cargando = false,
+                            visita = null,
+                            error = "No tienes acceso a esta visita."
+                        )
+                    }
                     return@launch
                 }
                 val visita = visitas.obtenerActa(idVisita, sesion.leerIdUsuario()).let { visita ->
@@ -77,10 +96,31 @@ class DetalleVisitaViewModel(
                 val listaEquipos = equipos.listarEquipos(
                     if (rol == Rol.CLIENTE) sesion.leerIdUsuario() else null
                 ).filter { it.instalacionId == visita.instalacionId }
-                _estado.update { it.copy(cargando = false, visita = visita, equipos = listaEquipos, error = null) }
+                _estado.update {
+                    it.copy(
+                        cargando = false,
+                        visita = visita,
+                        equipos = listaEquipos,
+                        error = null
+                    )
+                }
             } catch (e: ErrorApi) {
                 _estado.update { it.copy(cargando = false, error = e.message) }
             }
         }
     }
+
+    fun eliminar() {
+        if (_estado.value.eliminando) return
+        _estado.update { it.copy(eliminando = true, errorAccion = null) }
+        viewModelScope.launch {
+            try {
+                visitas.eliminarVisita(idVisita, sesion.leerIdUsuario())
+                _estado.update { it.copy(eliminando = false, eliminada = true) }
+            } catch (e: ErrorApi) {
+                _estado.update { it.copy(eliminando = false, errorAccion = e.message) }
+            }
+        }
+    }
+
 }

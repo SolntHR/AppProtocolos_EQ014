@@ -89,6 +89,16 @@ object AppViewModelFactory {
         }
         initializer {
             val contexto = contexto()
+            FormularioVisitaViewModel(
+                idUsuario = SesionPreferencias(contexto).leerIdUsuario(),
+                catalogo = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                usuarios = UsuarioRepository(),
+                visitas = VisitaRepository(),
+                idVisita = createSavedStateHandle().get<Long>(ARG_ID_VISITA)?.takeIf { it > 0 }
+            )
+        }
+        initializer {
+            val contexto = contexto()
             LoginViewModel(
                 usuarioRepository = UsuarioRepository(),
                 guardarSesion = SesionPreferencias(contexto)::guardarSesion

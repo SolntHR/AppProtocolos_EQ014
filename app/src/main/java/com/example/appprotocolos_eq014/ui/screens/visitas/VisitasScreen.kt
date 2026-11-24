@@ -25,7 +25,12 @@ import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.viewmodel.VisitasViewModel
 
 @Composable
-fun VisitasScreen(viewModel: VisitasViewModel, onAbrirVisita: (Long) -> Unit, onVerProtocolos: () -> Unit) {
+fun VisitasScreen(
+viewModel: VisitasViewModel,
+onAbrirVisita: (Long) -> Unit,
+onVerProtocolos: () -> Unit,
+onAsignarVisita: () -> Unit
+) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     RecargarAlVolver(viewModel::cargar)
     Column(Modifier.fillMaxSize()) {
@@ -36,6 +41,9 @@ fun VisitasScreen(viewModel: VisitasViewModel, onAbrirVisita: (Long) -> Unit, on
             if (Rol.puedeCrearProtocolos(estado.rol)) TextButton(onClick = onVerProtocolos) { Text("Protocolos") }
         }
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (Rol.puedeAsignarVisitas(estado.rol)) item {
+                BotonSecundario("Asignar visita", onAsignarVisita, Modifier.fillMaxWidth(), R.drawable.ic_mas)
+            }
             item {
                 CampoTexto(estado.busqueda, viewModel::buscar, "Buscar visitas", R.drawable.ic_buscar)
                 Text("OT, cliente, instalación o fecha", style = MaterialTheme.typography.bodySmall,

@@ -13,6 +13,8 @@ data class Visita(
     val clienteNombre: String = "",
     val ingenieroNombre: String = "",
     val tecnicos: String = "",
+    val participantes: List<Long> = emptyList(),
+
 
     val totalProtocolos: Int = 0,
     val protocolosRegistrados: Int = 0,

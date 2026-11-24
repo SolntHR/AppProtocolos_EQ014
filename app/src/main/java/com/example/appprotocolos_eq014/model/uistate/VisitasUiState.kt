@@ -43,8 +43,16 @@ data class DetalleVisitaUiState(
     val equipos: List<Equipo> = emptyList(),
     val rol: String = "",
     val usuarioId: Long = -1,
-    val error: String? = null
+    val error: String? = null,
+    val hoy: String = Fechas.hoy(),
+    val eliminando: Boolean = false,
+    val eliminada: Boolean = false,
+    val errorAccion: String? = null
 ) {
+    val puedeEditarVisita: Boolean get() = Rol.puedeAsignarVisitas(rol) && visita?.cerrada == false
+    val puedeEliminarVisita: Boolean
+        get() = Rol.puedeAsignarVisitas(rol) && visita?.let { it.esProgramada(hoy) && it.protocolos.isEmpty() } == true
+
     val puedeRegistrar: Boolean get() = Rol.puedeCrearProtocolos(rol) && visita?.cerrada == false
     val puedeCerrar: Boolean
         get() {

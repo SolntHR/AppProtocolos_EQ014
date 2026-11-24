@@ -153,6 +153,7 @@ fun VisitaResponse.aVisita() = Visita(
     clienteNombre = clienteNombre,
     ingenieroNombre = ingenieroNombre,
     tecnicos = participantes.joinToString(", ") { it.nombre }.ifEmpty { "—" },
+    participantes = participantes.map { it.id },
     totalProtocolos = totalProtocolos.toInt(),
     protocolosRegistrados = protocolosRegistrados.toInt()
 )

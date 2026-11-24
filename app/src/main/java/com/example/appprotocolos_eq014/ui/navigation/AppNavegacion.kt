@@ -67,6 +67,8 @@ import com.example.appprotocolos_eq014.ui.screens.equipos.EquiposScreen
 import com.example.appprotocolos_eq014.ui.screens.equipos.DetalleEquipoScreen
 import com.example.appprotocolos_eq014.ui.screens.visitas.VisitasScreen
 import com.example.appprotocolos_eq014.ui.screens.visitas.DetalleVisitaScreen
+import com.example.appprotocolos_eq014.ui.screens.visitas.FormularioVisitaScreen
+import com.example.appprotocolos_eq014.viewmodel.FormularioVisitaViewModel
 
 object Rutas {
     const val LOGIN = "login"
@@ -93,11 +95,14 @@ object Rutas {
 
     const val EQUIPO_NUEVO = "equipo_nuevo?$ARG_ID_INSTALACION={$ARG_ID_INSTALACION}"
     const val INSTALACION_NUEVA = "instalacion_nueva"
+    const val FORMULARIO_VISITA = "visita_formulario?$ARG_ID_VISITA={$ARG_ID_VISITA}"
 
     fun fichaUsuario(idUsuario: Long) = "ficha_usuario/$idUsuario"
     fun historial(idEquipo: Long) = "historial/$idEquipo"
     fun acta(idVisita: Long) = "acta/$idVisita"
     fun visita(idVisita: Long) = "visita/$idVisita"
+    fun formularioVisita(idVisita: Long? = null) =
+        if (idVisita == null) "visita_formulario" else "visita_formulario?$ARG_ID_VISITA=$idVisita"
     fun equipo(idEquipo: Long) = "equipo/$idEquipo"
     fun formulario(idProtocolo: String? = null, idVisita: Long? = null, idEquipo: Long? = null): String {
         val argumentos = buildList {
@@ -223,7 +228,12 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             }
             composable(Rutas.VISITAS) {
                 val vm: VisitasViewModel = viewModel(factory = AppViewModelFactory.Factory)
-                VisitasScreen(vm, { navController.navigate(Rutas.visita(it)) }, { navController.navigate(Rutas.PROTOCOLOS) })
+                VisitasScreen(
+                    viewModel = vm,
+                    onAbrirVisita = { navController.navigate(Rutas.visita(it)) },
+                    onVerProtocolos = { navController.navigate(Rutas.PROTOCOLOS) },
+                    onAsignarVisita = { navController.navigate(Rutas.formularioVisita()) }
+                )
             }
             composable(Rutas.EQUIPOS) {
                 val vm: EquiposViewModel = viewModel(factory = AppViewModelFactory.Factory)
@@ -242,7 +252,9 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     onRegistrar = { visita, equipo -> navController.navigate(Rutas.formulario(idVisita = visita, idEquipo = equipo)) },
                     onEditarProtocolo = { navController.navigate(Rutas.formulario(it)) },
                     onAgregarEquipo = { navController.navigate(Rutas.equipoNuevo(it)) },
-                    onVerActa = { navController.navigate(Rutas.acta(it)) }
+                    onVerActa = { navController.navigate(Rutas.acta(it)) },
+                    onEditarVisita = { navController.navigate(Rutas.formularioVisita(it)) },
+                    onVisitaEliminada = { navController.popBackStack() }
                 )
             }
             composable(Rutas.USUARIOS) { entrada ->
@@ -363,6 +375,17 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                         navController.previousBackStackEntry?.savedStateHandle?.set(CLAVE_INSTALACION_CREADA, idInstalacion)
                         navController.popBackStack()
                     }
+                )
+            }
+            composable(
+                Rutas.FORMULARIO_VISITA,
+                arguments = listOf(navArgument(ARG_ID_VISITA) { type = NavType.LongType; defaultValue = 0L })
+            ) {
+                val visitaViewModel: FormularioVisitaViewModel = viewModel(factory = AppViewModelFactory.Factory)
+                FormularioVisitaScreen(
+                    viewModel = visitaViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onGuardada = { navController.popBackStack() }
                 )
             }
             composable(Rutas.PERFIL) { entrada ->

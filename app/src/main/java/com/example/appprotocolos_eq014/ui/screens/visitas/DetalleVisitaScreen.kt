@@ -32,11 +32,30 @@ fun DetalleVisitaScreen(
     onRegistrar: (Long, Long?) -> Unit,
     onEditarProtocolo: (String) -> Unit,
     onAgregarEquipo: (Long) -> Unit,
-    onVerActa: (Long) -> Unit
+    onVerActa: (Long) -> Unit,
+    onEditarVisita: (Long) -> Unit,
+    onVisitaEliminada: () -> Unit
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     var responsablesVisibles by rememberSaveable { mutableStateOf(false) }
+    var confirmarEliminar by remember { mutableStateOf(false) }
     RecargarAlVolver(viewModel::cargar)
+    LaunchedEffect(estado.eliminada) {
+        if (estado.eliminada) onVisitaEliminada()
+    }
+    if (confirmarEliminar) {
+        AlertDialog(
+            onDismissRequest = { confirmarEliminar = false },
+            title = { Text("Eliminar visita") },
+            text = { Text("La visita ${estado.visita?.numeroOt.orEmpty()} se eliminará y no se podrá recuperar.") },
+            confirmButton = {
+                TextButton(onClick = { confirmarEliminar = false; viewModel.eliminar() }) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmarEliminar = false }) { Text("Cancelar") } }
+        )
+    }
     Column(Modifier.fillMaxSize()) {
         BarraSuperior("Detalle de visita", onVolver)
         val visita = estado.visita
@@ -62,6 +81,21 @@ fun DetalleVisitaScreen(
                                     DatoFicha("Ingeniero a cargo", visita.ingenieroNombre)
                                     DatoFicha("Técnicos", visita.tecnicos)
                                 }
+                            }
+                            if (estado.puedeEditarVisita) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    BotonSecundario("Editar visita", { onEditarVisita(visita.id) }, Modifier.weight(1f))
+                                    if (estado.puedeEliminarVisita) {
+                                        TextButton(onClick = { confirmarEliminar = true }, enabled = !estado.eliminando,
+                                            modifier = Modifier.weight(1f)) {
+                                            Text(if (estado.eliminando) "Eliminando..." else "Eliminar",
+                                                color = MaterialTheme.colorScheme.error)
+                                        }
+                                    }
+                                }
+                            }
+                            estado.errorAccion?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
