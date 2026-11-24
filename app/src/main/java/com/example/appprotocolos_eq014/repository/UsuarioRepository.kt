@@ -81,8 +81,10 @@ class UsuarioRepository(private val usuarioApi: UsuarioApi = RetrofitClient.usua
         return llamarApi { usuarioApi.actualizar(idUsuario, datos) }.aUsuario()
     }
 
-    suspend fun cambiarRol(idUsuario: Long, rolCodigo: String): Usuario =
-        llamarApi { usuarioApi.cambiarRol(idUsuario, CambiarRolRequest(rolCodigo)) }.aUsuario()
+    suspend fun cambiarRol(idUsuario: Long, rolCodigo: String, idJefe: Long, correoJefe: String, contrasena: String): Usuario {
+        val datos = CambiarRolRequest(rolCodigo, idJefe, Seguridad.cifrarContrasena(correoJefe, contrasena))
+        return llamarApi { usuarioApi.cambiarRol(idUsuario, datos) }.aUsuario()
+    }
 
     suspend fun cambiarActivo(idUsuario: Long, activo: Boolean): Usuario =
         llamarApi { usuarioApi.cambiarActivo(idUsuario, CambiarActivoRequest(activo)) }.aUsuario()

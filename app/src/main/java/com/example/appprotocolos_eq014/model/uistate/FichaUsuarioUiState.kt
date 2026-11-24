@@ -12,6 +12,11 @@ data class FichaUsuarioUiState(
     val pendiente: Boolean = false,
     val esCliente: Boolean = false,
     val rolPersonal: RolPersonal = RolPersonal.TECNICO,
+    val rolOriginal: RolPersonal? = null,
+    val esMiCuenta: Boolean = false,
+    val pedirContrasena: Boolean = false,
+    val contrasenaJefe: String = "",
+    val errorContrasenaJefe: String? = null,
     val rolNombre: String = "",
     val nombre: String = "",
     val rut: String = "",
@@ -28,4 +33,10 @@ data class FichaUsuarioUiState(
     val errorGeneral: String? = null,
     val guardando: Boolean = false,
     val guardadoExitoso: Boolean = false
-)
+){
+    val puedeEditarRol: Boolean
+        get() = esNuevo || pendiente || (!esCliente && !esMiCuenta)
+
+    val cambiaRol: Boolean
+        get() = !esNuevo && (pendiente || (!esCliente && rolPersonal != rolOriginal))
+}

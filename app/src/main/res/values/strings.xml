@@ -73,7 +73,7 @@
     <string name="campo_nombre_contacto">Nombre del contacto *</string>
     <string name="campo_empresa_obligatoria">Empresa cliente *</string>
     <string name="campo_correo_obligatorio">Correo electrónico *</string>
-    <string name="ayuda_perfil_fijo">El perfil se define al crear la cuenta</string>
+    <string name="ayuda_perfil_fijo">No puedes cambiar tu propio perfil</string>
     <string name="ayuda_correo_cuenta">El correo identifica la cuenta y no se puede cambiar</string>
     <string name="ayuda_contrasena_inicial">El correo de acceso se genera solo. Le enviaremos a este correo un código para que cree su contraseña.</string>
     <string name="historial_sin_protocolos">Este equipo aún no tiene protocolos visibles.</string>

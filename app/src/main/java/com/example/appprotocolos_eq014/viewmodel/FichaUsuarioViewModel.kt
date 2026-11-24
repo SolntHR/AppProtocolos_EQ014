@@ -15,7 +15,8 @@ import kotlinx.coroutines.launch
 
 class FichaUsuarioViewModel(
     private val usuarioRepository: UsuarioRepository,
-    private val idUsuario: Long
+    private val idUsuario: Long,
+    private val idSesion: Long
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FichaUsuarioUiState(esNuevo = idUsuario == NUEVO))
@@ -33,13 +34,16 @@ class FichaUsuarioViewModel(
             try {
                 val usuario = usuarioRepository.obtenerPorId(idUsuario)
                 val esCliente = usuario.rolCodigo == "CLIENTE"
+                val rol = RolPersonal.entries.find { rol -> rol.codigo == usuario.rolCodigo }
                 giro = usuario.giro
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         pendiente = usuario.rolCodigo == "SIN_ASIGNAR",
                         esCliente = esCliente,
-                        rolPersonal = RolPersonal.entries.find { rol -> rol.codigo == usuario.rolCodigo } ?: RolPersonal.TECNICO,
+                        rolPersonal = rol ?: RolPersonal.TECNICO,
+                        rolOriginal = rol,
+                        esMiCuenta = idUsuario == idSesion,
                         rolNombre = usuario.rolNombre,
                         nombre = if (esCliente) usuario.contactoNombre.orEmpty() else usuario.nombre,
                         rut = usuario.rut,
@@ -65,8 +69,24 @@ class FichaUsuarioViewModel(
     }
 
     fun onRolCambia(rol: RolPersonal) {
-        if (!puedeCambiarPerfil()) return
-        _uiState.update { it.copy(rolPersonal = rol) }
+        if (!_uiState.value.puedeEditarRol) return
+        _uiState.update { it.copy(rolPersonal = rol, errorGeneral = null) }
+    }
+
+    fun onContrasenaJefeCambia(valor: String) {
+        _uiState.update { it.copy(contrasenaJefe = valor, errorContrasenaJefe = null) }
+    }
+
+    fun onCancelarContrasena() {
+        _uiState.update { it.copy(pedirContrasena = false, contrasenaJefe = "", errorContrasenaJefe = null) }
+    }
+
+    fun onConfirmarContrasena() {
+        if (_uiState.value.contrasenaJefe.isBlank()) {
+            _uiState.update { it.copy(errorContrasenaJefe = "Ingresa tu contraseña") }
+            return
+        }
+        guardar()
     }
 
     fun onNombreCambia(valor: String) {
@@ -117,6 +137,15 @@ class FichaUsuarioViewModel(
 
     fun onGuardar() {
         if (_uiState.value.guardando || !validar()) return
+        if (_uiState.value.cambiaRol) {
+            _uiState.update { it.copy(pedirContrasena = true, contrasenaJefe = "", errorContrasenaJefe = null) }
+            return
+        }
+        guardar()
+    }
+
+    private fun guardar() {
+        if (_uiState.value.guardando) return
         val estado = _uiState.value
         val nombreRegistro = if (estado.esCliente) estado.empresa.trim() else estado.nombre.trim()
         val contactoNombre = if (estado.esCliente) estado.nombre.trim() else null
@@ -138,6 +167,10 @@ class FichaUsuarioViewModel(
                         contactoCargo = contactoCargo
                     )
                 } else {
+                    if (estado.cambiaRol) {
+                        val jefe = usuarioRepository.obtenerPorId(idSesion)
+                        usuarioRepository.cambiarRol(idUsuario, rolCodigo, idSesion, jefe.correo, estado.contrasenaJefe)
+                    }
                     usuarioRepository.actualizarPerfil(
                         idUsuario = idUsuario,
                         nombre = nombreRegistro,
@@ -147,13 +180,18 @@ class FichaUsuarioViewModel(
                         contactoNombre = contactoNombre,
                         contactoCargo = contactoCargo
                     )
-                    if (estado.pendiente) usuarioRepository.cambiarRol(idUsuario, rolCodigo)
                 }
-                _uiState.update { it.copy(guardando = false, guardadoExitoso = true) }
+                _uiState.update { it.copy(guardando = false, pedirContrasena = false, contrasenaJefe = "", guardadoExitoso = true) }
             } catch (e: ErrorApi) {
+                if (e.codigo == 401) {
+                    _uiState.update { it.copy(guardando = false, errorContrasenaJefe = e.message) }
+                    return@launch
+                }
                 _uiState.update {
                     it.copy(
                         guardando = false,
+                        pedirContrasena = false,
+                        contrasenaJefe = "",
                         errorNombre = e.campos["nombre"] ?: it.errorNombre,
                         errorRut = e.campos["rut"] ?: it.errorRut,
                         errorTelefono = e.campos["telefono"] ?: it.errorTelefono,

@@ -43,6 +43,11 @@ fun errorDesde(codigo: Int, cuerpo: String?): ErrorApi {
     } catch (_: Exception) {
         null
     }
-    val mensaje = error?.mensaje?.takeIf { it.isNotBlank() } ?: "El servicio no está disponible en este momento. Inténtalo más tarde."
-    return ErrorApi(mensaje, codigo, error?.campos.orEmpty())
+    val campos = error?.campos.orEmpty()
+    val mensaje = when {
+        campos.isNotEmpty() -> campos.values.distinct().joinToString("\n")
+        !error?.mensaje.isNullOrBlank() -> error?.mensaje.orEmpty()
+        else -> "El servicio no está disponible en este momento. Inténtalo más tarde."
+    }
+    return ErrorApi(mensaje, codigo, campos)
 }

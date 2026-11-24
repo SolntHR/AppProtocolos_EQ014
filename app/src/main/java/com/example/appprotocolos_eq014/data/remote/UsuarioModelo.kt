@@ -43,7 +43,7 @@ data class ActualizarUsuarioRequest(
     val contactoCargo: String?
 )
 
-data class CambiarRolRequest(val rol: String)
+data class CambiarRolRequest(val rol: String, val jefeId: Long, val contrasena: String)
 
 data class CambiarActivoRequest(val activo: Boolean)
 

@@ -14,10 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,6 +72,56 @@ fun FichaUsuarioScreen(
         onCorreoCambia = viewModel::onCorreoCambia,
         onGuardar = viewModel::onGuardar,
         onVolver = onVolver
+    )
+
+    if (uiState.pedirContrasena) {
+        DialogoContrasenaJefe(
+            contrasena = uiState.contrasenaJefe,
+            error = uiState.errorContrasenaJefe,
+            guardando = uiState.guardando,
+            onContrasenaCambia = viewModel::onContrasenaJefeCambia,
+            onConfirmar = viewModel::onConfirmarContrasena,
+            onCancelar = viewModel::onCancelarContrasena
+        )
+    }
+}
+
+@Composable
+private fun DialogoContrasenaJefe(
+    contrasena: String,
+    error: String?,
+    guardando: Boolean,
+    onContrasenaCambia: (String) -> Unit,
+    onConfirmar: () -> Unit,
+    onCancelar: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!guardando) onCancelar() },
+        title = { Text("Confirma con tu contraseña") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Cambiar el perfil de un usuario requiere la contraseña del jefe técnico.")
+                OutlinedTextField(
+                    value = contrasena,
+                    onValueChange = onContrasenaCambia,
+                    label = { Text("Tu contraseña") },
+                    singleLine = true,
+                    isError = error != null,
+                    supportingText = if (error != null) ({ Text(error) }) else null,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirmar, enabled = !guardando) {
+                Text(if (guardando) "Verificando..." else "Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancelar, enabled = !guardando) { Text("Cancelar") }
+        }
     )
 }
 
@@ -147,14 +202,24 @@ fun FichaUsuarioContent(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                if (uiState.esNuevo || uiState.pendiente) {
-                    SelectorSegmentado(
-                        etiqueta = stringResource(R.string.etiqueta_perfil_acceso),
-                        opciones = RolPersonal.entries.toList(),
-                        seleccionada = uiState.rolPersonal,
-                        textoDe = { it.etiqueta },
-                        onSeleccionar = onRolCambia
-                    )
+                if (uiState.puedeEditarRol) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        SelectorSegmentado(
+                            etiqueta = stringResource(R.string.etiqueta_perfil_acceso),
+                            opciones = RolPersonal.entries.toList(),
+                            seleccionada = uiState.rolPersonal,
+                            textoDe = { it.etiqueta },
+                            onSeleccionar = onRolCambia
+                        )
+                        if (uiState.cambiaRol) {
+                            Text(
+                                text = "Al guardar se pedirá tu contraseña para confirmar el cambio de perfil.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 12.dp)
+                            )
+                        }
+                    }
                 } else {
                     CampoBloqueado(
                         etiqueta = stringResource(R.string.campo_perfil),

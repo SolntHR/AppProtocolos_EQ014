@@ -156,7 +156,8 @@ object AppViewModelFactory {
             val contexto = contexto()
             FichaUsuarioViewModel(
                 usuarioRepository = UsuarioRepository(),
-                idUsuario = createSavedStateHandle().get<Long>(ARG_ID_USUARIO) ?: FichaUsuarioViewModel.NUEVO
+                idUsuario = createSavedStateHandle().get<Long>(ARG_ID_USUARIO) ?: FichaUsuarioViewModel.NUEVO,
+                idSesion = SesionPreferencias(contexto).leerIdUsuario()
             )
         }
         initializer {
