@@ -4,9 +4,11 @@ import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.data.remote.EquipoRequest
 import com.example.appprotocolos_eq014.data.remote.InstalacionApi
 import com.example.appprotocolos_eq014.data.remote.InstalacionRequest
+import com.example.appprotocolos_eq014.data.remote.ProtocoloApi
 import com.example.appprotocolos_eq014.data.remote.RetrofitClient
 import com.example.appprotocolos_eq014.data.remote.UsuarioApi
 import com.example.appprotocolos_eq014.data.remote.aEquipo
+import com.example.appprotocolos_eq014.data.remote.aVisita
 import com.example.appprotocolos_eq014.data.remote.listaApi
 import com.example.appprotocolos_eq014.data.remote.llamarApi
 import com.example.appprotocolos_eq014.model.entidades.Equipo
@@ -20,7 +22,8 @@ import kotlinx.coroutines.withContext
 class RegistroCatalogoRepository(
     private val helper: InduztekDbHelper,
     private val instalacionApi: InstalacionApi = RetrofitClient.instalacionApi,
-    private val usuarioApi: UsuarioApi = RetrofitClient.usuarioApi
+    private val usuarioApi: UsuarioApi = RetrofitClient.usuarioApi,
+    private val protocoloApi: ProtocoloApi = RetrofitClient.protocoloApi
 ) {
 
     suspend fun instalaciones(): List<OpcionCatalogo> =
@@ -81,51 +84,13 @@ class RegistroCatalogoRepository(
         return llamarApi { instalacionApi.crearInstalacion(datos) }.id
     }
 
-    suspend fun visitasCerradasDeCliente(idCliente: Long): List<Visita> = withContext(Dispatchers.IO) {
-        helper.readableDatabase.rawQuery(
-            """
-            SELECT v.id_visita, v.numero_ot, c.nombre, i.nombre, v.fecha, v.fecha_hora_cierre,
-                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado NOT IN (1, 5)),
-                   (SELECT COUNT(*) FROM PROTOCOLO p WHERE p.id_visita = v.id_visita AND p.id_estado = 4),
-                   v.id_instalacion, v.tipo_visita
-            FROM VISITA v
-            INNER JOIN INSTALACION i ON i.id_instalacion = v.id_instalacion
-            INNER JOIN USUARIO c ON c.id_usuario = i.id_usuario_cliente
-            WHERE i.id_usuario_cliente = ? AND v.fecha_hora_cierre IS NOT NULL
-            ORDER BY v.fecha DESC
-            """,
-            arrayOf(idCliente.toString())
-        ).use { c ->
-            buildList {
-                while (c.moveToNext()) {
-                    add(
-                        Visita(
-                            id = c.getLong(0),
-                            numeroOt = c.getString(1),
-                            clienteNombre = c.getString(2),
-                            instalacionNombre = c.getString(3),
-                            fecha = c.getString(4),
-                            fechaHoraCierre = c.getString(5),
-                            totalProtocolos = c.getInt(6),
-                            protocolosFormalizados = c.getInt(7),
-                            instalacionId = c.getLong(8),
-                            tipoVisita = c.getString(9)
-                        )
-                    )
-                }
-            }
-        }
-    }
+    suspend fun visitasCerradasDeCliente(idCliente: Long): List<Visita> =
+        listaApi { protocoloApi.listarVisitas(idCliente, false) }
+            .map { it.aVisita() }
+            .sortedByDescending { it.fecha }
 
-    suspend fun visitaEsDeCliente(idVisita: Long, idCliente: Long): Boolean = withContext(Dispatchers.IO) {
-        helper.readableDatabase.rawQuery(
-            """
-            SELECT 1 FROM VISITA v INNER JOIN INSTALACION i ON i.id_instalacion = v.id_instalacion
-            WHERE v.id_visita = ? AND i.id_usuario_cliente = ? AND v.fecha_hora_cierre IS NOT NULL
-            """,
-            arrayOf(idVisita.toString(), idCliente.toString())
-        ).use { it.moveToFirst() }
-    }
+    suspend fun visitaEsDeCliente(idVisita: Long, idCliente: Long): Boolean =
+        visitasCerradasDeCliente(idCliente).any { it.id == idVisita }
 
     suspend fun equipoEsDeCliente(idEquipo: Long, idCliente: Long): Boolean = withContext(Dispatchers.IO) {
         helper.readableDatabase.rawQuery(

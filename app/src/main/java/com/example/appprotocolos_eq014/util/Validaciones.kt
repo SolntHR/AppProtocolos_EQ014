@@ -27,6 +27,14 @@ object Validaciones {
 
     fun correoValido(correo: String): Boolean = regexCorreo.matches(correo.trim())
 
+
+    fun formatearRut(rut: String): String {
+        val limpio = rut.replace(".", "").replace("-", "").trim().uppercase()
+        if (limpio.length < 2) return rut.trim()
+        val cuerpo = limpio.dropLast(1).reversed().chunked(3).joinToString(".").reversed()
+        return "$cuerpo-${limpio.last()}"
+    }
+
     fun errorNombre(nombre: String): String? =
         if (nombre.isBlank()) "El nombre es obligatorio" else null
 

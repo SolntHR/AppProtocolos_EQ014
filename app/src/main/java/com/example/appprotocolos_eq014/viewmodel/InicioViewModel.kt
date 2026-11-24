@@ -50,7 +50,7 @@ class InicioViewModel(
               when (rol) {
                   "CLIENTE" -> cargarEquiposCliente(idUsuario)
                   "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
-                      val visitas = visitaRepository.visitasDeUsuario(idUsuario, verTodas = rol == "JEFE_TECNICO")
+                      val visitas = visitaRepository.visitasDeUsuario(idUsuario)
                       _uiState.update { it.copy(visitas = visitas, isLoading = false) }
                   }
                   else -> _uiState.update { it.copy(isLoading = false) }

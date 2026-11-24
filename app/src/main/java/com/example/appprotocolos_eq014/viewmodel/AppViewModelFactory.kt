@@ -47,12 +47,12 @@ object AppViewModelFactory {
         initializer {
             val contexto = contexto()
             val db = obtenerDbHelper(contexto)
-            VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(obtenerDbHelper(contexto)))
+            VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository(obtenerDbHelper(contexto)))
         }
         initializer {
             val contexto = contexto()
             val db = obtenerDbHelper(contexto)
-            DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(db), RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+            DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository(obtenerDbHelper(contexto)),
                 CatalogoRepository(), checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA)))
         }
         initializer {
@@ -100,7 +100,7 @@ object AppViewModelFactory {
             InicioViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
                 catalogoRepository = CatalogoRepository(),
-                visitaRepository = VisitaRepository(db),
+                visitaRepository = VisitaRepository(),
                 usuarioRepository = UsuarioRepository(),
                 catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto))
             )
@@ -118,7 +118,7 @@ object AppViewModelFactory {
             val contexto = contexto()
             ActaViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
-                visitaRepository = VisitaRepository(obtenerDbHelper(contexto)),
+                visitaRepository = VisitaRepository(),
                 catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
                 contexto = contexto.applicationContext,
                 idVisita = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA))

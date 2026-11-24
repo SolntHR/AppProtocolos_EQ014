@@ -1,6 +1,5 @@
 package com.example.appprotocolos_eq014.viewmodel
 
-import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
@@ -24,8 +23,7 @@ internal suspend fun visitasAccesibles(
     catalogo: RegistroCatalogoRepository
 ): List<Visita> = when (sesion.leerRolUsuario()) {
     Rol.CLIENTE -> catalogo.visitasCerradasDeCliente(sesion.leerIdUsuario())
-    Rol.JEFE_TECNICO -> visitas.visitasDeUsuario(sesion.leerIdUsuario(), verTodas = true)
-    Rol.TECNICO, Rol.INGENIERO -> visitas.visitasDeUsuario(sesion.leerIdUsuario())
+    Rol.TECNICO, Rol.INGENIERO, Rol.JEFE_TECNICO -> visitas.visitasDeUsuario(sesion.leerIdUsuario())
     else -> emptyList()
 }
 
@@ -43,8 +41,8 @@ class VisitasViewModel(
             try {
                 val lista = visitasAccesibles(sesion, visitas, catalogo)
                 _estado.update { it.copy(cargando = false, visitas = lista) }
-            } catch (e: SQLiteException) {
-                _estado.update { it.copy(cargando = false, error = "No se pudieron cargar las visitas.") }
+            } catch (e: ErrorApi) {
+                _estado.update { it.copy(cargando = false, error = e.message) }
             }
         }
     }
@@ -72,19 +70,16 @@ class DetalleVisitaViewModel(
                     _estado.update { it.copy(cargando = false, visita = null, error = "No tienes acceso a esta visita.") }
                     return@launch
                 }
-                val visita = visitas.obtenerActa(idVisita)?.let { visita ->
+                val visita = visitas.obtenerActa(idVisita, sesion.leerIdUsuario()).let { visita ->
                     if (rol == Rol.CLIENTE) visita.copy(protocolos = visita.protocolos.filter { it.estado.visibleParaCliente })
                     else visita
                 }
-                val listaEquipos = if (visita == null) emptyList() else equipos.listarEquipos(
+                val listaEquipos = equipos.listarEquipos(
                     if (rol == Rol.CLIENTE) sesion.leerIdUsuario() else null
                 ).filter { it.instalacionId == visita.instalacionId }
-                _estado.update { it.copy(cargando = false, visita = visita, equipos = listaEquipos,
-                    error = if (visita == null) "No se encontró la visita." else null) }
+                _estado.update { it.copy(cargando = false, visita = visita, equipos = listaEquipos, error = null) }
             } catch (e: ErrorApi) {
                 _estado.update { it.copy(cargando = false, error = e.message) }
-            } catch (e: SQLiteException) {
-                _estado.update { it.copy(cargando = false, error = "No se pudo cargar el detalle de la visita.") }
             }
         }
     }

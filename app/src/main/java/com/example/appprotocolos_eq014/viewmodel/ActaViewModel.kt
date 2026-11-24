@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.uistate.ActaUiState
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.repository.VisitaRepository
@@ -37,21 +38,24 @@ class ActaViewModel(
 
     private fun cargarActa() {
         viewModelScope.launch {
-            if (esCliente && !catalogoClienteRepository.visitaEsDeCliente(idVisita, idUsuario)) {
-                _uiState.update { it.copy(isLoading = false, errorGeneral = "No tienes acceso a esta acta.") }
-                return@launch
-            }
-
-            val acta = visitaRepository.obtenerActa(idVisita)?.let { a ->
-                if (esCliente) a.copy(protocolos = a.protocolos.filter { it.estado.visibleParaCliente }) else a
-            }
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    acta = acta,
-                    puedeRegistrarRecepcion = rolPuedeCerrar && acta != null && acta.recepcion == null,
-                    errorGeneral = if (acta == null) "No se encontró la visita" else null
-                )
+            try {
+                if (esCliente && !catalogoClienteRepository.visitaEsDeCliente(idVisita, idUsuario)) {
+                    _uiState.update { it.copy(isLoading = false, errorGeneral = "No tienes acceso a esta acta.") }
+                    return@launch
+                }
+                val acta = visitaRepository.obtenerActa(idVisita, idUsuario).let { a ->
+                    if (esCliente) a.copy(protocolos = a.protocolos.filter { it.estado.visibleParaCliente }) else a
+                }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        acta = acta,
+                        puedeRegistrarRecepcion = rolPuedeCerrar && acta.recepcion == null,
+                        errorGeneral = null
+                    )
+                }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, errorGeneral = e.message) }
             }
         }
     }
@@ -103,16 +107,15 @@ class ActaViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(guardando = true, errorGeneral = null) }
-            val registrada = visitaRepository.registrarRecepcion(
-                idVisita = idVisita,
-                nombre = estado.receptorNombre.trim(),
-                rut = estado.receptorRut.trim(),
-                cargo = estado.receptorCargo.trim(),
-                fechaHora = Formato.ahoraParaGuardar()
-            )
-            if (registrada) {
+            try {
+                visitaRepository.registrarRecepcion(
+                    idVisita = idVisita,
+                    nombre = estado.receptorNombre.trim(),
+                    rut = Validaciones.formatearRut(estado.receptorRut),
+                    cargo = estado.receptorCargo.trim()
+                )
                 NotificacionesLocales.notificarVisitaCerrada(contexto, acta.numeroOt, estado.receptorNombre.trim())
-                val actaActualizada = visitaRepository.obtenerActa(idVisita)
+                val actaActualizada = visitaRepository.obtenerActa(idVisita, idUsuario)
                 _uiState.update {
                     it.copy(
                         guardando = false,
@@ -121,8 +124,16 @@ class ActaViewModel(
                         recienRegistrada = true
                     )
                 }
-            } else {
-                _uiState.update { it.copy(guardando = false, errorGeneral = "No se pudo registrar la recepción") }
+            } catch (e: ErrorApi) {
+                _uiState.update {
+                    it.copy(
+                        guardando = false,
+                        errorNombre = e.campos["receptorNombre"] ?: it.errorNombre,
+                        errorRut = e.campos["receptorRut"] ?: it.errorRut,
+                        errorCargo = e.campos["receptorCargo"] ?: it.errorCargo,
+                        errorGeneral = e.message
+                    )
+                }
             }
         }
     }
