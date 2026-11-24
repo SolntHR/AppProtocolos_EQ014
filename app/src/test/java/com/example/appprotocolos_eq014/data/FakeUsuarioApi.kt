@@ -20,6 +20,13 @@ import retrofit2.Response
 
 class FakeUsuarioApi : UsuarioApi {
 
+    var ultimaSolicitudCambioRol: CambiarRolRequest? = null
+    var ultimaSolicitudCodigo: SolicitarCodigoRequest? = null
+    var ultimaVerificacionCodigo: VerificarCodigoRequest? = null
+    var ultimoRestablecimientoCodigo: RestablecerConCodigoRequest? = null
+    var ultimaVerificacionPregunta: VerificarPreguntaRequest? = null
+    var ultimoRestablecimientoPregunta: RestablecerConPreguntaRequest? = null
+
     private val jefe = UsuarioResponse(
         7, "JEFE_TECNICO", "Jefe técnico", "13.871.905-7", "Ricardo Espinoza Lagos",
         "respinoza@induztek.ejemplo", "respinoza@induztek.ejemplo", "+56 9 9345 1187",
@@ -31,15 +38,37 @@ class FakeUsuarioApi : UsuarioApi {
     override suspend fun registrar(datos: RegistroRequest): RegistroResponse = TODO()
     override suspend fun preguntas(): List<String> = TODO()
     override suspend fun listar(rol: String?, activo: Boolean?, buscar: String?): Response<List<UsuarioResponse>> = TODO()
-    override suspend fun obtener(id: Long): UsuarioResponse = TODO()
+    override suspend fun obtener(id: Long): UsuarioResponse = jefe.copy(id = id)
     override suspend fun crear(datos: CrearUsuarioRequest): UsuarioResponse = TODO()
     override suspend fun actualizar(id: Long, datos: ActualizarUsuarioRequest): UsuarioResponse = TODO()
-    override suspend fun cambiarRol(id: Long, datos: CambiarRolRequest): UsuarioResponse = TODO()
+    override suspend fun cambiarRol(id: Long, datos: CambiarRolRequest): UsuarioResponse {
+        ultimaSolicitudCambioRol = datos
+        return jefe.copy(id = id, rolCodigo = datos.rol)
+    }
     override suspend fun cambiarActivo(id: Long, datos: CambiarActivoRequest): UsuarioResponse = TODO()
     override suspend fun cambiarContrasena(id: Long, datos: CambiarContrasenaRequest): Response<Unit> = TODO()
-    override suspend fun verificarPregunta(datos: VerificarPreguntaRequest): Response<Unit> = TODO()
-    override suspend fun restablecerConPregunta(datos: RestablecerConPreguntaRequest): Response<Unit> = TODO()
-    override suspend fun solicitarCodigo(datos: SolicitarCodigoRequest): MensajeResponse = TODO()
-    override suspend fun verificarCodigo(datos: VerificarCodigoRequest): Response<Unit> = TODO()
-    override suspend fun restablecerConCodigo(datos: RestablecerConCodigoRequest): Response<Unit> = TODO()
+    override suspend fun verificarPregunta(datos: VerificarPreguntaRequest): Response<Unit> {
+        ultimaVerificacionPregunta = datos
+        return Response.success(Unit)
+    }
+
+    override suspend fun restablecerConPregunta(datos: RestablecerConPreguntaRequest): Response<Unit> {
+        ultimoRestablecimientoPregunta = datos
+        return Response.success(Unit)
+    }
+
+    override suspend fun solicitarCodigo(datos: SolicitarCodigoRequest): MensajeResponse {
+        ultimaSolicitudCodigo = datos
+        return MensajeResponse("Código enviado")
+    }
+
+    override suspend fun verificarCodigo(datos: VerificarCodigoRequest): Response<Unit> {
+        ultimaVerificacionCodigo = datos
+        return Response.success(Unit)
+    }
+
+    override suspend fun restablecerConCodigo(datos: RestablecerConCodigoRequest): Response<Unit> {
+        ultimoRestablecimientoCodigo = datos
+        return Response.success(Unit)
+    }
 }

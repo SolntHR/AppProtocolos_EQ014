@@ -1,5 +1,10 @@
 package com.example.appprotocolos_eq014.model.uistate
 
+enum class MetodoRecuperacion(val texto: String) {
+    CORREO("Por correo"),
+    PREGUNTA("Por pregunta")
+}
+
 enum class PasoRecuperacion {
     VERIFICAR,
     NUEVA_CONTRASENA,
@@ -18,7 +23,12 @@ object PreguntasSeguridad {
 
 data class RecuperarUiState(
     val paso: PasoRecuperacion = PasoRecuperacion.VERIFICAR,
+    val metodo: MetodoRecuperacion = MetodoRecuperacion.CORREO,
     val correo: String = "",
+    val codigo: String = "",
+    val codigoEnviado: Boolean = false,
+    val mensajeCodigo: String? = null,
+    val errorCodigo: String? = null,
     val preguntas: List<String> = PreguntasSeguridad.lista,
     val pregunta: String? = null,
     val respuesta: String = "",
