@@ -10,7 +10,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface UsuarioApi {
-    // meter metodos
     @POST("usuarios/login")
     suspend fun login(@Body datos: LoginRequest): UsuarioResponse
 

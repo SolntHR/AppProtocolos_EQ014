@@ -68,7 +68,7 @@ private fun CampoBloqueadoPreview() {
         CampoBloqueado(
             etiqueta = "RUT",
             valor = "17.284.519-3",
-            ayuda = "Solo lo puede cambiar el Jefe técnico",
+            ayuda = "Solo lo puede cambiar un Jefe técnico",
             modifier = Modifier.padding(16.dp)
         )
     }

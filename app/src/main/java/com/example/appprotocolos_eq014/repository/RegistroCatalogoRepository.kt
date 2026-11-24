@@ -1,6 +1,5 @@
 package com.example.appprotocolos_eq014.repository
 
-import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.data.remote.EquipoRequest
 import com.example.appprotocolos_eq014.data.remote.InstalacionApi
 import com.example.appprotocolos_eq014.data.remote.InstalacionRequest
@@ -16,11 +15,8 @@ import com.example.appprotocolos_eq014.model.entidades.Instalacion
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 import com.example.appprotocolos_eq014.model.uistate.OpcionCatalogo
 import com.example.appprotocolos_eq014.model.entidades.Visita
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class RegistroCatalogoRepository(
-    private val helper: InduztekDbHelper,
     private val instalacionApi: InstalacionApi = RetrofitClient.instalacionApi,
     private val usuarioApi: UsuarioApi = RetrofitClient.usuarioApi,
     private val protocoloApi: ProtocoloApi = RetrofitClient.protocoloApi
@@ -91,14 +87,4 @@ class RegistroCatalogoRepository(
 
     suspend fun visitaEsDeCliente(idVisita: Long, idCliente: Long): Boolean =
         visitasCerradasDeCliente(idCliente).any { it.id == idVisita }
-
-    suspend fun equipoEsDeCliente(idEquipo: Long, idCliente: Long): Boolean = withContext(Dispatchers.IO) {
-        helper.readableDatabase.rawQuery(
-            """
-            SELECT 1 FROM EQUIPO e INNER JOIN INSTALACION i ON i.id_instalacion = e.id_instalacion
-            WHERE e.id_equipo = ? AND i.id_usuario_cliente = ?
-            """,
-            arrayOf(idEquipo.toString(), idCliente.toString())
-        ).use { it.moveToFirst() }
-    }
 }

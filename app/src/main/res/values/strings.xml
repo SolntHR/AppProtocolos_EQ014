@@ -18,15 +18,9 @@
     <string name="nav_perfil">Perfil</string>
     <string name="nav_protocolos">Protocolos</string>
 
-    <string name="saludo">Hola, %1$s</string>
-    <string name="datos_guardados">Datos guardados en el equipo</string>
     <string name="titulo_gestion_usuarios">Gestión de usuarios</string>
     <string name="titulo_instrumentos">Instrumentos</string>
-    <string name="etiqueta_en_curso">En curso</string>
 
-    <string name="titulo_mis_equipos">Mis equipos</string>
-    <string name="subtitulo_consulta">Consulta de protocolos y resultados</string>
-    <string name="campo_buscar_tag">Buscar por TAG (ej.: TR-01)</string>
     <string name="titulo_historial_equipo">Historial del equipo</string>
     <string name="seccion_protocolos">Protocolos</string>
     <string name="seccion_comparacion">Comparación de resultados</string>
@@ -44,7 +38,7 @@
     <string name="campo_cargo_bloqueado">Cargo</string>
     <string name="campo_perfil">Perfil</string>
     <string name="campo_telefono">Teléfono *</string>
-    <string name="ayuda_solo_jefe">Solo lo puede cambiar el Jefe técnico</string>
+    <string name="ayuda_solo_jefe">Solo lo puede cambiar un jefe técnico</string>
     <string name="ayuda_perfil_dominio">El perfil lo define el dominio del correo</string>
     <string name="ayuda_correo_fijo">No se puede cambiar: define el perfil de acceso</string>
     <string name="btn_guardar_cambios">Guardar cambios</string>
@@ -72,7 +66,6 @@
     <string name="etiqueta_perfil_acceso">Perfil de acceso</string>
     <string name="campo_nombre_contacto">Nombre del contacto *</string>
     <string name="campo_empresa_obligatoria">Empresa cliente *</string>
-    <string name="campo_correo_obligatorio">Correo electrónico *</string>
     <string name="ayuda_perfil_fijo">No puedes cambiar tu propio perfil</string>
     <string name="ayuda_correo_cuenta">El correo identifica la cuenta y no se puede cambiar</string>
     <string name="ayuda_contrasena_inicial">El correo de acceso se genera solo. Le enviaremos a este correo un código para que cree su contraseña.</string>
@@ -85,19 +78,10 @@
     <string name="comparacion_significativa">Variación significativa</string>
     <string name="comentario_requerido">Al formalizar, el ingeniero debe dejar un comentario</string>
     <string name="comentario_detalle">Variación mayor a 25 % respecto a la medición anterior.</string>
-    <string name="titulo_mis_visitas">Mis visitas</string>
     <plurals name="ordenes_asignadas">
         <item quantity="one">%1$d orden de trabajo asignada</item>
         <item quantity="other">%1$d órdenes de trabajo asignadas</item>
     </plurals>
-    <string name="inicio_sin_visitas">No tienes visitas asignadas.</string>
-    <string name="estado_guardado_local">Perfil %1$s</string>
-    <string name="visita_cerrada">Cerrada</string>
-    <string name="visita_progreso">%1$d de %2$d protocolos registrados</string>
-    <string name="cliente_sin_coincidencias">Ningún equipo coincide con “%1$s”.</string>
-    <string name="cliente_solo_consulta">Vista de solo consulta</string>
-    <string name="cliente_ver_historial">Historial</string>
-    <string name="cliente_sin_protocolos">Sin protocolos disponibles.</string>
     <string name="titulo_acta">Acta en terreno</string>
     <string name="acta_titulo_documento">ACTA DE PRUEBA EN TERRENO</string>
     <string name="acta_cliente">Cliente</string>
@@ -127,10 +111,6 @@
     <string name="acta_registrada">Acta registrada y recibida por %1$s. Quedará pendiente de formalización.</string>
     <string name="btn_registrar_recepcion">Registrar recepción y cerrar visita</string>
     <string name="titulo_recuperar">Recuperar contraseña</string>
-    <string name="recuperar_paso_correo">Ingresa el correo de tu cuenta para continuar.</string>
-    <string name="recuperar_titulo_pregunta">Pregunta de seguridad</string>
-    <string name="recuperar_paso_pregunta">Responde la pregunta que configuraste para tu cuenta.</string>
-    <string name="recuperar_pregunta">Pregunta</string>
     <string name="recuperar_respuesta">Tu respuesta</string>
     <string name="recuperar_titulo_nueva">Nueva contraseña</string>
     <string name="recuperar_paso_nueva">Usa al menos 6 caracteres.</string>
@@ -138,12 +118,11 @@
     <string name="recuperar_confirmar">Repite la nueva contraseña</string>
     <string name="recuperar_listo">Contraseña actualizada</string>
     <string name="recuperar_listo_detalle">Ya puedes ingresar con tu nueva contraseña.</string>
-    <string name="btn_continuar">Continuar</string>
     <string name="btn_verificar">Verificar respuesta</string>
     <string name="btn_guardar_contrasena">Guardar contraseña</string>
     <string name="btn_volver_login">Volver al inicio de sesión</string>
     <string name="instrumentos_resumen">%1$d requieren atención (vencidos o por vencer en 30 días)</string>
-    <string name="instrumentos_nota">No se puede registrar una prueba con un instrumento de calibración vencida. Solo el Jefe técnico actualiza las calibraciones.</string>
+    <string name="instrumentos_nota">No se puede registrar una prueba con un instrumento de calibración vencida. Solo un jefe técnico actualiza las calibraciones.</string>
     <string name="instrumento_serie">%1$s · N.º de serie %2$s</string>
     <string name="instrumento_sin_calibracion">Sin calibración registrada</string>
     <string name="instrumento_vencido">Venció el %1$s (hace %2$d días)</string>
@@ -151,8 +130,6 @@
     <string name="btn_registrar_calibracion">Registrar calibración</string>
     <string name="campo_fecha_calibracion">Fecha de calibración (dd-mm-aaaa) *</string>
     <string name="campo_fecha_vencimiento">Fecha de vencimiento (dd-mm-aaaa) *</string>
-    <string name="nav_instrumentos">Instrumentos</string>
-    <string name="nav_usuarios">Usuarios</string>
     <string name="tab_personal_induztek">Personal Induztek</string>
     <string name="tab_usuarios_cliente">Usuarios cliente</string>
     <string name="estado_activo">Activo</string>
@@ -162,7 +139,6 @@
     <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
     <string name="cd_volver">Volver atrás</string>
 
-    <string name="error_campo_obligatorio">Este campo es obligatorio</string>
     <string name="menu_cerrar_sesion">Cerrar sesión</string>
     <string name="dialogo_cancelar">Cancelar</string>
     <string name="registro_nuevo">¿Eres nuevo?</string>

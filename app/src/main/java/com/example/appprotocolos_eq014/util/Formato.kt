@@ -30,8 +30,6 @@ object Formato {
     fun fechaHora(fechaBaseDatos: String): String =
         convertir(fechaBaseDatos.take(16), "yyyy-MM-dd HH:mm", "dd-MM-yyyy HH:mm")
 
-    fun ahoraParaGuardar(): String = formateador("yyyy-MM-dd HH:mm").format(Date())
-
     fun ahoraParaMostrar(): String = formateador("dd-MM-yyyy HH:mm").format(Date())
 
     fun encabezadoHoy(): String = formateador("EEEE, d MMM yyyy").format(Date()).uppercase(localeChile)

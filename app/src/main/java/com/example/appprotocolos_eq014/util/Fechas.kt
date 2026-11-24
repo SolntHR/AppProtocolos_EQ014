@@ -20,7 +20,7 @@ object Fechas {
         for (p in patrones) {
             try {
                 return SimpleDateFormat(p, Locale.US).parse(iso)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
         }
         return null

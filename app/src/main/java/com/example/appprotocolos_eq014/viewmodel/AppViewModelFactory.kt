@@ -7,7 +7,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.appprotocolos_eq014.data.InduztekDbHelper
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
 import com.example.appprotocolos_eq014.repository.FotoPerfilRepository
@@ -22,10 +21,6 @@ const val ARG_ID_EQUIPO = "idEquipo"
 const val ARG_ID_VISITA = "idVisita"
 
 object AppViewModelFactory {
-    private var dbHelper: InduztekDbHelper? = null
-
-    private fun obtenerDbHelper(context: Context): InduztekDbHelper =
-        dbHelper ?: InduztekDbHelper(context.applicationContext).also { dbHelper = it }
 
     private fun CreationExtras.contexto(): Context = checkNotNull(this[APPLICATION_KEY])
 
@@ -44,11 +39,11 @@ object AppViewModelFactory {
         }
         initializer {
             val contexto = contexto()
-            VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository(obtenerDbHelper(contexto)))
+            VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository())
         }
         initializer {
             val contexto = contexto()
-            DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+            DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository(),
                 CatalogoRepository(), checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA)))
         }
         initializer {
@@ -72,7 +67,7 @@ object AppViewModelFactory {
             val contexto = contexto()
             FormularioEquipoViewModel(
                 sesion = SesionPreferencias(contexto),
-                repository = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                repository = RegistroCatalogoRepository(),
                 idInstalacionInicial = createSavedStateHandle().get<Long>(ARG_ID_INSTALACION) ?: SIN_INSTALACION
             )
         }
@@ -80,14 +75,14 @@ object AppViewModelFactory {
             val contexto = contexto()
             FormularioInstalacionViewModel(
                 sesion = SesionPreferencias(contexto),
-                repository = RegistroCatalogoRepository(obtenerDbHelper(contexto))
+                repository = RegistroCatalogoRepository()
             )
         }
         initializer {
             val contexto = contexto()
             FormularioVisitaViewModel(
                 idUsuario = SesionPreferencias(contexto).leerIdUsuario(),
-                catalogo = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                catalogo = RegistroCatalogoRepository(),
                 usuarios = UsuarioRepository(),
                 visitas = VisitaRepository(),
                 idVisita = createSavedStateHandle().get<Long>(ARG_ID_VISITA)?.takeIf { it > 0 }
@@ -108,7 +103,7 @@ object AppViewModelFactory {
                 visitaRepository = VisitaRepository(),
                 usuarioRepository = UsuarioRepository(),
                 protocoloRepository = ProtocoloRepository(),
-                catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto))
+                catalogoClienteRepository = RegistroCatalogoRepository()
             )
         }
         initializer {
@@ -126,7 +121,7 @@ object AppViewModelFactory {
             ActaViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
                 visitaRepository = VisitaRepository(),
-                catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                catalogoClienteRepository = RegistroCatalogoRepository(),
                 contexto = contexto.applicationContext,
                 idVisita = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA))
             )

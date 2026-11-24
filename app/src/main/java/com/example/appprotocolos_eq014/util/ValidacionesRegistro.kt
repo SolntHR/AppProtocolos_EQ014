@@ -14,7 +14,6 @@ object ValidacionesRegistro {
     fun telefonoCompleto(valor: String): String = Validaciones.telefonoCompleto(valor)
     fun nombreNormalizado(valor: String): String = valor.trim().replace(Regex("\\s+"), " ")
 
-    // Solo una sugerencia visual: el servicio resolverá dominio y colisiones.
     fun correoInternoSugerido(nombre: String): String {
         val partes = nombreNormalizado(nombre).split(" ").filter { it.isNotBlank() }
         if (partes.size < 2) return ""

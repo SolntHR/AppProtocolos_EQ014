@@ -1,6 +1,5 @@
 package com.example.appprotocolos_eq014.viewmodel
 
-import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
@@ -75,8 +74,6 @@ class InicioViewModel(
                 }
             } catch (e: ErrorApi) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
-            } catch (e: SQLiteException) {
-                _uiState.update { it.copy(isLoading = false, error = "No se pudieron cargar los datos. Inténtalo nuevamente.") }
             }
         }
     }

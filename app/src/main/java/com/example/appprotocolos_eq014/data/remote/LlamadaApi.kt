@@ -20,9 +20,9 @@ suspend fun <T> llamarApi(peticion: suspend () -> T): T = try {
     peticion()
 } catch (e: HttpException) {
     throw errorDesde(e.code(), e.response()?.errorBody()?.string())
-} catch (e: IOException) {
+} catch (_: IOException) {
     throw ErrorApi(SIN_CONEXION)
-} catch (e: JsonParseException) {
+} catch (_: JsonParseException) {
     throw ErrorApi("El servidor respondió con datos inesperados")
 }
 

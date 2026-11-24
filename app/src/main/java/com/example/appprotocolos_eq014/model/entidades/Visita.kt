@@ -5,7 +5,7 @@ data class Visita(
     val numeroOt: String,
     val instalacionId: Long,
     val fecha: String,
-    val tipoVisita: String /*= SOLO_PRUEBAS*/,
+    val tipoVisita: String,
     val ingenieroCargoId: Long = 0,
     val fechaHoraCierre: String? = null,
 

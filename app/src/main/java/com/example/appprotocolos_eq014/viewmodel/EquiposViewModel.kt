@@ -1,6 +1,5 @@
 package com.example.appprotocolos_eq014.viewmodel
 
-import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
@@ -37,8 +36,6 @@ class EquiposViewModel(
                 _estado.update { it.copy(cargando = false, equipos = equipos) }
             } catch (e: ErrorApi) {
                 _estado.update { it.copy(cargando = false, error = e.message) }
-            } catch (e: SQLiteException) {
-                _estado.update { it.copy(cargando = false, error = "No se pudieron cargar los equipos. Inténtalo nuevamente.") }
             }
         }
     }
@@ -80,8 +77,6 @@ class DetalleEquipoViewModel(
                 _estado.value = DetalleEquipoUiState(cargando = false, equipo = equipo, protocolos = historial)
             } catch (e: ErrorApi) {
                 _estado.update { it.copy(cargando = false, error = e.message) }
-            } catch (e: SQLiteException) {
-                _estado.update { it.copy(cargando = false, error = "No se pudo cargar la ficha del equipo.") }
             }
         }
     }

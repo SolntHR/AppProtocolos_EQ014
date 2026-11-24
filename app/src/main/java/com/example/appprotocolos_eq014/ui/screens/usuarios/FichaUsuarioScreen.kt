@@ -100,7 +100,7 @@ private fun DialogoContrasenaJefe(
         title = { Text("Confirma con tu contraseña") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Cambiar el perfil de un usuario requiere la contraseña del jefe técnico.")
+                Text("Para cambiar el perfil de un usuario, confirma con tu contraseña de jefe técnico.")
                 OutlinedTextField(
                     value = contrasena,
                     onValueChange = onContrasenaCambia,
