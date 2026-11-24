@@ -40,18 +40,15 @@ object AppViewModelFactory {
         }
         initializer {
             val contexto = contexto()
-            val db = obtenerDbHelper(contexto)
-            DetalleEquipoViewModel(SesionPreferencias(contexto), CatalogoRepository(), ProtocoloRepository(db),
+            DetalleEquipoViewModel(SesionPreferencias(contexto), CatalogoRepository(), ProtocoloRepository(),
                 checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_EQUIPO)))
         }
         initializer {
             val contexto = contexto()
-            val db = obtenerDbHelper(contexto)
             VisitasViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository(obtenerDbHelper(contexto)))
         }
         initializer {
             val contexto = contexto()
-            val db = obtenerDbHelper(contexto)
             DetalleVisitaViewModel(SesionPreferencias(contexto), VisitaRepository(), RegistroCatalogoRepository(obtenerDbHelper(contexto)),
                 CatalogoRepository(), checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_VISITA)))
         }
@@ -67,7 +64,7 @@ object AppViewModelFactory {
             val contexto = contexto()
             ProtocolosViewModel(
                 sesion = SesionPreferencias(contexto),
-                repository = RegistroProtocoloRepository(obtenerDbHelper(contexto)),
+                repository = ProtocoloRepository(),
                 contexto = contexto.applicationContext
             )
         }
@@ -106,7 +103,6 @@ object AppViewModelFactory {
         }
         initializer {
             val contexto = contexto()
-            val db = obtenerDbHelper(contexto)
             InicioViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
                 catalogoRepository = CatalogoRepository(),
@@ -119,8 +115,9 @@ object AppViewModelFactory {
             val contexto = contexto()
             HistorialViewModel(
                 sesionPreferencias = SesionPreferencias(contexto),
-                protocoloRepository = ProtocoloRepository(obtenerDbHelper(contexto)),
-                catalogoClienteRepository = RegistroCatalogoRepository(obtenerDbHelper(contexto)),
+                protocoloRepository = ProtocoloRepository(),
+                catalogoRepository = CatalogoRepository(),
+
                 idEquipo = checkNotNull(createSavedStateHandle().get<Long>(ARG_ID_EQUIPO))
             )
         }

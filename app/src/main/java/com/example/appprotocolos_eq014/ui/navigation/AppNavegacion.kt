@@ -291,9 +291,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 ListaProtocolosScreen(
                     viewModel = protocolosViewModel,
                     onAbrirProtocolo = { id -> navController.navigate(Rutas.detalleProtocolo(id)) },
-                    onNuevoProtocolo = { navController.navigate(Rutas.formulario()) },
-                    onNuevoEquipo = { navController.navigate(Rutas.equipoNuevo()) },
-                    onNuevaInstalacion = { navController.navigate(Rutas.INSTALACION_NUEVA) }
+                    onNuevoProtocolo = { navController.navigate(Rutas.formulario()) }
                 )
             }
             composable(

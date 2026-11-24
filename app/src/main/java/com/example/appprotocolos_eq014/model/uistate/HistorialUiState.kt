@@ -28,8 +28,5 @@ data class HistorialUiState(
     val protocolos: List<FilaHistorial> = emptyList(),
     val comparacion: List<FilaComparacion> = emptyList(),
     val haySignificativa: Boolean = false,
-    val comentario: String = "",
-    val errorComentario: String? = null,
-    val comentarioGuardado: Boolean = false,
     val error: String? = null
 )

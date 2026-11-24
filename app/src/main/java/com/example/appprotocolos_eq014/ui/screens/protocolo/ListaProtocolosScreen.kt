@@ -31,7 +31,6 @@ import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.util.formatoCl
-import com.example.appprotocolos_eq014.ui.components.BotonSecundario
 import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
 import com.example.appprotocolos_eq014.ui.components.EtiquetaProtocoloListado
@@ -46,9 +45,7 @@ import com.example.appprotocolos_eq014.viewmodel.ProtocolosViewModel
 fun ListaProtocolosScreen(
     viewModel: ProtocolosViewModel,
     onAbrirProtocolo: (String) -> Unit,
-    onNuevoProtocolo: () -> Unit,
-    onNuevoEquipo: () -> Unit = {},
-    onNuevaInstalacion: () -> Unit = {}
+    onNuevoProtocolo: () -> Unit
 ) {
     val state by viewModel.lista.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.cargarLista() }
@@ -74,18 +71,6 @@ fun ListaProtocolosScreen(
                         )
                     }
 
-                    if (Rol.puedeCrearProtocolos(state.rolUsuario)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BotonSecundario(
-                                texto = "Equipo", onClick = onNuevoEquipo,
-                                icono = R.drawable.ic_mas, modifier = Modifier.weight(1f)
-                            )
-                            BotonSecundario(
-                                texto = "Instalación", onClick = onNuevaInstalacion,
-                                icono = R.drawable.ic_mas, modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
                     CampoTexto(
                         valor = state.busqueda,
                         onValorCambia = viewModel::onBusqueda,

@@ -3,14 +3,15 @@ package com.example.appprotocolos_eq014.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
+import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Protocolo
 import com.example.appprotocolos_eq014.model.uistate.FilaComparacion
 import com.example.appprotocolos_eq014.model.uistate.FilaHistorial
 import com.example.appprotocolos_eq014.model.uistate.HistorialUiState
-import com.example.appprotocolos_eq014.model.entidades.Protocolo
-import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
+import com.example.appprotocolos_eq014.repository.CatalogoRepository
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
-import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 import com.example.appprotocolos_eq014.util.Formato
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +23,7 @@ import kotlin.math.abs
 class HistorialViewModel(
     private val sesionPreferencias: SesionPreferencias,
     private val protocoloRepository: ProtocoloRepository,
-    private val catalogoClienteRepository: RegistroCatalogoRepository,
+    private val catalogoRepository: CatalogoRepository,
     private val idEquipo: Long
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
@@ -30,65 +31,37 @@ class HistorialViewModel(
     )
     val uiState: StateFlow<HistorialUiState> = _uiState.asStateFlow()
 
-    private var idProtocoloReciente: String? = null
-
     init {
         cargarHistorial()
     }
 
     private fun cargarHistorial() {
         viewModelScope.launch {
-            if (_uiState.value.esCliente &&
-                !catalogoClienteRepository.equipoEsDeCliente(idEquipo, sesionPreferencias.leerIdUsuario())
-            ) {
-                _uiState.update { it.copy(isLoading = false, error = "No tienes acceso a este equipo") }
-                return@launch
-            }
-            val equipo = protocoloRepository.obtenerEquipo(idEquipo)
-            if (equipo == null) {
-                _uiState.update { it.copy(isLoading = false, error = "No se encontró el equipo") }
-                return@launch
-            }
-            val esCliente = _uiState.value.esCliente
-            val protocolos = protocoloRepository.historialEquipo(idEquipo)
-                .filter { !esCliente || it.estado.visibleParaCliente }
-                .filter { it.estado != EstadoProtocolo.ANULADO }
-            idProtocoloReciente = protocolos.firstOrNull()?.id
-
-            val comparacion = construirComparacion(protocolos)
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    tag = equipo.tag,
-                    descripcion = describir(equipo),
-                    protocolos = protocolos.map { p -> aFila(p, esCliente) },
-                    comparacion = comparacion,
-                    haySignificativa = comparacion.firstOrNull()?.significativa == true,
-                    comentario = if (comparacion.firstOrNull()?.significativa == true) {
-                        protocolos.firstOrNull()?.observaciones.orEmpty()
-                    } else {
-                        ""
-                    }
-                )
-            }
-        }
-    }
-
-    fun onComentarioCambia(valor: String) {
-        _uiState.update { it.copy(comentario = valor, errorComentario = null, comentarioGuardado = false) }
-    }
-
-    fun onGuardarComentario() {
-        val comentario = _uiState.value.comentario.trim()
-        if (comentario.isEmpty()) {
-            _uiState.update { it.copy(errorComentario = "Debe dejar un comentario antes de formalizar") }
-            return
-        }
-        val idProtocolo = idProtocoloReciente ?: return
-        viewModelScope.launch {
-            val guardado = protocoloRepository.guardarObservacion(idProtocolo, comentario)
-            _uiState.update {
-                if (guardado) it.copy(comentarioGuardado = true) else it.copy(errorComentario = "No se pudo guardar el comentario")
+            try {
+                val esCliente = _uiState.value.esCliente
+                val equipo = catalogoRepository
+                    .listarEquipos(if (esCliente) sesionPreferencias.leerIdUsuario() else null)
+                    .firstOrNull { it.id == idEquipo }
+                if (equipo == null) {
+                    _uiState.update { it.copy(isLoading = false, error = "No tienes acceso a este equipo") }
+                    return@launch
+                }
+                val protocolos = protocoloRepository.historialEquipo(idEquipo)
+                    .filter { !esCliente || it.estado.visibleParaCliente }
+                    .filter { it.estado != EstadoProtocolo.ANULADO }
+                val comparacion = construirComparacion(protocolos)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        tag = equipo.tag,
+                        descripcion = describir(equipo),
+                        protocolos = protocolos.map { p -> aFila(p, esCliente) },
+                        comparacion = comparacion,
+                        haySignificativa = comparacion.firstOrNull()?.significativa == true
+                    )
+                }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }

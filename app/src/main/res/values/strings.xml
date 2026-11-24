@@ -83,11 +83,8 @@
     <string name="comparacion_variacion">Variación</string>
     <string name="comparacion_sin_previo">Sin historial previo</string>
     <string name="comparacion_significativa">Variación significativa</string>
-    <string name="comentario_requerido">Debe dejar un comentario antes de formalizar</string>
+    <string name="comentario_requerido">Al formalizar, el ingeniero debe dejar un comentario</string>
     <string name="comentario_detalle">Variación mayor a 25 % respecto a la medición anterior.</string>
-    <string name="comentario_registrado">Comentario registrado</string>
-    <string name="campo_comentario_tecnico">Comentario del técnico</string>
-    <string name="btn_guardar_comentario">Guardar comentario</string>
     <string name="titulo_mis_visitas">Mis visitas</string>
     <plurals name="ordenes_asignadas">
         <item quantity="one">%1$d orden de trabajo asignada</item>

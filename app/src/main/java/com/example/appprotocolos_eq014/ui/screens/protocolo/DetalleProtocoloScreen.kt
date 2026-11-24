@@ -85,24 +85,6 @@ fun DetalleProtocoloScreen(
             state.error?.let { MensajeAvisoProtocolo(it) }
 
             Cabecera(d)
-
-            if (state.puedeEditar) {
-                BotonPrincipal(
-                    texto = if (d.estado == EstadoProtocolo.OBSERVADO) "Corregir protocolo" else "Continuar protocolo",
-                    onClick = { onEditar(d.id) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            if (state.puedeRevisar) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    BotonSecundario("Observar", onClick = { accion = EstadoProtocolo.OBSERVADO }, modifier = Modifier.weight(1f))
-                    BotonPrincipal(
-                        "Formalizar", onClick = { accion = EstadoProtocolo.FORMALIZADO },
-                        habilitado = !state.procesando, modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
             if (d.pruebas.isEmpty()) {
                 TarjetaSeccion(titulo = "Pruebas") { Text("Este protocolo aún no tiene pruebas registradas.") }
             }
@@ -145,6 +127,23 @@ fun DetalleProtocoloScreen(
                     TarjetaProtocoloListado(
                         protocolo = p,
                         onClick = { if (p.id != d.id) onAbrirProtocolo(p.id) }
+                    )
+                }
+            }
+
+            if (state.puedeEditar) {
+                BotonPrincipal(
+                    texto = if (d.estado == EstadoProtocolo.OBSERVADO) "Corregir protocolo" else "Continuar protocolo",
+                    onClick = { onEditar(d.id) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            if (state.puedeRevisar) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    BotonSecundario("Observar", onClick = { accion = EstadoProtocolo.OBSERVADO }, modifier = Modifier.weight(1f))
+                    BotonPrincipal(
+                        "Formalizar", onClick = { accion = EstadoProtocolo.FORMALIZADO },
+                        habilitado = !state.procesando, modifier = Modifier.weight(1f)
                     )
                 }
             }

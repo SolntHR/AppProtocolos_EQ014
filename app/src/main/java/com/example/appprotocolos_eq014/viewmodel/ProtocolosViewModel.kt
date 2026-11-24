@@ -1,16 +1,16 @@
 package com.example.appprotocolos_eq014.viewmodel
 
 import android.content.Context
-import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
-import com.example.appprotocolos_eq014.model.uistate.DetalleProtocoloUiState
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
-import com.example.appprotocolos_eq014.model.uistate.ListaProtocolosUiState
 import com.example.appprotocolos_eq014.model.catalogos.Rol
+import com.example.appprotocolos_eq014.model.uistate.DetalleProtocoloUiState
+import com.example.appprotocolos_eq014.model.uistate.ListaProtocolosUiState
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
-import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
+import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 
 class ProtocolosViewModel(
     private val sesion: SesionPreferencias,
-    private val repository: RegistroProtocoloRepository,
+    private val repository: ProtocoloRepository,
     private val contexto: Context
 ) : ViewModel() {
     private val _lista = MutableStateFlow(ListaProtocolosUiState())
@@ -38,11 +38,11 @@ class ProtocolosViewModel(
                 return@launch
             }
             try {
-                val protocolos = repository.todos()
+                val protocolos = repository.listar()
                 val promedio = repository.promedioDiasFormalizacion()
                 _lista.update { it.copy(cargando = false, protocolos = protocolos, promedioDiasFormalizacion = promedio) }
-            } catch (e: SQLiteException) {
-                _lista.update { it.copy(cargando = false, error = "No se pudo cargar el listado: ${e.message}") }
+            } catch (e: ErrorApi) {
+                _lista.update { it.copy(cargando = false, error = e.message) }
             }
         }
     }
@@ -65,14 +65,10 @@ class ProtocolosViewModel(
             }
             try {
                 val d = repository.detalle(idProtocolo)
-                val historialEquipo = if (d == null) emptyList()
-                                        else repository.historialDeEquipo(d.equipoId)
-                _detalle.update {
-                    it.copy(cargando = false, detalle = d, historialEquipo = historialEquipo,
-                        error = if (d == null) "El protocolo no existe." else null)
-                }
-            } catch (e: SQLiteException) {
-                _detalle.update { it.copy(cargando = false, error = "Error al cargar: ${e.message}") }
+                val historialEquipo = repository.historialEquipo(d.equipoId)
+                _detalle.update { it.copy(cargando = false, detalle = d, historialEquipo = historialEquipo, error = null) }
+            } catch (e: ErrorApi) {
+                _detalle.update { it.copy(cargando = false, error = e.message) }
             }
         }
     }
@@ -87,22 +83,12 @@ class ProtocolosViewModel(
         viewModelScope.launch {
             _detalle.update { it.copy(procesando = true, error = null) }
             try {
-                repository.cambiarEstado(
-                    idProtocolo = d.id,
-                    nuevo = nuevo,
-                    usuarioId = sesion.leerIdUsuario(),
-                    rol = sesion.leerRolUsuario().orEmpty(),
-                    motivo = motivo
-                )
+                repository.cambiarEstado(d.id, nuevo, sesion.leerIdUsuario(), motivo)
                 NotificacionesLocales.notificarEstadoProtocolo(contexto, d.numero, nuevo)
                 _detalle.update { it.copy(procesando = false, mensaje = "Protocolo ${nuevo.etiqueta.lowercase()}") }
                 cargarDetalle(d.id)
-            } catch (e: IllegalArgumentException) {
-                _detalle.update { it.copy(procesando = false, error = e.message) }
-            } catch (e: IllegalStateException) {
-                _detalle.update { it.copy(procesando = false, error = e.message) }
-            } catch (e: SQLiteException) {
-                _detalle.update { it.copy(procesando = false, error = "Error de base de datos: ${e.message}") }
+            } catch (e: ErrorApi) {
+                _detalle.update { it.copy(procesando = false, error = e.campos.values.firstOrNull() ?: e.message) }
             }
         }
     }

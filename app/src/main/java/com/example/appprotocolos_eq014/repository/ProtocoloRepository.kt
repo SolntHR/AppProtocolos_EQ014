@@ -1,100 +1,78 @@
 package com.example.appprotocolos_eq014.repository
 
-import android.content.ContentValues
-import android.database.Cursor
-import com.example.appprotocolos_eq014.data.InduztekDbHelper
-import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.data.remote.CambioEstadoRequest
+import com.example.appprotocolos_eq014.data.remote.InstalacionApi
+import com.example.appprotocolos_eq014.data.remote.InstrumentoApi
+import com.example.appprotocolos_eq014.data.remote.ProtocoloApi
+import com.example.appprotocolos_eq014.data.remote.RetrofitClient
+import com.example.appprotocolos_eq014.data.remote.aProtocolo
+import com.example.appprotocolos_eq014.data.remote.listaApi
+import com.example.appprotocolos_eq014.data.remote.llamarApi
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.entidades.Protocolo
-import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.appprotocolos_eq014.model.reglas.MedicionAnterior
+import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
 
-class ProtocoloRepository(private val dbHelper: InduztekDbHelper) {
+class ProtocoloRepository(
+    private val protocoloApi: ProtocoloApi = RetrofitClient.protocoloApi,
+    private val instalacionApi: InstalacionApi = RetrofitClient.instalacionApi,
+    private val instrumentoApi: InstrumentoApi = RetrofitClient.instrumentoApi
+) {
 
-    suspend fun obtenerEquipo(idEquipo: Long): Equipo? = withContext(Dispatchers.IO) {
-        val cursor = dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT e.id_equipo, e.id_instalacion, e.id_tipo_equipo, e.tag, t.nombre AS tipo,
-                   e.marca, e.modelo, e.numero_serie, i.nombre AS instalacion, e.potencia_kva, e.tensiones
-            FROM EQUIPO e
-            INNER JOIN TIPO_EQUIPO t ON e.id_tipo_equipo = t.id_tipo_equipo
-            INNER JOIN INSTALACION i ON e.id_instalacion = i.id_instalacion
-            WHERE e.id_equipo = ?
-            """,
-            arrayOf(idEquipo.toString())
-        )
-        val equipo = if (cursor.moveToFirst()) {
-            Equipo(
-                id = cursor.getLong(0),
-                instalacionId = cursor.getLong(1),
-                tipoEquipoId = cursor.getLong(2),
-                tag = cursor.getString(3),
-                tipoEquipoNombre = cursor.getString(4),
-                marca = cursor.getString(5),
-                modelo = cursor.getString(6),
-                numeroSerie = cursor.getString(7),
-                instalacionNombre = cursor.getString(8),
-                potenciaKva = cursor.doubleONulo(9),
-                tensiones = cursor.getString(10)
-            )
-        } else {
-            null
+    suspend fun listar(): List<Protocolo> =
+        conReemplazos(listaApi { protocoloApi.listarProtocolos(null, null, null, null) }.map { it.aProtocolo() })
+            .sortedByDescending { it.fechaHoraPrueba }
+
+    suspend fun promedioDiasFormalizacion(): Double? =
+        llamarApi { protocoloApi.indicadores() }.promedioDiasFormalizacion
+
+    suspend fun historialEquipo(idEquipo: Long): List<Protocolo> =
+        conReemplazos(listaApi { protocoloApi.historialEquipo(idEquipo) }.map { it.aProtocolo() })
+
+    suspend fun detalle(idProtocolo: String): Protocolo {
+        val respuesta = llamarApi { protocoloApi.obtenerProtocolo(idProtocolo) }
+        val equipo = llamarApi { instalacionApi.obtenerEquipo(respuesta.equipoId) }
+        val instrumentos = listaApi { instrumentoApi.listar(null) }
+            .associate { it.id to "${it.marca} ${it.modelo} · Serie ${it.numeroSerie}" }
+        val anteriores = listaApi {
+            protocoloApi.medicionesAnteriores(respuesta.equipoId, respuesta.fechaHoraPrueba, respuesta.id)
         }
-        cursor.close()
-        equipo
-    }
-
-    suspend fun historialEquipo(idEquipo: Long): List<Protocolo> = withContext(Dispatchers.IO) {
-        val cursor = dbHelper.readableDatabase.rawQuery(
-            """
-            SELECT p.id_protocolo, p.numero, p.fecha_hora_prueba, p.id_estado, p.observaciones,
-                   (SELECT MAX(pr.id_resultado) FROM PRUEBA pr
-                    WHERE pr.id_protocolo = p.id_protocolo AND pr.realizada = 1) AS resultado,
-                   (SELECT m.valor FROM MEDICION m
-                    INNER JOIN PRUEBA pr ON m.id_prueba = pr.id_prueba
-                    INNER JOIN PARAMETRO pa ON m.id_parametro = pa.id_parametro
-                    WHERE pr.id_protocolo = p.id_protocolo AND pa.codigo = 'LECTURA_1MIN' LIMIT 1) AS lectura_1,
-                   (SELECT m.valor FROM MEDICION m
-                    INNER JOIN PRUEBA pr ON m.id_prueba = pr.id_prueba
-                    INNER JOIN PARAMETRO pa ON m.id_parametro = pa.id_parametro
-                    WHERE pr.id_protocolo = p.id_protocolo AND pa.codigo = 'LECTURA_10MIN' LIMIT 1) AS lectura_10,
-                    p.id_visita
-            FROM PROTOCOLO p
-            WHERE p.id_equipo = ?
-            ORDER BY p.fecha_hora_prueba DESC
-            """,
-            arrayOf(idEquipo.toString())
-        )
-        val protocolos = mutableListOf<Protocolo>()
-        while (cursor.moveToNext()) {
-            protocolos.add(
-                Protocolo(
-                    id = cursor.getString(0),
-                    numero = cursor.getString(1),
-                    fechaHoraPrueba = cursor.getString(2),
-                    estado = EstadoProtocolo.desdeId(cursor.getLong(3)),
-                    observaciones = cursor.getString(4),
-                    resultadoGlobal = ResultadoPrueba.desdeId(cursor.longONulo(5)),
-                    lectura1Min = cursor.doubleONulo(6),
-                    lectura10Min = cursor.doubleONulo(7),
-                    visitaId = cursor.getLong(8),
-                    equipoId = idEquipo
+            .groupBy { "${it.tipoPruebaId}|${it.elemento}" }
+            .mapValues { (_, filas) ->
+                MedicionAnterior(
+                    filas.first().protocoloNumero,
+                    filas.mapNotNull { fila -> fila.valor?.let { fila.parametroCodigo to it } }.toMap()
                 )
+            }
+        val protocolo = respuesta.aProtocolo()
+        return protocolo.copy(
+            reemplazaANumero = respuesta.protocoloReemplazadoId,
+            pruebas = protocolo.pruebas.map { prueba ->
+                val anterior = anteriores["${prueba.tipo.idDb}|${prueba.elemento}"]
+                prueba.copy(
+                    instrumentoNombre = prueba.instrumentoId?.let { instrumentos[it] },
+                    calculo = ReglasProtocolo.resumenCalculo(prueba.tipo, prueba.valores, equipo.maxContactosUohm),
+                    comparaciones = if (anterior == null || !prueba.realizada) emptyList()
+                    else ReglasProtocolo.comparar(prueba.tipo, prueba.valores, anterior)
+                )
+            }
+        )
+    }
+
+    suspend fun cambiarEstado(idProtocolo: String, nuevo: EstadoProtocolo, usuarioId: Long, motivo: String?) {
+        val datos = CambioEstadoRequest(usuarioId, nuevo.name, motivo?.trim()?.ifEmpty { null })
+        llamarApi { protocoloApi.cambiarEstado(idProtocolo, datos) }
+    }
+
+    private fun conReemplazos(protocolos: List<Protocolo>): List<Protocolo> {
+        val numeros = protocolos.associate { it.id to it.numero }
+        val reemplazadoPor = protocolos.filter { it.reemplazaANumero != null }
+            .associate { it.reemplazaANumero to it.numero }
+        return protocolos.map {
+            it.copy(
+                reemplazaANumero = it.reemplazaANumero?.let { id -> numeros[id] ?: id },
+                reemplazadoPorNumero = reemplazadoPor[it.id]
             )
         }
-        cursor.close()
-        protocolos
     }
-
-    suspend fun guardarObservacion(idProtocolo: String, observacion: String): Boolean = withContext(Dispatchers.IO) {
-        val valores = ContentValues().apply { put("observaciones", observacion) }
-        dbHelper.writableDatabase.update(
-            "PROTOCOLO", valores, "id_protocolo = ?", arrayOf(idProtocolo)
-        ) > 0
-    }
-
-    private fun Cursor.doubleONulo(indice: Int): Double? = if (isNull(indice)) null else getDouble(indice)
-
-    private fun Cursor.longONulo(indice: Int): Long? = if (isNull(indice)) null else getLong(indice)
 }

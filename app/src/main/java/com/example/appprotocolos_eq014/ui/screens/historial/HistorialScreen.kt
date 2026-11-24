@@ -1,7 +1,6 @@
 package com.example.appprotocolos_eq014.ui.screens.historial
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -45,8 +44,6 @@ import com.example.appprotocolos_eq014.model.uistate.FilaHistorial
 import com.example.appprotocolos_eq014.model.uistate.HistorialUiState
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
-import com.example.appprotocolos_eq014.ui.components.BotonSecundario
-import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
 import com.example.appprotocolos_eq014.ui.components.EtiquetaResultado
 import com.example.appprotocolos_eq014.ui.components.TituloSeccion
@@ -63,18 +60,14 @@ fun HistorialScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HistorialContent(
         uiState = uiState,
-        onVolver = onVolver,
-        onComentarioCambia = viewModel::onComentarioCambia,
-        onGuardarComentario = viewModel::onGuardarComentario
+        onVolver = onVolver
     )
 }
 
 @Composable
 fun HistorialContent(
     uiState: HistorialUiState,
-    onVolver: () -> Unit,
-    onComentarioCambia: (String) -> Unit,
-    onGuardarComentario: () -> Unit
+    onVolver: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -119,12 +112,7 @@ fun HistorialContent(
                     TituloSeccion(stringResource(R.string.seccion_comparacion))
                     TarjetaComparacion(
                         filas = uiState.comparacion,
-                        mostrarComentario = uiState.haySignificativa && !uiState.esCliente,
-                        comentario = uiState.comentario,
-                        errorComentario = uiState.errorComentario,
-                        comentarioGuardado = uiState.comentarioGuardado,
-                        onComentarioCambia = onComentarioCambia,
-                        onGuardarComentario = onGuardarComentario
+                        mostrarAviso = uiState.haySignificativa && !uiState.esCliente
                     )
                 }
             }
@@ -202,12 +190,7 @@ private fun FilaLineaTiempo(fila: FilaHistorial) {
 @Composable
 private fun TarjetaComparacion(
     filas: List<FilaComparacion>,
-    mostrarComentario: Boolean,
-    comentario: String,
-    errorComentario: String?,
-    comentarioGuardado: Boolean,
-    onComentarioCambia: (String) -> Unit,
-    onGuardarComentario: () -> Unit
+    mostrarAviso: Boolean
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
@@ -270,51 +253,32 @@ private fun TarjetaComparacion(
                 }
             }
 
-            if (mostrarComentario) {
-                AvisoComentario(comentarioGuardado)
-                CampoTexto(
-                    valor = comentario,
-                    onValorCambia = onComentarioCambia,
-                    etiqueta = stringResource(R.string.campo_comentario_tecnico),
-                    icono = R.drawable.ic_lapiz,
-                    error = errorComentario
-                )
-                BotonSecundario(
-                    texto = stringResource(R.string.btn_guardar_comentario),
-                    onClick = onGuardarComentario,
-                    icono = R.drawable.ic_check,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            if (mostrarAviso) AvisoComentario()
         }
     }
 }
 
 @Composable
-private fun AvisoComentario(guardado: Boolean) {
-    val tono = if (guardado) TonoEstado.EXITO else TonoEstado.AVISO
-    val fondo by animateColorAsState(tono.fondo, label = "fondo_aviso")
-    val texto by animateColorAsState(tono.texto, label = "texto_aviso")
+private fun AvisoComentario() {
+    val tono = TonoEstado.AVISO
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(fondo)
+            .background(tono.fondo)
             .padding(12.dp)
     ) {
         Text(
-            text = stringResource(if (guardado) R.string.comentario_registrado else R.string.comentario_requerido),
-            color = texto,
+            text = stringResource(R.string.comentario_requerido),
+            color = tono.texto,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold
         )
-        if (!guardado) {
-            Text(
-                text = stringResource(R.string.comentario_detalle),
-                color = texto,
-                fontSize = 12.sp
-            )
-        }
+        Text(
+            text = stringResource(R.string.comentario_detalle),
+            color = tono.texto,
+            fontSize = 12.sp
+        )
     }
 }
 
@@ -337,9 +301,7 @@ private fun HistorialPreview() {
                 ),
                 haySignificativa = true
             ),
-            onVolver = {},
-            onComentarioCambia = {},
-            onGuardarComentario = {}
+            onVolver = {}
         )
     }
 }

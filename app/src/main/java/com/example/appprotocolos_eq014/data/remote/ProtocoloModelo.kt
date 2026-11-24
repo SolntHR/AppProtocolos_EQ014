@@ -226,3 +226,66 @@ fun ActaResponse.aVisita() = visita.aVisita().copy(
     recepcion = recepcion?.let { RecepcionActa(it.nombre, it.rut, it.cargo, fechaHoraLocal(it.fechaHora).orEmpty()) },
     protocolos = protocolos.map { it.aProtocolo() }.sortedBy { it.tagEquipo }
 )
+
+data class ProtocoloResumenResponse(
+    val id: String,
+    val numero: String,
+    val visitaId: Long,
+    val numeroOt: String,
+    val equipoId: Long,
+    val equipoTag: String?,
+    val tipoEquipoNombre: String?,
+    val instalacionNombre: String?,
+    val clienteNombre: String?,
+    val usuarioRegistraId: Long,
+    val usuarioRegistraNombre: String?,
+    val fechaHoraPrueba: String,
+    val estado: String,
+    val estadoEtiqueta: String,
+    val resultado: String?,
+    val lectura1Min: Double?,
+    val lectura10Min: Double?,
+    val protocoloReemplazadoId: String?
+)
+
+data class IndicadoresResponse(
+    val total: Long,
+    val porEstado: Map<String, Long>,
+    val promedioDiasFormalizacion: Double?
+)
+
+data class CambioEstadoRequest(
+    val usuarioId: Long,
+    val estado: String,
+    val motivo: String?
+)
+
+data class MedicionAnteriorResponse(
+    val tipoPruebaId: Long,
+    val elemento: String,
+    val protocoloNumero: String,
+    val fechaHoraPrueba: String,
+    val parametroCodigo: String,
+    val valor: Double?,
+    val unidad: String
+)
+
+fun ProtocoloResumenResponse.aProtocolo() = Protocolo(
+    id = id,
+    numero = numero,
+    visitaId = visitaId,
+    equipoId = equipoId,
+    usuarioRegistraId = usuarioRegistraId,
+    fechaHoraPrueba = fechaHoraLocal(fechaHoraPrueba).orEmpty(),
+    estado = estadoDesde(estado),
+    numeroOt = numeroOt,
+    tagEquipo = equipoTag.orEmpty(),
+    tipoEquipoNombre = tipoEquipoNombre.orEmpty(),
+    instalacionNombre = instalacionNombre.orEmpty(),
+    clienteNombre = clienteNombre.orEmpty(),
+    tecnicoNombre = usuarioRegistraNombre.orEmpty(),
+    resultadoGlobal = resultadoDesde(resultado),
+    lectura1Min = lectura1Min,
+    lectura10Min = lectura10Min,
+    reemplazaANumero = protocoloReemplazadoId
+)
