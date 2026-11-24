@@ -29,7 +29,8 @@ import com.example.appprotocolos_eq014.ui.theme.AppProtocolos_EQ014Theme
 fun BarraSuperior(
     titulo: String,
     onVolver: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accion: (@Composable () -> Unit)? = null
 ) {
     Box(modifier = modifier.background(MaterialTheme.colorScheme.surface)) {
         Row(
@@ -54,7 +55,7 @@ fun BarraSuperior(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.size(48.dp))
+            if (accion != null) accion() else Spacer(Modifier.size(48.dp))
         }
         HorizontalDivider(
             color = MaterialTheme.colorScheme.surfaceVariant,

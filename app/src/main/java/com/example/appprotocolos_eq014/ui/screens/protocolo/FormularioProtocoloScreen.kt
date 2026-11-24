@@ -6,12 +6,16 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -19,9 +23,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -32,12 +36,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.appprotocolos_eq014.R
@@ -58,15 +64,20 @@ import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
+import com.example.appprotocolos_eq014.ui.components.EtiquetaEstado
 import com.example.appprotocolos_eq014.ui.components.EtiquetaEstadoProtocolo
 import com.example.appprotocolos_eq014.ui.components.EtiquetaResultadoProtocolo
 import com.example.appprotocolos_eq014.ui.components.MensajeAvisoProtocolo
 import com.example.appprotocolos_eq014.ui.components.SelectorDesplegable
 import com.example.appprotocolos_eq014.ui.components.TarjetaSeccion
+import com.example.appprotocolos_eq014.ui.components.TonoEstado
 import com.example.appprotocolos_eq014.ui.styles.EstilosCampo
 import com.example.appprotocolos_eq014.ui.theme.AmarilloAviso
 import com.example.appprotocolos_eq014.ui.theme.AmarilloSuave
+import com.example.appprotocolos_eq014.ui.theme.AzulPrimario
+import com.example.appprotocolos_eq014.ui.theme.AzulSuave
 import com.example.appprotocolos_eq014.ui.theme.RojoError
+import com.example.appprotocolos_eq014.ui.theme.RojoSuave
 import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.util.ValidacionesProtocolo
 import com.example.appprotocolos_eq014.util.formatoCl
@@ -134,7 +145,10 @@ fun FormularioProtocoloScreen(
     ) {
         BarraSuperior(
             titulo = if (state.esEdicion) "Editar ${state.numero.orEmpty()}" else "Nuevo protocolo",
-            onVolver = salir
+            onVolver = salir,
+            accion = if (state.cargando || state.esUltimoPaso) null else ({
+                TextButton(onClick = viewModel::guardarBorrador, enabled = !state.guardando) { Text("Guardar borrador") }
+            })
         )
 
         if (state.cargando) {
@@ -142,7 +156,8 @@ fun FormularioProtocoloScreen(
             return@Column
         }
 
-        IndicadorPasos(state.paso, onAnterior = viewModel::anterior)
+        val faltantes = ValidacionesProtocolo.faltantes(state, registrar = true)
+        IndicadorPasos(state, faltantes, onIrAPaso = viewModel::irAPaso)
 
         Column(
             modifier = Modifier
@@ -157,12 +172,17 @@ fun FormularioProtocoloScreen(
                 MensajeAvisoProtocolo("Tu perfil es de solo consulta. No puedes registrar protocolos.")
             }
             state.error?.let { MensajeAvisoProtocolo(it) }
+            val faltanAqui = faltantes[state.paso].orEmpty()
+            if (state.intentado && faltanAqui.isNotEmpty() && !state.esUltimoPaso) {
+                MensajeAvisoProtocolo("Faltan ${textoDatos(faltanAqui.size)} en este paso. Están marcados en rojo.")
+            }
             state.motivoObservacion?.let {
                 MensajeAvisoProtocolo("Observado: $it. Corrige lo indicado y vuelve a registrar.", esError = false)
             }
 
-            when (state.paso) {
-                ValidacionesProtocolo.PASO_VISITA -> {
+            val seccion = state.seccionDelPaso(state.paso)
+            when {
+                state.paso == ValidacionesProtocolo.PASO_VISITA -> {
                     state.estadoActual?.let { estado ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Estado actual: ", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -172,17 +192,16 @@ fun FormularioProtocoloScreen(
                     SeccionVisita(state, viewModel)
                     SeccionEquipo(state, viewModel, onRegistrarEquipo)
                 }
-                ValidacionesProtocolo.PASO_CONDICIONES -> SeccionAmbiente(state, viewModel)
-                ValidacionesProtocolo.PASO_PRUEBAS -> state.secciones.forEach { seccion ->
-                    TarjetaPrueba(
-                        seccion = seccion,
-                        tipoEquipoId = state.equipoSeleccionado?.tipoEquipoId ?: 0,
-                        instrumentos = state.instrumentos,
-                        puedeResultadoManual = Rol.puedeFormalizar(state.rolUsuario),
-                        viewModel = viewModel
-                    )
-                }
-                else -> {
+                state.paso == ValidacionesProtocolo.PASO_CONDICIONES -> SeccionAmbiente(state, viewModel)
+                seccion != null -> TarjetaPrueba(
+                    seccion = seccion,
+                    tipoEquipoId = state.equipoSeleccionado?.tipoEquipoId ?: 0,
+                    instrumentos = state.instrumentos,
+                    puedeResultadoManual = Rol.puedeFormalizar(state.rolUsuario),
+                    intentado = state.intentado,
+                    viewModel = viewModel
+                )
+                state.paso == state.pasoObservaciones -> {
                     TarjetaSeccion(titulo = "Observaciones") {
                         if (state.visitaSeleccionada?.incluyeMantenimiento == true) {
                             OutlinedTextField(
@@ -207,8 +226,8 @@ fun FormularioProtocoloScreen(
                         )
                     }
                     SeccionFotos(state, viewModel, onTomarFoto = tomarFoto, onElegirFoto = elegirFoto)
-                    ResumenResultado(state)
                 }
+                else -> PasoResumen(state, faltantes, onIrAPaso = viewModel::irAPaso)
             }
         }
 
@@ -232,8 +251,13 @@ fun FormularioProtocoloScreen(
                         modifier = Modifier.weight(1f)
                     )
                 } else {
+                    BotonSecundario(
+                        texto = if (state.paso == 0) "Cancelar" else "Atrás",
+                        onClick = { if (state.paso == 0) salir() else viewModel.anterior() },
+                        modifier = Modifier.weight(1f)
+                    )
                     BotonPrincipal(
-                        texto = "Siguiente",
+                        texto = if (state.paso == state.pasoObservaciones) "Ver resumen" else "Siguiente",
                         onClick = viewModel::siguiente,
                         modifier = Modifier.weight(1f)
                     )
@@ -243,28 +267,138 @@ fun FormularioProtocoloScreen(
     }
 }
 
+private fun textoDatos(cantidad: Int) = if (cantidad == 1) "1 dato" else "$cantidad datos"
+
 @Composable
-private fun IndicadorPasos(paso: Int, onAnterior: () -> Unit) {
-    val pasos = FormularioProtocoloUiState.PASOS
+private fun IndicadorPasos(
+    state: FormularioProtocoloUiState,
+    faltantes: Map<Int, List<String>>,
+    onIrAPaso: (Int) -> Unit
+) {
+    val pasos = state.pasos
+    val faltanAqui = faltantes[state.paso].orEmpty().size
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            pasos.indices.forEach { i ->
+                val actual = i == state.paso
+                val conError = state.intentado && faltantes[i].orEmpty().isNotEmpty()
+                val listo = !conError && !actual && i < state.pasoResumen && faltantes[i].isNullOrEmpty()
+                val (fondo, texto, borde) = when {
+                    actual && conError -> Triple(RojoError, Color.White, RojoError)
+                    actual -> Triple(AzulPrimario, Color.White, AzulPrimario)
+                    conError -> Triple(RojoSuave, RojoError, RojoError)
+                    listo -> Triple(AzulSuave, AzulPrimario, AzulSuave)
+                    else -> Triple(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.outlineVariant)
+                }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(fondo)
+                        .border(1.5.dp, borde, CircleShape)
+                        .clickable { onIrAPaso(i) }
+                ) {
+                    Text(
+                        when {
+                            conError -> "!"
+                            listo -> "✓"
+                            else -> "${i + 1}"
+                        },
+                        color = texto,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (i < pasos.lastIndex) {
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .height(2.dp)
+                            .background(if (i < state.paso) AzulPrimario else MaterialTheme.colorScheme.outlineVariant)
+                    )
+                }
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "Paso ${paso + 1} de ${pasos.size} · ${pasos[paso]}",
-                style = MaterialTheme.typography.titleSmall,
+                "Paso ${state.paso + 1} de ${pasos.size} · ${pasos[state.paso]}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f)
             )
-            if (paso > 0) TextButton(onClick = onAnterior) { Text("Anterior") }
+            if (state.intentado && faltanAqui > 0 && !state.esUltimoPaso) {
+                EtiquetaEstado("Faltan ${textoDatos(faltanAqui)}", TonoEstado.ERROR)
+            }
         }
-        LinearProgressIndicator(
-            progress = { (paso + 1f) / pasos.size },
-            modifier = Modifier.fillMaxWidth()
+    }
+}
+
+@Composable
+private fun PasoResumen(
+    state: FormularioProtocoloUiState,
+    faltantes: Map<Int, List<String>>,
+    onIrAPaso: (Int) -> Unit
+) {
+    val total = faltantes.values.sumOf { it.size }
+    if (state.intentado && total > 0) {
+        val pasosConFaltas = faltantes.size
+        MensajeAvisoProtocolo(
+            "No se puede registrar todavía. Faltan ${textoDatos(total)} en $pasosConFaltas " +
+                    (if (pasosConFaltas == 1) "paso" else "pasos") + ". Toca un paso para ir a completarlo."
         )
+    } else if (state.intentado) {
+        ValidacionesProtocolo.primerError(state, registrar = true)?.let { MensajeAvisoProtocolo(it.second) }
+    }
+    ResumenResultado(state)
+    Text("Estado por paso", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    (0 until state.pasoResumen).forEach { i ->
+        val faltan = faltantes[i].orEmpty()
+        val conError = state.intentado && faltan.isNotEmpty()
+        val seccion = state.seccionDelPaso(i)
+        val (texto, tono) = when {
+            faltan.isNotEmpty() -> (if (state.intentado) "Faltan ${faltan.size}" else "Pendiente") to
+                    (if (state.intentado) TonoEstado.ERROR else TonoEstado.NEUTRO)
+            seccion?.noRealizada == true -> "No realizada" to TonoEstado.NEUTRO
+            i == state.pasoObservaciones -> "${state.totalFotos} ${if (state.totalFotos == 1) "foto" else "fotos"}" to TonoEstado.NEUTRO
+            else -> "Completo" to TonoEstado.EXITO
+        }
+        Surface(
+            onClick = { onIrAPaso(i) },
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(if (conError) 2.dp else 1.dp, if (conError) RojoError else MaterialTheme.colorScheme.outlineVariant),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(if (conError) RojoSuave else AzulSuave)
+                ) {
+                    Text("${i + 1}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (conError) RojoError else AzulPrimario)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(state.pasos[i], style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    if (conError) {
+                        Text(faltan.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = RojoError)
+                    }
+                }
+                EtiquetaEstado(texto, tono)
+            }
+        }
     }
 }
 
@@ -366,18 +500,42 @@ private fun SeccionEquipo(
     onRegistrarEquipo: (Long) -> Unit
 ) {
     if (state.visitaSeleccionada == null) return
-    TarjetaSeccion(titulo = "Equipo") {
-        SelectorDesplegable(
-            etiqueta = "Equipo (TAG)",
-            opciones = state.equipos,
-            seleccion = state.equipoSeleccionado,
-            textoDe = { "${it.tag} · ${it.tipoEquipoNombre}" },
-            onSeleccion = viewModel::seleccionarEquipo,
-            habilitado = !state.esEdicion,
-            error = state.errorEquipo,
-            textoVacio = "Selecciona el equipo"
+    TarjetaSeccion(titulo = "Equipos disponibles") {
+        Text(
+            "Equipos de ${state.visitaSeleccionada.instalacionNombre} que aún no tienen protocolo en esta visita.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        if (state.equipos.isEmpty()) {
+        val opciones = if (state.esEdicion) listOfNotNull(state.equipoSeleccionado) else state.equipos
+        opciones.forEach { equipo ->
+            val elegido = equipo.id == state.equipoSeleccionado?.id
+            val conError = state.errorEquipo != null
+            Surface(
+                onClick = { viewModel.seleccionarEquipo(equipo) },
+                enabled = !state.esEdicion,
+                shape = RoundedCornerShape(16.dp),
+                color = if (elegido) AzulSuave else if (conError) RojoSuave else MaterialTheme.colorScheme.surface,
+                border = BorderStroke(
+                    if (elegido || conError) 2.dp else 1.dp,
+                    if (elegido) AzulPrimario else if (conError) RojoError else MaterialTheme.colorScheme.outlineVariant
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(14.dp)
+                ) {
+                    RadioButton(selected = elegido, onClick = null)
+                    Column(Modifier.weight(1f)) {
+                        Text(equipo.tag, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(equipo.descripcion, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+        state.errorEquipo?.let { Text(it, color = RojoError, style = MaterialTheme.typography.bodySmall) }
+        if (state.equipos.isEmpty() && !state.esEdicion) {
             Text(
                 "No hay equipos disponibles: todos ya tienen protocolo en esta visita o la instalación no tiene equipos.",
                 style = MaterialTheme.typography.bodySmall,
@@ -442,6 +600,7 @@ private fun TarjetaPrueba(
     tipoEquipoId: Long,
     instrumentos: List<Instrumento>,
     puedeResultadoManual: Boolean,
+    intentado: Boolean,
     viewModel: FormularioProtocoloViewModel
 ) {
     val tipo = seccion.tipo
@@ -532,6 +691,7 @@ private fun TarjetaPrueba(
                     fila = fila,
                     unidadAislacion = seccion.unidadAislacion,
                     puedeResultadoManual = puedeResultadoManual,
+                    intentado = intentado,
                     onValor = { codigo, valor -> viewModel.onValorFila(tipo, indice, codigo, valor) },
                     onOpera = { viewModel.onOperaFila(tipo, indice, it) },
                     onResultadoManual = { viewModel.onResultadoManual(tipo, indice, it) }
@@ -556,6 +716,7 @@ private fun FilaPrueba(
     fila: FilaPruebaUi,
     unidadAislacion: String,
     puedeResultadoManual: Boolean,
+    intentado: Boolean,
     onValor: (String, String) -> Unit,
     onOpera: (Boolean) -> Unit,
     onResultadoManual: (ResultadoPrueba?) -> Unit
@@ -590,7 +751,8 @@ private fun FilaPrueba(
                         etiqueta = campo.etiqueta,
                         unidad = if (unidad == "-") "" else unidad,
 
-                        marcarError = campo.codigo in ev.camposConError,
+                        marcarError = campo.codigo in ev.camposConError ||
+                                (intentado && fila.valores[campo.codigo].isNullOrBlank()),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -686,7 +848,7 @@ private fun ResumenResultado(state: FormularioProtocoloUiState) {
         }
         val pruebasCompletas = state.secciones.sumOf { it.filasCompletas.size }
         Text(
-            "$pruebasCompletas mediciones completas. Se guardan en el dispositivo aunque no haya señal.",
+            "$pruebasCompletas mediciones completas.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )

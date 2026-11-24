@@ -52,6 +52,7 @@ data class FormularioProtocoloUiState(
     val cargando: Boolean = true,
     val guardando: Boolean = false,
     val paso: Int = 0,
+    val intentado: Boolean = false,
 
     val idProtocolo: String? = null,
     val numero: String? = null,
@@ -99,10 +100,19 @@ data class FormularioProtocoloUiState(
 
     val totalFotos: Int get() = fotosGuardadas.size + fotosNuevas.size
 
-    val esUltimoPaso: Boolean get() = paso == PASOS.lastIndex
+    val pasos: List<String>
+        get() = listOf("Visita y equipo", "Condiciones") + secciones.map { it.tipo.nombre } +
+                listOf("Observaciones y evidencia", "Resumen")
+
+    val pasoObservaciones: Int get() = pasos.lastIndex - 1
+
+    val pasoResumen: Int get() = pasos.lastIndex
+
+    val esUltimoPaso: Boolean get() = paso == pasoResumen
+
+    fun seccionDelPaso(indice: Int): SeccionPruebaUi? = secciones.getOrNull(indice - 2)
 
     companion object {
-        val PASOS = listOf("Visita y equipo", "Condiciones", "Pruebas", "Cierre y fotos")
         const val MAXIMO_FOTOS = 10
     }
 }

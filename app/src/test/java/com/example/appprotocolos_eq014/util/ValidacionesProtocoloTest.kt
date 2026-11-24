@@ -35,6 +35,6 @@ class ValidacionesProtocoloTest {
         val error = ValidacionesProtocolo.primerError(estado, registrar = true)
 
         assertEquals(ValidacionesProtocolo.PASO_CONDICIONES, error?.first)
-        assertEquals("La temperatura y la humedad son obligatorias para registrar en terreno (HU-02).", error?.second)
+        assertEquals("Falta completar: Temperatura.", error?.second)
     }
 }

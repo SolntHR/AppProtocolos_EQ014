@@ -319,7 +319,7 @@ class FormularioProtocoloViewModel(
             seccion.noRealizada -> null
             instrumento != null && !instrumento.vigenteEn(estado.fechaHoraPrueba) ->
                 "Calibración vencida el ${Fechas.fecha(instrumento.fechaVencimiento)}. No se puede usar."
-            !hayCompletas -> null
+            !hayCompletas && !estado.intentado -> null
             instrumento == null -> "Selecciona el instrumento utilizado"
             else -> null
         }
@@ -328,15 +328,17 @@ class FormularioProtocoloViewModel(
 
     fun siguiente() {
         val s = _uiState.value
-        val error = ValidacionesProtocolo.errorDelPaso(s, s.paso, registrar = false)
-        _uiState.update {
-            val marcado = marcarErrores(it, registrar = false)
-            if (error != null) marcado.copy(error = error)
-            else marcado.copy(paso = (it.paso + 1).coerceAtMost(FormularioProtocoloUiState.PASOS.lastIndex), error = null)
+        if (s.paso == ValidacionesProtocolo.PASO_VISITA && (s.visitaSeleccionada == null || s.equipoSeleccionado == null)) {
+            _uiState.update { marcarErrores(it, registrar = false) }
+            return
         }
+        irAPaso(s.paso + 1)
     }
 
-    fun anterior() = _uiState.update { it.copy(paso = (it.paso - 1).coerceAtLeast(0), error = null) }
+    fun anterior() = irAPaso(_uiState.value.paso - 1)
+
+    fun irAPaso(paso: Int) =
+        _uiState.update { it.copy(paso = paso.coerceIn(0, it.pasoResumen), error = null) }
 
     fun onFotoElegida(uri: Uri?) {
         if (uri == null) return
@@ -381,10 +383,10 @@ class FormularioProtocoloViewModel(
     fun registrarEnTerreno() = guardar(registrar = true)
 
     private fun marcarErrores(s: FormularioProtocoloUiState, registrar: Boolean): FormularioProtocoloUiState {
-        val obligatorio = "Obligatorio para registrar"
+        val obligatorio = ValidacionesProtocolo.COMPLETA_ESTE_DATO
         return s.copy(
             errorVisita = if (s.visitaSeleccionada == null) "Selecciona la visita" else null,
-            errorEquipo = if (s.visitaSeleccionada != null && s.equipoSeleccionado == null) "Selecciona el equipo" else null,
+            errorEquipo = if (s.visitaSeleccionada != null && s.equipoSeleccionado == null) "Elige un equipo para continuar" else null,
             errorTemperatura = if (s.temperatura.isBlank()) obligatorio.takeIf { registrar } else s.errorTemperatura,
             errorHumedad = if (s.humedad.isBlank()) obligatorio.takeIf { registrar } else s.errorHumedad,
             errorMantenimiento = if (registrar && s.visitaSeleccionada?.incluyeMantenimiento == true &&
@@ -400,8 +402,11 @@ class FormularioProtocoloViewModel(
         val equipo = s.equipoSeleccionado
         if (problema != null || visita == null || equipo == null) {
             _uiState.update {
-                marcarErrores(it, registrar).copy(paso = problema?.first ?: 0, error = problema?.second)
+                val marcado = marcarErrores(it, registrar)
+                if (registrar) marcado.copy(intentado = true, error = null)
+                else marcado.copy(paso = problema?.first ?: 0, error = problema?.second)
             }
+            reevaluarTodo()
             return
         }
 
