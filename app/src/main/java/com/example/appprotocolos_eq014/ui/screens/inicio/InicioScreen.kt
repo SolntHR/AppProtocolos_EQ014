@@ -4,14 +4,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.appprotocolos_eq014.viewmodel.InicioViewModel
-import com.example.appprotocolos_eq014.ui.components.RecargarAlVolver
-import com.example.appprotocolos_eq014.ui.components.EstadoListado
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.model.catalogos.Rol
+import com.example.appprotocolos_eq014.ui.components.EstadoListado
+import com.example.appprotocolos_eq014.ui.components.RecargarAlVolver
+import com.example.appprotocolos_eq014.viewmodel.InicioViewModel
 
 @Composable
 fun InicioScreen(
@@ -22,7 +22,7 @@ fun InicioScreen(
     onAbrirPerfil: () -> Unit,
     onVerVisitas: () -> Unit,
     onVerEquipos: () -> Unit,
-    onVerProtocolos: () -> Unit,
+    onAsignarVisita: () -> Unit,
     onGestionUsuarios: () -> Unit,
     onInstrumentos: () -> Unit
 ) {
@@ -37,8 +37,9 @@ fun InicioScreen(
     } else if (uiState.error != null) {
         EstadoListado("No se pudo cargar el inicio", uiState.error.orEmpty(), "Reintentar", viewModel::cargarDatosInicio)
     } else {
-        when (uiState.rolUsuario) {
-            "CLIENTE" -> {
+        val rol = uiState.rolUsuario
+        when (rol) {
+            Rol.CLIENTE -> {
                 InicioCliente(
                     uiState = uiState,
                     onAbrirEquipo = onAbrirEquipo,
@@ -48,17 +49,16 @@ fun InicioScreen(
                     onVerVisitas = onVerVisitas
                 )
             }
-            "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
+            Rol.TECNICO, Rol.INGENIERO, Rol.JEFE_TECNICO -> {
                 InicioPersonalTerreno(
                     uiState = uiState,
                     onAbrirVisita = onAbrirVisita,
                     onNuevoProtocolo = onNuevoProtocolo,
                     onAbrirPerfil = onAbrirPerfil,
                     onVerVisitas = onVerVisitas,
-                    onVerEquipos = onVerEquipos,
-                    onVerProtocolos = onVerProtocolos,
-                    onGestionUsuarios = if (uiState.rolUsuario == Rol.JEFE_TECNICO) onGestionUsuarios else null,
-                    onInstrumentos = if (uiState.rolUsuario == Rol.JEFE_TECNICO) onInstrumentos else null
+                    onAsignarVisita = if (Rol.puedeAsignarVisitas(rol)) onAsignarVisita else null,
+                    onGestionUsuarios = if (rol == Rol.JEFE_TECNICO) onGestionUsuarios else null,
+                    onInstrumentos = if (rol == Rol.JEFE_TECNICO) onInstrumentos else null
                 )
             }
             else -> {

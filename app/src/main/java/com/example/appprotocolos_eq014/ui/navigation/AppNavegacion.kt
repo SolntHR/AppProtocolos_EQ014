@@ -221,7 +221,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     onAbrirPerfil = { navController.navegarPestana(Rutas.PERFIL) },
                     onVerVisitas = { navController.navegarPestana(Rutas.VISITAS) },
                     onVerEquipos = { navController.navegarPestana(Rutas.EQUIPOS) },
-                    onVerProtocolos = { navController.navigate(Rutas.PROTOCOLOS) },
+                    onAsignarVisita = { navController.navigate(Rutas.formularioVisita()) },
                     onGestionUsuarios = { navController.navigate(Rutas.USUARIOS) },
                     onInstrumentos = { navController.navigate(Rutas.INSTRUMENTOS) }
                 )
@@ -231,7 +231,6 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 VisitasScreen(
                     viewModel = vm,
                     onAbrirVisita = { navController.navigate(Rutas.visita(it)) },
-                    onVerProtocolos = { navController.navigate(Rutas.PROTOCOLOS) },
                     onAsignarVisita = { navController.navigate(Rutas.formularioVisita()) }
                 )
             }

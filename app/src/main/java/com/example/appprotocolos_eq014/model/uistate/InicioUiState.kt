@@ -19,5 +19,6 @@ data class InicioUiState(
     val equiposCliente: List<EquipoCliente> = emptyList(),
     val visitas: List<Visita> = emptyList(),
     val actasCliente: List<Visita> = emptyList(),
+    val usuariosPendientes: Int = 0,
     val error: String? = null
 )

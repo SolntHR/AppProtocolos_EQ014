@@ -39,7 +39,9 @@ class GestionUsuariosViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        personal = usuarios.filter { u -> u.rolCodigo != "CLIENTE" }.map { u -> filas.getValue(u) },
+                        personal = usuarios.filter { u -> u.rolCodigo != "CLIENTE" }
+                            .sortedByDescending { u -> u.rolCodigo == "SIN_ASIGNAR" }
+                            .map { u -> filas.getValue(u) },
                         clientes = usuarios.filter { u -> u.rolCodigo == "CLIENTE" }.map { u -> filas.getValue(u) },
                         activos = usuarios.count { u -> u.activo },
                         inactivos = usuarios.count { u -> !u.activo }

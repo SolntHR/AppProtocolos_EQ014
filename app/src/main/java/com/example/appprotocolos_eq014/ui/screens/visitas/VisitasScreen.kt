@@ -28,7 +28,6 @@ import com.example.appprotocolos_eq014.viewmodel.VisitasViewModel
 fun VisitasScreen(
 viewModel: VisitasViewModel,
 onAbrirVisita: (Long) -> Unit,
-onVerProtocolos: () -> Unit,
 onAsignarVisita: () -> Unit
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
@@ -37,9 +36,7 @@ onAsignarVisita: () -> Unit
         CabeceraPagina(
             if (estado.rol == Rol.CLIENTE) "Actas de visitas" else "Visitas",
             if (estado.rol == Rol.CLIENTE) "Consulta los trabajos entregados a tu empresa" else "Órdenes de trabajo y avance de tus visitas"
-        ) {
-            if (Rol.puedeCrearProtocolos(estado.rol)) TextButton(onClick = onVerProtocolos) { Text("Protocolos") }
-        }
+        )
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (Rol.puedeAsignarVisitas(estado.rol)) item {
                 BotonSecundario("Asignar visita", onAsignarVisita, Modifier.fillMaxWidth(), R.drawable.ic_mas)

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.data.remote.ErrorApi
+import com.example.appprotocolos_eq014.model.catalogos.Rol
 import com.example.appprotocolos_eq014.model.uistate.EquipoCliente
 import com.example.appprotocolos_eq014.model.uistate.InicioUiState
 import com.example.appprotocolos_eq014.repository.CatalogoRepository
@@ -51,7 +52,10 @@ class InicioViewModel(
                   "CLIENTE" -> cargarEquiposCliente(idUsuario)
                   "TECNICO", "INGENIERO", "JEFE_TECNICO" -> {
                       val visitas = visitaRepository.visitasDeUsuario(idUsuario)
-                      _uiState.update { it.copy(visitas = visitas, isLoading = false) }
+                      val pendientes = if (rol == Rol.JEFE_TECNICO) {
+                          usuarioRepository.listarUsuarios().count { it.rolCodigo == "SIN_ASIGNAR" }
+                      } else 0
+                      _uiState.update { it.copy(visitas = visitas, usuariosPendientes = pendientes, isLoading = false) }
                   }
                   else -> _uiState.update { it.copy(isLoading = false) }
               }

@@ -34,7 +34,8 @@ fun destinosInferiores(rolUsuario: String?): List<DestinoInferior> = when (rolUs
     )
     else -> listOf(
         DestinoInferior(Rutas.INICIO, R.string.nav_inicio, R.drawable.ic_inicio),
-        DestinoInferior(Rutas.VISITAS, R.string.nav_visitas, R.drawable.ic_protocolo),
+        DestinoInferior(Rutas.VISITAS, R.string.nav_visitas, R.drawable.ic_ubicacion),
+        DestinoInferior(Rutas.PROTOCOLOS, R.string.nav_protocolos, R.drawable.ic_protocolo),
         DestinoInferior(Rutas.EQUIPOS, R.string.nav_equipos, R.drawable.ic_equipos),
         DestinoInferior(Rutas.PERFIL, R.string.nav_perfil, R.drawable.ic_perfil)
     )

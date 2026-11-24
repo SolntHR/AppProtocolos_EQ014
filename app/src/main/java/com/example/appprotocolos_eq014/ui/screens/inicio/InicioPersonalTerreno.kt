@@ -6,12 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.appprotocolos_eq014.R
@@ -35,15 +33,6 @@ fun EncabezadoInicio(uiState: InicioUiState, onAbrirPerfil: () -> Unit) {
                     modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
                         .clickable(role = Role.Button, onClickLabel = "Mi perfil", onClick = onAbrirPerfil))
             }
-            Row(
-                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)).padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(painterResource(R.drawable.ic_check), contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                Text("Modo local · datos guardados en este dispositivo", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary)
-            }
         }
     }
 }
@@ -55,51 +44,53 @@ fun InicioPersonalTerreno(
     onNuevoProtocolo: () -> Unit,
     onAbrirPerfil: () -> Unit,
     onVerVisitas: () -> Unit,
-    onVerEquipos: () -> Unit,
-    onVerProtocolos: () -> Unit,
+    onAsignarVisita: (() -> Unit)? = null,
     onGestionUsuarios: (() -> Unit)? = null,
     onInstrumentos: (() -> Unit)? = null
 ) {
     val abiertas = uiState.visitas.filter { !it.cerrada }
     val deHoy = abiertas.filter { it.fecha.take(10) == Fechas.hoy() }
     val resumen = (deHoy.ifEmpty { abiertas }).take(3)
-    Box(Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item { EncabezadoInicio(uiState, onAbrirPerfil) }
-            item {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (deHoy.isNotEmpty()) "Visitas de hoy" else "Visitas pendientes",
-                        style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-                    TextButton(onClick = onVerVisitas) { Text("Ver todas") }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item { EncabezadoInicio(uiState, onAbrirPerfil) }
+        item {
+            Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Accesos rápidos", style = MaterialTheme.typography.titleLarge)
+                TarjetaAcceso("Nuevo protocolo", "Registra las mediciones de un equipo", R.drawable.ic_mas, onNuevoProtocolo)
+                if (onAsignarVisita != null) {
+                    TarjetaAcceso("Asignar visita", "Programa una OT y asigna a los técnicos", R.drawable.ic_ubicacion, onAsignarVisita)
                 }
-            }
-            if (resumen.isEmpty()) item {
-                Box(Modifier.padding(horizontal = 20.dp)) {
-                    EstadoListado("Sin visitas pendientes", "Puedes revisar las visitas anteriores desde Visitas.")
+                if (onGestionUsuarios != null) {
+                    val pendientes = uiState.usuariosPendientes
+                    TarjetaAcceso(
+                        "Usuarios pendientes ($pendientes)",
+                        if (pendientes == 0) "No hay cuentas esperando un perfil" else "Asigna el perfil a las cuentas nuevas",
+                        R.drawable.ic_alerta, onGestionUsuarios
+                    )
+                    TarjetaAcceso("Gestión de usuarios", "Administra el personal y los clientes", R.drawable.ic_persona, onGestionUsuarios)
                 }
-            }
-            items(resumen, key = { it.id }) { visita ->
-                TarjetaVisita(visita, { onAbrirVisita(visita.id) }, Modifier.padding(horizontal = 20.dp))
-            }
-            item {
-                Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Accesos rápidos", style = MaterialTheme.typography.titleLarge)
-                    TarjetaAcceso("Equipos", "Consulta equipos, instalaciones y datos de placa", R.drawable.ic_equipos, onVerEquipos)
-                    TarjetaAcceso("Protocolos", "Revisa estados, resultados y formalización", R.drawable.ic_protocolo, onVerProtocolos)
-                    if (onGestionUsuarios != null) TarjetaAcceso("Gestión de usuarios", "Administra el personal y los clientes", R.drawable.ic_persona, onGestionUsuarios)
-                    if (onInstrumentos != null) TarjetaAcceso("Instrumentos", "Consulta y actualiza las calibraciones", R.drawable.ic_rayo, onInstrumentos)
+                if (onInstrumentos != null) {
+                    TarjetaAcceso("Instrumentos", "Consulta y actualiza las calibraciones", R.drawable.ic_rayo, onInstrumentos)
                 }
             }
         }
-        ExtendedFloatingActionButton(
-            onClick = onNuevoProtocolo, containerColor = MaterialTheme.colorScheme.secondary,
-            contentColor = MaterialTheme.colorScheme.onSecondary,
-            icon = { Icon(painterResource(R.drawable.ic_mas), contentDescription = null) },
-            text = { Text("Nuevo protocolo") }, shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
-        )
+        item {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(if (deHoy.isNotEmpty()) "Visitas de hoy" else "Visitas pendientes",
+                    style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                TextButton(onClick = onVerVisitas) { Text("Ver todas") }
+            }
+        }
+        if (resumen.isEmpty()) item {
+            Box(Modifier.padding(horizontal = 20.dp)) {
+                EstadoListado("Sin visitas pendientes", "Puedes revisar las visitas anteriores desde Visitas.")
+            }
+        }
+        items(resumen, key = { it.id }) { visita ->
+            TarjetaVisita(visita, { onAbrirVisita(visita.id) }, Modifier.padding(horizontal = 20.dp))
+        }
     }
 }
