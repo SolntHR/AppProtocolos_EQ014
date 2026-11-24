@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
 import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.entidades.Usuario
+import com.example.appprotocolos_eq014.model.uistate.FiltroRolUsuario
 import com.example.appprotocolos_eq014.model.uistate.GestionUsuariosUiState
 import com.example.appprotocolos_eq014.model.uistate.PestanaUsuarios
 import com.example.appprotocolos_eq014.model.uistate.UsuarioFila
@@ -42,7 +43,8 @@ class GestionUsuariosViewModel(
                         personal = usuarios.filter { u -> u.rolCodigo != "CLIENTE" }
                             .sortedByDescending { u -> u.rolCodigo == "SIN_ASIGNAR" }
                             .map { u -> filas.getValue(u) },
-                        clientes = usuarios.filter { u -> u.rolCodigo == "CLIENTE" }.map { u -> filas.getValue(u) },
+                        clientes = usuarios.filter { u -> u.rolCodigo == "CLIENTE" }
+                            .map { u -> filas.getValue(u) },
                         activos = usuarios.count { u -> u.activo },
                         inactivos = usuarios.count { u -> !u.activo }
                     )
@@ -55,6 +57,14 @@ class GestionUsuariosViewModel(
 
     fun onPestanaCambia(pestana: PestanaUsuarios) {
         _uiState.update { it.copy(pestana = pestana) }
+    }
+
+    fun onBusquedaCambia(texto: String) {
+        _uiState.update { it.copy(busqueda = texto) }
+    }
+
+    fun onFiltroRolCambia(filtro: FiltroRolUsuario) {
+        _uiState.update { it.copy(filtroRol = filtro) }
     }
 
     fun onCambiarActivo(fila: UsuarioFila) {
@@ -89,13 +99,18 @@ class GestionUsuariosViewModel(
             id = usuario.id.toLong(),
             nombre = if (esCliente) usuario.contactoNombre ?: usuario.nombre else usuario.nombre,
             detalle = when {
-                esCliente -> listOfNotNull(usuario.nombre, usuario.contactoCargo).joinToString(" · ")
+                esCliente -> listOfNotNull(
+                    usuario.nombre,
+                    usuario.contactoCargo
+                ).joinToString(" · ")
+
                 usuario.rolCodigo == "SIN_ASIGNAR" -> "Pendiente: asignar perfil"
                 else -> usuario.rolNombre
             },
             activo = usuario.activo,
             esUsuarioActual = usuario.id.toLong() == idUsuarioActual,
-            foto = fotoPerfilRepository.cargar(fotoPerfilRepository.rutaDe(usuario.id.toLong()))
+            foto = fotoPerfilRepository.cargar(fotoPerfilRepository.rutaDe(usuario.id.toLong())),
+            rolCodigo = usuario.rolCodigo
         )
     }
 }

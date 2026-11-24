@@ -2,8 +2,10 @@ package com.example.appprotocolos_eq014.ui.screens.usuarios
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +19,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -48,11 +52,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appprotocolos_eq014.R
+import com.example.appprotocolos_eq014.model.uistate.FiltroRolUsuario
 import com.example.appprotocolos_eq014.model.uistate.GestionUsuariosUiState
 import com.example.appprotocolos_eq014.model.uistate.PestanaUsuarios
 import com.example.appprotocolos_eq014.model.uistate.UsuarioFila
 import com.example.appprotocolos_eq014.ui.components.AvatarIniciales
+import com.example.appprotocolos_eq014.ui.components.CampoTexto
 import com.example.appprotocolos_eq014.ui.theme.AppProtocolos_EQ014Theme
+import com.example.appprotocolos_eq014.ui.theme.NaranjaAcento
+import com.example.appprotocolos_eq014.ui.theme.NaranjaSuave
 import com.example.appprotocolos_eq014.viewmodel.GestionUsuariosViewModel
 
 private val TextoFab = Color(0xFF4C2900)
@@ -86,6 +94,8 @@ fun GestionUsuariosScreen(
         GestionUsuariosContent(
             uiState = uiState,
             onPestanaCambia = viewModel::onPestanaCambia,
+            onBusquedaCambia = viewModel::onBusquedaCambia,
+            onFiltroRolCambia = viewModel::onFiltroRolCambia,
             onCambiarActivo = viewModel::onCambiarActivo,
             onAbrirUsuario = onAbrirUsuario
         )
@@ -115,6 +125,8 @@ fun GestionUsuariosScreen(
 fun GestionUsuariosContent(
     uiState: GestionUsuariosUiState,
     onPestanaCambia: (PestanaUsuarios) -> Unit,
+    onBusquedaCambia: (String) -> Unit,
+    onFiltroRolCambia: (FiltroRolUsuario) -> Unit,
     onCambiarActivo: (UsuarioFila) -> Unit,
     onAbrirUsuario: (Long) -> Unit
 ) {
@@ -146,6 +158,32 @@ fun GestionUsuariosContent(
             Spacer(Modifier.height(4.dp))
         }
 
+        item {
+            CampoTexto(
+                valor = uiState.busqueda,
+                onValorCambia = onBusquedaCambia,
+                etiqueta = if (uiState.pestana == PestanaUsuarios.PERSONAL) "Buscar por nombre" else "Buscar por contacto o empresa",
+                icono = R.drawable.ic_buscar
+            )
+        }
+
+        if (uiState.pestana == PestanaUsuarios.PERSONAL) {
+            item {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FiltroRolUsuario.entries.forEach { filtro ->
+                        FilterChip(
+                            selected = uiState.filtroRol == filtro,
+                            onClick = { onFiltroRolCambia(filtro) },
+                            label = { Text("${filtro.etiqueta} (${uiState.cantidadCon(filtro)})") }
+                        )
+                    }
+                }
+            }
+        }
+
         if (uiState.isLoading) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -155,7 +193,11 @@ fun GestionUsuariosContent(
         } else if (uiState.usuariosVisibles.isEmpty()) {
             item {
                 Text(
-                    text = stringResource(R.string.usuarios_sin_registros),
+                    text = if (uiState.busqueda.isNotBlank() || uiState.filtroRol != FiltroRolUsuario.TODOS) {
+                        "No hay usuarios que coincidan con la búsqueda o el filtro."
+                    } else {
+                        stringResource(R.string.usuarios_sin_registros)
+                    },
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 24.dp)
                 )
@@ -234,8 +276,9 @@ private fun FilaUsuario(
 
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp,
+        color = if (fila.pendiente) NaranjaSuave else MaterialTheme.colorScheme.surface,
+        border = if (fila.pendiente) BorderStroke(1.5.dp, NaranjaAcento) else null,
+        shadowElevation = if (fila.pendiente) 0.dp else 2.dp,
         modifier = modifier
             .fillMaxWidth()
             .alpha(opacidad)
@@ -257,7 +300,7 @@ private fun FilaUsuario(
                 AvatarIniciales(
                     nombre = fila.nombre,
                     tamano = 44.dp,
-                    colorFondo = MaterialTheme.colorScheme.primary,
+                    colorFondo = if (fila.pendiente) NaranjaAcento else MaterialTheme.colorScheme.primary,
                     colorTexto = MaterialTheme.colorScheme.onPrimary,
                     foto = foto
                 )
@@ -275,7 +318,8 @@ private fun FilaUsuario(
                     Text(
                         text = fila.detalle,
                         fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (fila.pendiente) FontWeight.Bold else FontWeight.Normal,
+                        color = if (fila.pendiente) NaranjaAcento else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -320,12 +364,15 @@ private fun GestionUsuariosPreview() {
                 personal = listOf(
                     UsuarioFila(7, "Ricardo Espinoza Lagos", "Jefe técnico", activo = true, esUsuarioActual = true),
                     UsuarioFila(1, "Matías Godoy Herrera", "Técnico de terreno", activo = true, esUsuarioActual = false),
-                    UsuarioFila(3, "Carlos Rondón Pérez", "Técnico de terreno", activo = false, esUsuarioActual = false)
+                    UsuarioFila(3, "Carlos Rondón Pérez", "Técnico de terreno", activo = false, esUsuarioActual = false),
+                    UsuarioFila(12, "Juan Pérez Soto", "Pendiente: asignar perfil", activo = true, esUsuarioActual = false, rolCodigo = "SIN_ASIGNAR")
                 ),
                 activos = 10,
                 inactivos = 1
             ),
             onPestanaCambia = {},
+            onBusquedaCambia = {},
+            onFiltroRolCambia = {},
             onCambiarActivo = {},
             onAbrirUsuario = {}
         )
