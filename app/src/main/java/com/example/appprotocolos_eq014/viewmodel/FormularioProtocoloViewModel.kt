@@ -1,10 +1,12 @@
 package com.example.appprotocolos_eq014.viewmodel
 
 import android.content.Context
-import android.database.sqlite.SQLiteException
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appprotocolos_eq014.data.SesionPreferencias
+import com.example.appprotocolos_eq014.data.remote.ErrorApi
 import com.example.appprotocolos_eq014.model.entidades.Equipo
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.notificaciones.NotificacionesLocales
@@ -22,7 +24,9 @@ import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.entidades.Prueba
 import com.example.appprotocolos_eq014.model.entidades.Protocolo
-import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
+import com.example.appprotocolos_eq014.repository.ProtocoloRepository
+import com.example.appprotocolos_eq014.util.Imagenes
+import com.example.appprotocolos_eq014.util.ValidacionesProtocolo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +36,7 @@ import kotlin.math.roundToLong
 
 class FormularioProtocoloViewModel(
     private val sesion: SesionPreferencias,
-    private val repository: RegistroProtocoloRepository,
+    private val repository: ProtocoloRepository,
     private val contexto: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FormularioProtocoloUiState())
@@ -56,7 +60,7 @@ class FormularioProtocoloViewModel(
             try {
                 val nombre = repository.nombreUsuario(idUsuario)
                 val instrumentos = repository.instrumentos()
-                val visitas = repository.visitasAbiertas(idUsuario, rol)
+                val visitas = repository.visitasAbiertas(idUsuario)
                 _uiState.update {
                     it.copy(tecnicoNombre = nombre, instrumentos = instrumentos, visitas = visitas)
                 }
@@ -68,25 +72,20 @@ class FormularioProtocoloViewModel(
                     val visita = visitas.firstOrNull { it.id == idVisita }
                     if (visita != null) cargarEquiposVisita(visita, idEquipoInicial)
                 }
-            } catch (e: SQLiteException) {
-                _uiState.update { it.copy(cargando = false, error = "No se pudo cargar el formulario: ${e.message}") }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(cargando = false, error = e.message) }
             }
         }
     }
 
     private suspend fun cargarEdicion(idProtocolo: String, idUsuario: Long) {
         val p = repository.paraEditar(idProtocolo)
-        if (p == null) {
-            _uiState.update { it.copy(cargando = false, error = "El protocolo no existe.") }
-            return
-        }
         if (p.usuarioRegistraId != idUsuario) {
             _uiState.update { it.copy(cargando = false, error = "Solo quien creó el protocolo puede modificarlo (RN-17).") }
             return
         }
         val visita = repository.visita(p.visitaId)
-        val equipos = if (visita == null) emptyList()
-        else repository.equiposDisponibles(visita.id, visita.instalacionId, idProtocolo)
+        val equipos = repository.equiposDisponibles(visita.id, visita.instalacionId, idProtocolo)
         val equipo = equipos.firstOrNull { it.id == p.equipoId }
         val anteriores = repository.medicionesAnteriores(p.equipoId, idProtocolo, p.fechaHoraPrueba)
 
@@ -127,7 +126,7 @@ class FormularioProtocoloViewModel(
                 numero = p.numero,
                 estadoActual = p.estado,
                 fechaHoraPrueba = p.fechaHoraPrueba,
-                visitas = if (visita != null && it.visitas.none { v -> v.id == visita.id }) it.visitas + visita else it.visitas,
+                visitas = if (it.visitas.none { v -> v.id == visita.id }) it.visitas + visita else it.visitas,
                 visitaSeleccionada = visita,
                 equipos = equipos,
                 equipoSeleccionado = equipo,
@@ -137,7 +136,8 @@ class FormularioProtocoloViewModel(
                 observaciones = p.observaciones.orEmpty(),
                 motivoObservacion = p.motivoObservacion,
                 anteriores = anteriores,
-                secciones = secciones
+                secciones = secciones,
+                fotosGuardadas = p.evidencias
             )
         }
         reevaluarTodo()
@@ -150,31 +150,47 @@ class FormularioProtocoloViewModel(
     private fun cargarEquiposVisita(visita: Visita, idEquipoInicial: Long? = null) {
         if (_uiState.value.esEdicion) return
         _uiState.update {
-            it.copy(visitaSeleccionada = visita, equipoSeleccionado = null, equipos = emptyList(), secciones = emptyList(), error = null)
+            it.copy(
+                visitaSeleccionada = visita, equipoSeleccionado = null, equipos = emptyList(), secciones = emptyList(),
+                errorVisita = null, error = null
+            )
         }
-        viewModelScope.launch {
-            val equipos = repository.equiposDisponibles(visita.id, visita.instalacionId, null)
-            _uiState.update { it.copy(equipos = equipos) }
-            equipos.firstOrNull { it.id == idEquipoInicial }?.let { seleccionarEquipo(it) }
-        }
+        cargarEquipos(visita, idEquipoInicial)
     }
 
     fun onEquipoCreado(idEquipo: Long) {
         val visita = _uiState.value.visitaSeleccionada ?: return
+        cargarEquipos(visita, idEquipo)
+    }
+
+    private fun cargarEquipos(visita: Visita, idEquipoASeleccionar: Long?) {
         viewModelScope.launch {
-            val equipos = repository.equiposDisponibles(visita.id, visita.instalacionId, null)
-            _uiState.update { it.copy(equipos = equipos) }
-            equipos.firstOrNull { it.id == idEquipo }?.let { seleccionarEquipo(it) }
+            try {
+                val equipos = repository.equiposDisponibles(visita.id, visita.instalacionId, null)
+                _uiState.update { it.copy(equipos = equipos) }
+                equipos.firstOrNull { it.id == idEquipoASeleccionar }?.let { seleccionarEquipo(it) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 
     fun seleccionarEquipo(equipo: Equipo) {
         if (_uiState.value.esEdicion) return
-        _uiState.update { it.copy(equipoSeleccionado = equipo, secciones = seccionesVacias(equipo), anteriores = emptyMap(), error = null) }
+        _uiState.update {
+            it.copy(
+                equipoSeleccionado = equipo, secciones = seccionesVacias(equipo), anteriores = emptyMap(),
+                errorEquipo = null, error = null
+            )
+        }
         viewModelScope.launch {
-            val anteriores = repository.medicionesAnteriores(equipo.id, null, Fechas.ahora())
-            _uiState.update { it.copy(anteriores = anteriores) }
-            reevaluarTodo()
+            try {
+                val anteriores = repository.medicionesAnteriores(equipo.id, null, Fechas.ahora())
+                _uiState.update { it.copy(anteriores = anteriores) }
+                reevaluarTodo()
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 
@@ -258,7 +274,8 @@ class FormularioProtocoloViewModel(
     fun onMotivoNoRealizada(tipo: TipoPrueba, motivo: String) =
         actualizarSeccion(tipo) { it.copy(motivoNoRealizada = motivo) }
 
-    fun onDescripcionMantenimiento(texto: String) = _uiState.update { it.copy(descripcionMantenimiento = texto) }
+    fun onDescripcionMantenimiento(texto: String) =
+        _uiState.update { it.copy(descripcionMantenimiento = texto, errorMantenimiento = null) }
     fun onObservaciones(texto: String) = _uiState.update { it.copy(observaciones = texto) }
 
     private fun actualizarFila(tipo: TipoPrueba, indice: Int, cambio: (FilaPruebaUi) -> FilaPruebaUi) =
@@ -309,37 +326,82 @@ class FormularioProtocoloViewModel(
         return seccion.copy(filas = filas, errorInstrumento = errorInstrumento)
     }
 
+    fun siguiente() {
+        val s = _uiState.value
+        val error = ValidacionesProtocolo.errorDelPaso(s, s.paso, registrar = false)
+        _uiState.update {
+            val marcado = marcarErrores(it, registrar = false)
+            if (error != null) marcado.copy(error = error)
+            else marcado.copy(paso = (it.paso + 1).coerceAtMost(FormularioProtocoloUiState.PASOS.lastIndex), error = null)
+        }
+    }
+
+    fun anterior() = _uiState.update { it.copy(paso = (it.paso - 1).coerceAtLeast(0), error = null) }
+
+    fun onFotoElegida(uri: Uri?) {
+        if (uri == null) return
+        viewModelScope.launch {
+            val foto = Imagenes.jpegDesdeGaleria(contexto, uri)
+            if (foto == null) _uiState.update { it.copy(errorFotos = "No se pudo leer la imagen.") } else agregarFoto(foto)
+        }
+    }
+
+    fun onFotoCapturada(foto: Bitmap?) {
+        if (foto != null) agregarFoto(Imagenes.aJpeg(foto))
+    }
+
+    fun onPermisoCamaraDenegado() =
+        _uiState.update { it.copy(errorFotos = "Sin permiso de cámara. Puedes elegir la foto desde la galería.") }
+
+    private fun agregarFoto(foto: ByteArray) {
+        _uiState.update {
+            if (it.totalFotos >= FormularioProtocoloUiState.MAXIMO_FOTOS) {
+                it.copy(errorFotos = "Máximo ${FormularioProtocoloUiState.MAXIMO_FOTOS} fotos por protocolo.")
+            } else {
+                it.copy(fotosNuevas = it.fotosNuevas + foto, errorFotos = null)
+            }
+        }
+    }
+
+    fun onQuitarFotoNueva(indice: Int) =
+        _uiState.update { it.copy(fotosNuevas = it.fotosNuevas.filterIndexed { i, _ -> i != indice }, errorFotos = null) }
+
+    fun onEliminarFotoGuardada(idEvidencia: Long) {
+        viewModelScope.launch {
+            try {
+                repository.eliminarEvidencia(idEvidencia, sesion.leerIdUsuario())
+                _uiState.update { it.copy(fotosGuardadas = it.fotosGuardadas.filter { f -> f.id != idEvidencia }, errorFotos = null) }
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(errorFotos = e.message) }
+            }
+        }
+    }
+
     fun guardarBorrador() = guardar(registrar = false)
     fun registrarEnTerreno() = guardar(registrar = true)
 
+    private fun marcarErrores(s: FormularioProtocoloUiState, registrar: Boolean): FormularioProtocoloUiState {
+        val obligatorio = "Obligatorio para registrar"
+        return s.copy(
+            errorVisita = if (s.visitaSeleccionada == null) "Selecciona la visita" else null,
+            errorEquipo = if (s.visitaSeleccionada != null && s.equipoSeleccionado == null) "Selecciona el equipo" else null,
+            errorTemperatura = if (s.temperatura.isBlank()) obligatorio.takeIf { registrar } else s.errorTemperatura,
+            errorHumedad = if (s.humedad.isBlank()) obligatorio.takeIf { registrar } else s.errorHumedad,
+            errorMantenimiento = if (registrar && s.visitaSeleccionada?.incluyeMantenimiento == true &&
+                s.descripcionMantenimiento.isBlank()) "Describe el mantenimiento realizado" else null
+        )
+    }
+
     private fun guardar(registrar: Boolean) {
         val s = _uiState.value
+        if (s.guardando) return
+        val problema = ValidacionesProtocolo.primerError(s, registrar)
         val visita = s.visitaSeleccionada
         val equipo = s.equipoSeleccionado
-        val temperatura = ReglasProtocolo.numero(s.temperatura)
-        val humedad = ReglasProtocolo.numero(s.humedad)
-
-        val error = when {
-            visita == null -> "Selecciona la visita (OT)."
-            equipo == null -> "Selecciona el equipo."
-            s.errorTemperatura != null || s.errorHumedad != null -> "Revisa la temperatura y la humedad."
-            registrar && (temperatura == null || humedad == null) ->
-                "La temperatura ambiente y la humedad son obligatorias para registrar en terreno (HU-02)."
-            s.secciones.any { it.filasConProblema } ->
-                "Hay mediciones incompletas o fuera de rango. Revisa las filas marcadas en rojo."
-            s.secciones.any { it.errorInstrumento != null } -> "Revisa el instrumento de cada prueba."
-            s.secciones.any { it.noRealizada && it.motivoNoRealizada.isBlank() } ->
-                "Indica el motivo de cada prueba no realizada."
-            registrar && s.secciones.any { !it.todasLasFilasCompletas } ->
-                "Cada prueba debe quedar completa o marcada como No realizada con su motivo."
-            registrar && s.secciones.none { it.filasCompletas.isNotEmpty() } ->
-                "Para registrar en terreno se requiere al menos una prueba completa (RN-04)."
-            registrar && visita.incluyeMantenimiento && s.descripcionMantenimiento.isBlank() ->
-                "Describe el mantenimiento realizado."
-            else -> null
-        }
-        if (error != null || visita == null || equipo == null) {
-            _uiState.update { it.copy(error = error) }
+        if (problema != null || visita == null || equipo == null) {
+            _uiState.update {
+                marcarErrores(it, registrar).copy(paso = problema?.first ?: 0, error = problema?.second)
+            }
             return
         }
 
@@ -371,41 +433,49 @@ class FormularioProtocoloViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(guardando = true, error = null) }
-            try {
-                val id = repository.guardar(
+            val idUsuario = sesion.leerIdUsuario()
+            val guardado = try {
+                repository.guardar(
                     datos = Protocolo(
                         id = s.idProtocolo.orEmpty(),
                         visitaId = visita.id,
                         equipoId = equipo.id,
-                        temperatura = temperatura,
-                        humedad = humedad,
+                        temperatura = ReglasProtocolo.numero(s.temperatura),
+                        humedad = ReglasProtocolo.numero(s.humedad),
                         descripcionMantenimiento = s.descripcionMantenimiento,
                         observaciones = s.observaciones,
                         pruebas = pruebas
                     ),
-                    usuarioId = sesion.leerIdUsuario(),
-                    rol = sesion.leerRolUsuario().orEmpty(),
-                    registrarEnTerreno = registrar
+                    usuarioId = idUsuario,
+                    registrar = registrar
                 )
+            } catch (e: ErrorApi) {
+                _uiState.update { it.copy(guardando = false, error = e.campos.values.firstOrNull() ?: e.message) }
+                return@launch
+            }
 
-                NotificacionesLocales.notificarEstadoProtocolo(
-                    contexto,
-                    repository.numeroDe(id),
-                    if (registrar) EstadoProtocolo.REGISTRADO_TERRENO else EstadoProtocolo.BORRADOR
-                )
-                _uiState.update {
-                    it.copy(
-                        guardando = false,
-                        protocoloGuardadoId = id,
-                        mensajeGuardado = if (registrar) "Protocolo registrado en terreno" else "Borrador guardado en el dispositivo"
-                    )
+            var fotosFallidas = 0
+            s.fotosNuevas.forEach { foto ->
+                try {
+                    repository.subirEvidencia(guardado.id, idUsuario, foto)
+                } catch (_: ErrorApi) {
+                    fotosFallidas++
                 }
-            } catch (e: IllegalArgumentException) {
-                _uiState.update { it.copy(guardando = false, error = e.message) }
-            } catch (e: IllegalStateException) {
-                _uiState.update { it.copy(guardando = false, error = e.message) }
-            } catch (e: SQLiteException) {
-                _uiState.update { it.copy(guardando = false, error = "Error de base de datos: ${e.message}") }
+            }
+
+            NotificacionesLocales.notificarEstadoProtocolo(
+                contexto,
+                guardado.numero,
+                if (registrar) EstadoProtocolo.REGISTRADO_TERRENO else EstadoProtocolo.BORRADOR
+            )
+            val mensaje = if (registrar) "Protocolo registrado en terreno" else "Borrador guardado"
+            _uiState.update {
+                it.copy(
+                    guardando = false,
+                    fotosNuevas = emptyList(),
+                    protocoloGuardadoId = guardado.id,
+                    mensajeGuardado = if (fotosFallidas == 0) mensaje else "$mensaje, pero $fotosFallidas foto(s) no se subieron"
+                )
             }
         }
     }

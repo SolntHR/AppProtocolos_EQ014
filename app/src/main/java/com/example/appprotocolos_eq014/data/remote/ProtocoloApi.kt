@@ -1,12 +1,15 @@
 package com.example.appprotocolos_eq014.data.remote
 
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -49,6 +52,23 @@ interface ProtocoloApi {
 
     @GET("protocolos/{id}")
     suspend fun obtenerProtocolo(@Path("id") id: String): ProtocoloDetalleResponse
+
+    @POST("protocolos")
+    suspend fun crearProtocolo(@Body datos: ProtocoloRequest): ProtocoloDetalleResponse
+
+    @PUT("protocolos/{id}")
+    suspend fun actualizarProtocolo(@Path("id") id: String, @Body datos: ProtocoloRequest): ProtocoloDetalleResponse
+
+    @Multipart
+    @POST("protocolos/{id}/evidencias")
+    suspend fun subirEvidencia(
+        @Path("id") id: String,
+        @Query("usuarioId") usuarioId: Long,
+        @Part archivo: MultipartBody.Part
+    ): EvidenciaResponse
+
+    @DELETE("evidencias/{id}")
+    suspend fun eliminarEvidencia(@Path("id") id: Long, @Query("usuarioId") usuarioId: Long): Response<Unit>
 
     @PATCH("protocolos/{id}/estado")
     suspend fun cambiarEstado(@Path("id") id: String, @Body datos: CambioEstadoRequest): ProtocoloDetalleResponse

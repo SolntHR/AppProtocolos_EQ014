@@ -15,7 +15,6 @@ import com.example.appprotocolos_eq014.repository.InstrumentoRepository
 import com.example.appprotocolos_eq014.repository.ProtocoloRepository
 import com.example.appprotocolos_eq014.repository.UsuarioRepository
 import com.example.appprotocolos_eq014.repository.VisitaRepository
-import com.example.appprotocolos_eq014.repository.RegistroProtocoloRepository
 import com.example.appprotocolos_eq014.repository.RegistroCatalogoRepository
 
 const val ARG_ID_USUARIO = "idUsuario"
@@ -56,7 +55,7 @@ object AppViewModelFactory {
             val contexto = contexto()
             FormularioProtocoloViewModel(
                 sesion = SesionPreferencias(contexto),
-                repository = RegistroProtocoloRepository(obtenerDbHelper(contexto)),
+                repository = ProtocoloRepository(),
                 contexto = contexto.applicationContext
             )
         }

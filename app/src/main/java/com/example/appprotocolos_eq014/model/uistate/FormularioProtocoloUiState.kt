@@ -3,6 +3,7 @@ package com.example.appprotocolos_eq014.model.uistate
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
 import com.example.appprotocolos_eq014.model.entidades.Equipo
+import com.example.appprotocolos_eq014.model.entidades.Evidencia
 import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.entidades.Visita
 import com.example.appprotocolos_eq014.model.reglas.EstadoFila
@@ -30,6 +31,9 @@ data class SeccionPruebaUi(
     val noRealizada: Boolean = false,
     val motivoNoRealizada: String = ""
 ) {
+    val faltaMotivo: Boolean
+        get() = noRealizada && motivoNoRealizada.isBlank()
+
     val filasCompletas: List<FilaPruebaUi>
         get() = if (noRealizada) emptyList() else filas.filter { it.evaluacion.estado == EstadoFila.COMPLETA }
 
@@ -47,6 +51,7 @@ data class SeccionPruebaUi(
 data class FormularioProtocoloUiState(
     val cargando: Boolean = true,
     val guardando: Boolean = false,
+    val paso: Int = 0,
 
     val idProtocolo: String? = null,
     val numero: String? = null,
@@ -60,6 +65,8 @@ data class FormularioProtocoloUiState(
     val visitaSeleccionada: Visita? = null,
     val equipos: List<Equipo> = emptyList(),
     val equipoSeleccionado: Equipo? = null,
+    val errorVisita: String? = null,
+    val errorEquipo: String? = null,
 
     val temperatura: String = "",
     val humedad: String = "",
@@ -72,6 +79,11 @@ data class FormularioProtocoloUiState(
 
     val descripcionMantenimiento: String = "",
     val observaciones: String = "",
+    val errorMantenimiento: String? = null,
+
+    val fotosGuardadas: List<Evidencia> = emptyList(),
+    val fotosNuevas: List<ByteArray> = emptyList(),
+    val errorFotos: String? = null,
 
     val error: String? = null,
     val protocoloGuardadoId: String? = null,
@@ -84,4 +96,13 @@ data class FormularioProtocoloUiState(
         get() = secciones.any { s -> s.filas.any { f -> f.evaluacion.comparaciones.any { it.significativa } } }
 
     val esEdicion: Boolean get() = idProtocolo != null
+
+    val totalFotos: Int get() = fotosGuardadas.size + fotosNuevas.size
+
+    val esUltimoPaso: Boolean get() = paso == PASOS.lastIndex
+
+    companion object {
+        val PASOS = listOf("Visita y equipo", "Condiciones", "Pruebas", "Cierre y fotos")
+        const val MAXIMO_FOTOS = 10
+    }
 }

@@ -1,9 +1,16 @@
 package com.example.appprotocolos_eq014.ui.screens.protocolo
 
+import android.Manifest
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,38 +19,42 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.example.appprotocolos_eq014.R
+import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.catalogos.Rol
+import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.reglas.CampoMedicion
 import com.example.appprotocolos_eq014.model.reglas.Comparacion
 import com.example.appprotocolos_eq014.model.reglas.EstadoFila
-import com.example.appprotocolos_eq014.util.Fechas
-import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
-import com.example.appprotocolos_eq014.model.uistate.FormularioProtocoloUiState
-import com.example.appprotocolos_eq014.model.entidades.Instrumento
 import com.example.appprotocolos_eq014.model.reglas.Parametros
 import com.example.appprotocolos_eq014.model.reglas.ReglasProtocolo
-import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
-import com.example.appprotocolos_eq014.model.catalogos.Rol
-import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
 import com.example.appprotocolos_eq014.model.reglas.TipoPrueba
-import com.example.appprotocolos_eq014.util.formatoCl
+import com.example.appprotocolos_eq014.model.uistate.FilaPruebaUi
+import com.example.appprotocolos_eq014.model.uistate.FormularioProtocoloUiState
+import com.example.appprotocolos_eq014.model.uistate.SeccionPruebaUi
+import com.example.appprotocolos_eq014.permisos.Permisos
+import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 import com.example.appprotocolos_eq014.ui.components.BarraSuperior
 import com.example.appprotocolos_eq014.ui.components.BotonPrincipal
 import com.example.appprotocolos_eq014.ui.components.BotonSecundario
@@ -56,8 +67,10 @@ import com.example.appprotocolos_eq014.ui.styles.EstilosCampo
 import com.example.appprotocolos_eq014.ui.theme.AmarilloAviso
 import com.example.appprotocolos_eq014.ui.theme.AmarilloSuave
 import com.example.appprotocolos_eq014.ui.theme.RojoError
+import com.example.appprotocolos_eq014.util.Fechas
+import com.example.appprotocolos_eq014.util.ValidacionesProtocolo
+import com.example.appprotocolos_eq014.util.formatoCl
 import com.example.appprotocolos_eq014.viewmodel.FormularioProtocoloViewModel
-import com.example.appprotocolos_eq014.permisos.SolicitarPermisoNotificaciones
 
 @Composable
 fun FormularioProtocoloScreen(
@@ -91,11 +104,28 @@ fun FormularioProtocoloScreen(
         onGuardado(id)
     }
 
+    val lanzadorGaleria = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        viewModel.onFotoElegida(uri)
+    }
+    val lanzadorCamara = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { foto ->
+        viewModel.onFotoCapturada(foto)
+    }
+    val lanzadorPermisoCamara = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
+        if (concedido) lanzadorCamara.launch(null) else viewModel.onPermisoCamaraDenegado()
+    }
+    val tomarFoto = {
+        if (Permisos.tiene(context, Manifest.permission.CAMERA)) lanzadorCamara.launch(null)
+        else lanzadorPermisoCamara.launch(Manifest.permission.CAMERA)
+    }
+    val elegirFoto = {
+        lanzadorGaleria.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+
     val salir = {
         viewModel.descartar()
         onVolver()
     }
-    BackHandler(onBack = salir)
+    BackHandler { if (state.paso > 0) viewModel.anterior() else salir() }
 
     Column(
         modifier = Modifier
@@ -111,6 +141,8 @@ fun FormularioProtocoloScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             return@Column
         }
+
+        IndicadorPasos(state.paso, onAnterior = viewModel::anterior)
 
         Column(
             modifier = Modifier
@@ -128,20 +160,20 @@ fun FormularioProtocoloScreen(
             state.motivoObservacion?.let {
                 MensajeAvisoProtocolo("Observado: $it. Corrige lo indicado y vuelve a registrar.", esError = false)
             }
-            state.estadoActual?.let { estado ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Estado actual: ", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    EtiquetaEstadoProtocolo(estado)
+
+            when (state.paso) {
+                ValidacionesProtocolo.PASO_VISITA -> {
+                    state.estadoActual?.let { estado ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Estado actual: ", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            EtiquetaEstadoProtocolo(estado)
+                        }
+                    }
+                    SeccionVisita(state, viewModel)
+                    SeccionEquipo(state, viewModel, onRegistrarEquipo)
                 }
-            }
-
-            SeccionVisita(state, viewModel)
-            SeccionEquipo(state, viewModel, onRegistrarEquipo)
-
-            if (state.equipoSeleccionado != null) {
-                SeccionAmbiente(state, viewModel)
-
-                state.secciones.forEach { seccion ->
+                ValidacionesProtocolo.PASO_CONDICIONES -> SeccionAmbiente(state, viewModel)
+                ValidacionesProtocolo.PASO_PRUEBAS -> state.secciones.forEach { seccion ->
                     TarjetaPrueba(
                         seccion = seccion,
                         tipoEquipoId = state.equipoSeleccionado?.tipoEquipoId ?: 0,
@@ -150,30 +182,33 @@ fun FormularioProtocoloScreen(
                         viewModel = viewModel
                     )
                 }
-
-                TarjetaSeccion(titulo = "Observaciones") {
-                    if (state.visitaSeleccionada?.incluyeMantenimiento == true) {
+                else -> {
+                    TarjetaSeccion(titulo = "Observaciones") {
+                        if (state.visitaSeleccionada?.incluyeMantenimiento == true) {
+                            OutlinedTextField(
+                                value = state.descripcionMantenimiento,
+                                onValueChange = viewModel::onDescripcionMantenimiento,
+                                label = { Text("Descripción del mantenimiento *") },
+                                isError = state.errorMantenimiento != null,
+                                supportingText = if (state.errorMantenimiento != null) ({ Text(state.errorMantenimiento.orEmpty()) }) else null,
+                                minLines = 2,
+                                shape = EstilosCampo.forma,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                         OutlinedTextField(
-                            value = state.descripcionMantenimiento,
-                            onValueChange = viewModel::onDescripcionMantenimiento,
-                            label = { Text("Descripción del mantenimiento *") },
+                            value = state.observaciones,
+                            onValueChange = viewModel::onObservaciones,
+                            label = { Text("Observaciones del equipo (opcional)") },
+                            placeholder = { Text("Ej.: fuga de aceite leve en válvula inferior") },
                             minLines = 2,
                             shape = EstilosCampo.forma,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    OutlinedTextField(
-                        value = state.observaciones,
-                        onValueChange = viewModel::onObservaciones,
-                        label = { Text("Observaciones del equipo (opcional)") },
-                        placeholder = { Text("Ej.: fuga de aceite leve en válvula inferior") },
-                        minLines = 2,
-                        shape = EstilosCampo.forma,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    SeccionFotos(state, viewModel, onTomarFoto = tomarFoto, onElegirFoto = elegirFoto)
+                    ResumenResultado(state)
                 }
-
-                ResumenResultado(state)
             }
         }
 
@@ -184,25 +219,119 @@ fun FormularioProtocoloScreen(
                     .padding(horizontal = 16.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                BotonSecundario(
-                    texto = "Guardar borrador",
-                    onClick = { if (!state.guardando) viewModel.guardarBorrador() },
-                    modifier = Modifier.weight(1f)
-                )
-                BotonPrincipal(
-                    texto = if (state.guardando) "Guardando..." else "Registrar",
-                    onClick = viewModel::registrarEnTerreno,
-                    habilitado = !state.guardando,
-                    modifier = Modifier.weight(1f)
-                )
+                if (state.esUltimoPaso) {
+                    BotonSecundario(
+                        texto = "Guardar borrador",
+                        onClick = viewModel::guardarBorrador,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonPrincipal(
+                        texto = if (state.guardando) "Guardando..." else "Registrar",
+                        onClick = viewModel::registrarEnTerreno,
+                        habilitado = !state.guardando,
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    BotonPrincipal(
+                        texto = "Siguiente",
+                        onClick = viewModel::siguiente,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
+private fun IndicadorPasos(paso: Int, onAnterior: () -> Unit) {
+    val pasos = FormularioProtocoloUiState.PASOS
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Paso ${paso + 1} de ${pasos.size} · ${pasos[paso]}",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.weight(1f)
+            )
+            if (paso > 0) TextButton(onClick = onAnterior) { Text("Anterior") }
+        }
+        LinearProgressIndicator(
+            progress = { (paso + 1f) / pasos.size },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun SeccionFotos(
+    state: FormularioProtocoloUiState,
+    viewModel: FormularioProtocoloViewModel,
+    onTomarFoto: () -> Unit,
+    onElegirFoto: () -> Unit
+) {
+    TarjetaSeccion(titulo = "Fotos de evidencia (${state.totalFotos}/${FormularioProtocoloUiState.MAXIMO_FOTOS})") {
+        if (state.totalFotos > 0) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(state.fotosGuardadas, key = { "g${it.id}" }) { foto ->
+                    MiniaturaFoto(foto.url) { viewModel.onEliminarFotoGuardada(foto.id) }
+                }
+                itemsIndexed(state.fotosNuevas) { indice, foto ->
+                    MiniaturaFoto(foto) { viewModel.onQuitarFotoNueva(indice) }
+                }
+            }
+        }
+        state.errorFotos?.let { Text(it, color = RojoError, style = MaterialTheme.typography.bodySmall) }
+        if (state.totalFotos < FormularioProtocoloUiState.MAXIMO_FOTOS) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                BotonSecundario("Cámara", onTomarFoto, Modifier.weight(1f), R.drawable.ic_camara)
+                BotonSecundario("Galería", onElegirFoto, Modifier.weight(1f), R.drawable.ic_galeria)
+            }
+        }
+        if (state.fotosNuevas.isNotEmpty()) {
+            Text(
+                "Las fotos nuevas se suben al guardar el protocolo.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun MiniaturaFoto(modelo: Any, onQuitar: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(96.dp)
+            .clip(RoundedCornerShape(12.dp))
+    ) {
+        AsyncImage(
+            model = modelo,
+            contentDescription = "Foto de evidencia",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Surface(
+            onClick = onQuitar,
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(4.dp)
+        ) {
+            Text("✕", modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), color = RojoError)
+        }
+    }
+}
+
+@Composable
 private fun SeccionVisita(state: FormularioProtocoloUiState, viewModel: FormularioProtocoloViewModel) {
-    TarjetaSeccion(titulo = "1. Datos de la visita") {
+    TarjetaSeccion(titulo = "Datos de la visita") {
         SelectorDesplegable(
             etiqueta = "Orden de trabajo (OT)",
             opciones = state.visitas,
@@ -210,6 +339,7 @@ private fun SeccionVisita(state: FormularioProtocoloUiState, viewModel: Formular
             textoDe = { "${it.numeroOt} · ${it.clienteNombre} · ${Fechas.fecha(it.fecha)}" },
             onSeleccion = viewModel::seleccionarVisita,
             habilitado = !state.esEdicion,
+            error = state.errorVisita,
             textoVacio = "Selecciona la visita"
         )
         if (state.visitas.isEmpty() && !state.esEdicion) {
@@ -236,7 +366,7 @@ private fun SeccionEquipo(
     onRegistrarEquipo: (Long) -> Unit
 ) {
     if (state.visitaSeleccionada == null) return
-    TarjetaSeccion(titulo = "2. Equipo") {
+    TarjetaSeccion(titulo = "Equipo") {
         SelectorDesplegable(
             etiqueta = "Equipo (TAG)",
             opciones = state.equipos,
@@ -244,11 +374,12 @@ private fun SeccionEquipo(
             textoDe = { "${it.tag} · ${it.tipoEquipoNombre}" },
             onSeleccion = viewModel::seleccionarEquipo,
             habilitado = !state.esEdicion,
+            error = state.errorEquipo,
             textoVacio = "Selecciona el equipo"
         )
         if (state.equipos.isEmpty()) {
             Text(
-                "Todos los equipos de esta instalación ya tienen protocolo en la visita.",
+                "No hay equipos disponibles: todos ya tienen protocolo en esta visita o la instalación no tiene equipos.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -277,7 +408,7 @@ private fun SeccionEquipo(
 
 @Composable
 private fun SeccionAmbiente(state: FormularioProtocoloUiState, viewModel: FormularioProtocoloViewModel) {
-    TarjetaSeccion(titulo = "3. Condiciones ambientales") {
+    TarjetaSeccion(titulo = "Condiciones ambientales") {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             CampoNumero(
                 valor = state.temperatura,
@@ -341,71 +472,71 @@ private fun TarjetaPrueba(
         }
 
         if (!seccion.noRealizada) {
-        val sugeridos = instrumentos.filter {
-            it.nombreTipo.lowercase().contains(ReglasProtocolo.palabraInstrumento(tipo))
-        }.ifEmpty { instrumentos }
-        val hoy = Fechas.hoy()
-        SelectorDesplegable(
-            etiqueta = "Instrumento",
-            opciones = sugeridos,
-            seleccion = instrumentos.firstOrNull { it.id == seccion.instrumentoId },
-            textoDe = {
-                "${it.descripcion} · vence ${Fechas.fecha(it.fechaVencimiento)}" +
-                        if (!it.vigenteEn(hoy)) " (VENCIDO)" else ""
-            },
-            onSeleccion = { viewModel.onInstrumento(tipo, it.id) },
-            error = seccion.errorInstrumento
-        )
+            val sugeridos = instrumentos.filter {
+                it.nombreTipo.lowercase().contains(ReglasProtocolo.palabraInstrumento(tipo))
+            }.ifEmpty { instrumentos }
+            val hoy = Fechas.hoy()
+            SelectorDesplegable(
+                etiqueta = "Instrumento",
+                opciones = sugeridos,
+                seleccion = instrumentos.firstOrNull { it.id == seccion.instrumentoId },
+                textoDe = {
+                    "${it.descripcion} · vence ${Fechas.fecha(it.fechaVencimiento)}" +
+                            if (!it.vigenteEn(hoy)) " (VENCIDO)" else ""
+                },
+                onSeleccion = { viewModel.onInstrumento(tipo, it.id) },
+                error = seccion.errorInstrumento
+            )
 
-        when (tipo) {
-            TipoPrueba.AISLACION -> {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CampoNumero(
-                        valor = seccion.comunes[Parametros.KV.codigo].orEmpty(),
-                        onCambio = { viewModel.onComun(tipo, Parametros.KV.codigo, it) },
-                        etiqueta = "Tensión de prueba",
-                        unidad = "kV",
-                        modifier = Modifier.weight(1f)
-                    )
-                    listOf("MΩ", "GΩ").forEach { u ->
-                        FilterChip(
-                            selected = seccion.unidadAislacion == u,
-                            onClick = { viewModel.onUnidadAislacion(tipo, u) },
-                            label = { Text(u, fontWeight = FontWeight.Bold) }
+            when (tipo) {
+                TipoPrueba.AISLACION -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CampoNumero(
+                            valor = seccion.comunes[Parametros.KV.codigo].orEmpty(),
+                            onCambio = { viewModel.onComun(tipo, Parametros.KV.codigo, it) },
+                            etiqueta = "Tensión de prueba",
+                            unidad = "kV",
+                            modifier = Modifier.weight(1f)
                         )
+                        listOf("MΩ", "GΩ").forEach { u ->
+                            FilterChip(
+                                selected = seccion.unidadAislacion == u,
+                                onClick = { viewModel.onUnidadAislacion(tipo, u) },
+                                label = { Text(u, fontWeight = FontWeight.Bold) }
+                            )
+                        }
                     }
                 }
+                TipoPrueba.TTR -> CampoNumero(
+                    valor = seccion.comunes[Parametros.TAP.codigo].orEmpty(),
+                    onCambio = { viewModel.onComun(tipo, Parametros.TAP.codigo, it) },
+                    etiqueta = "Posición del cambiador (tap)",
+                    unidad = "",
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TipoPrueba.CONTACTOS -> CampoNumero(
+                    valor = seccion.comunes[Parametros.MAX_PLACA.codigo].orEmpty(),
+                    onCambio = { viewModel.onComun(tipo, Parametros.MAX_PLACA.codigo, it) },
+                    etiqueta = "Máximo de placa",
+                    unidad = "µΩ",
+                    modifier = Modifier.fillMaxWidth()
+                )
+                else -> Unit
             }
-            TipoPrueba.TTR -> CampoNumero(
-                valor = seccion.comunes[Parametros.TAP.codigo].orEmpty(),
-                onCambio = { viewModel.onComun(tipo, Parametros.TAP.codigo, it) },
-                etiqueta = "Posición del cambiador (tap)",
-                unidad = "",
-                modifier = Modifier.fillMaxWidth()
-            )
-            TipoPrueba.CONTACTOS -> CampoNumero(
-                valor = seccion.comunes[Parametros.MAX_PLACA.codigo].orEmpty(),
-                onCambio = { viewModel.onComun(tipo, Parametros.MAX_PLACA.codigo, it) },
-                etiqueta = "Máximo de placa",
-                unidad = "µΩ",
-                modifier = Modifier.fillMaxWidth()
-            )
-            else -> Unit
-        }
 
-        seccion.filas.forEachIndexed { indice, fila ->
-            HorizontalDivider()
-            FilaPrueba(
-                tipo = tipo,
-                tipoEquipoId = tipoEquipoId,
-                fila = fila,
-                unidadAislacion = seccion.unidadAislacion,
-                puedeResultadoManual = puedeResultadoManual,
-                onValor = { codigo, valor -> viewModel.onValorFila(tipo, indice, codigo, valor) },
-                onOpera = { viewModel.onOperaFila(tipo, indice, it) },
-                onResultadoManual = { viewModel.onResultadoManual(tipo, indice, it) }
-            )
-        }
+            seccion.filas.forEachIndexed { indice, fila ->
+                HorizontalDivider()
+                FilaPrueba(
+                    tipo = tipo,
+                    tipoEquipoId = tipoEquipoId,
+                    fila = fila,
+                    unidadAislacion = seccion.unidadAislacion,
+                    puedeResultadoManual = puedeResultadoManual,
+                    onValor = { codigo, valor -> viewModel.onValorFila(tipo, indice, codigo, valor) },
+                    onOpera = { viewModel.onOperaFila(tipo, indice, it) },
+                    onResultadoManual = { viewModel.onResultadoManual(tipo, indice, it) }
+                )
+            }
         }
 
         OutlinedTextField(

@@ -3,7 +3,10 @@ package com.example.appprotocolos_eq014.ui.screens.protocolo
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,10 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.util.Fechas
 import com.example.appprotocolos_eq014.model.entidades.Protocolo
@@ -104,6 +110,21 @@ fun DetalleProtocoloScreen(
                 TarjetaSeccion(titulo = "Observaciones") {
                     d.descripcionMantenimiento?.takeIf { it.isNotBlank() }?.let { Text("Mantenimiento: $it") }
                     d.observaciones?.takeIf { it.isNotBlank() }?.let { Text(it) }
+                }
+            }
+
+            if (d.evidencias.isNotEmpty()) {
+                TarjetaSeccion(titulo = "Fotos de evidencia") {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(d.evidencias, key = { it.id }) { foto ->
+                            AsyncImage(
+                                model = foto.url,
+                                contentDescription = "Foto de evidencia",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(120.dp).clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                    }
                 }
             }
 

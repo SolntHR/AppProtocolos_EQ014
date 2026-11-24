@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
 
     // url gateway con todos los microservicios
-    private const val URL_GATEWAY = "https://q6tvtkkd-8090.brs.devtunnels.ms/" // URL DEL GITHUB DEL MICROSERVICIO GATEWAY
+    const val URL_GATEWAY = "https://q6tvtkkd-8090.brs.devtunnels.ms/" // URL DEL GITHUB DEL MICROSERVICIO GATEWAY
 
     private fun crear(urlBase: String): Retrofit =
         Retrofit.Builder()

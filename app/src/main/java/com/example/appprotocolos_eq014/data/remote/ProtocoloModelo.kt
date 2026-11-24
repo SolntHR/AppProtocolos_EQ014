@@ -2,6 +2,7 @@ package com.example.appprotocolos_eq014.data.remote
 
 import com.example.appprotocolos_eq014.model.catalogos.EstadoProtocolo
 import com.example.appprotocolos_eq014.model.catalogos.ResultadoPrueba
+import com.example.appprotocolos_eq014.model.entidades.Evidencia
 import com.example.appprotocolos_eq014.model.entidades.HistorialEstado
 import com.example.appprotocolos_eq014.model.entidades.Medicion
 import com.example.appprotocolos_eq014.model.entidades.Protocolo
@@ -218,7 +219,8 @@ fun ProtocoloDetalleResponse.aProtocolo(): Protocolo {
         tecnicoNombre = usuarioRegistraNombre,
         resultadoGlobal = listaPruebas.filter { it.realizada }.mapNotNull { it.resultado }.maxByOrNull { it.idDb },
         pruebas = listaPruebas,
-        historialEstados = historial.map { it.aHistorial() }
+        historialEstados = historial.map { it.aHistorial() },
+        evidencias = evidencias.map { Evidencia(it.id, RetrofitClient.URL_GATEWAY.trimEnd('/') + it.url, it.descripcion) }
     )
 }
 
@@ -288,4 +290,47 @@ fun ProtocoloResumenResponse.aProtocolo() = Protocolo(
     lectura1Min = lectura1Min,
     lectura10Min = lectura10Min,
     reemplazaANumero = protocoloReemplazadoId
+)
+
+data class MedicionRequest(
+    val parametroId: Long,
+    val valor: Double
+)
+
+data class PruebaRequest(
+    val tipoPruebaId: Long,
+    val elemento: String,
+    val momento: String,
+    val realizada: Boolean,
+    val motivoNoRealizada: String?,
+    val instrumentoId: Long?,
+    val resultado: String?,
+    val comentario: String?,
+    val ingresadoManualmente: Boolean,
+    val mediciones: List<MedicionRequest>
+)
+
+data class ProtocoloRequest(
+    val usuarioId: Long,
+    val visitaId: Long,
+    val equipoId: Long,
+    val temperaturaC: Double?,
+    val humedadPct: Double?,
+    val descripcionMantenimiento: String?,
+    val observaciones: String?,
+    val registrar: Boolean,
+    val pruebas: List<PruebaRequest>
+)
+
+fun Prueba.aRequest() = PruebaRequest(
+    tipoPruebaId = tipo.idDb,
+    elemento = elemento,
+    momento = momento,
+    realizada = realizada,
+    motivoNoRealizada = motivoNoRealizada,
+    instrumentoId = instrumentoId,
+    resultado = resultado?.name,
+    comentario = comentario,
+    ingresadoManualmente = ingresadoManualmente,
+    mediciones = mediciones.filter { it.parametroId > 0 }.map { MedicionRequest(it.parametroId, it.valor) }
 )

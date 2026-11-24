@@ -32,7 +32,8 @@ data class Protocolo(
     val reemplazaANumero: String? = null,
 
     val pruebas: List<Prueba> = emptyList(),
-    val historialEstados: List<HistorialEstado> = emptyList()
+    val historialEstados: List<HistorialEstado> = emptyList(),
+    val evidencias: List<Evidencia> = emptyList()
 
 ){
     val esNuevo: Boolean get() = id.isBlank()
