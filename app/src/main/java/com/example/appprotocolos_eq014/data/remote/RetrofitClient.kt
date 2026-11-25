@@ -5,7 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    const val URL_GATEWAY = "https://q6tvtkkd-8090.brs.devtunnels.ms/"
+    const val URL_GATEWAY = "https://fjfh1k06-8090.brs.devtunnels.ms/"
 
     private fun crear(urlBase: String): Retrofit =
         Retrofit.Builder()
