@@ -78,8 +78,13 @@ Tecnologías: Kotlin, Jetpack Compose, Material 3, Navigation Compose, Lifecycle
 ## Cómo ejecutar
 
 1. Levantar el backend siguiendo el README de [MS-Kotlin](https://github.com/SolntHR/MS-Kotlin) (Eureka, los cuatro microservicios y el API Gateway en el puerto 8090).
-2. Exponer el puerto **8090** con un túnel (VS Code → Puertos → Reenviar puerto 8090 → visibilidad **Public**).
-3. Copiar la URL del túnel en `app/src/main/java/com/example/appprotocolos_eq014/data/remote/RetrofitClient.kt`, constante `URL_GATEWAY` (terminada en `/`).
+2. Encender el túnel persistente del equipo, que publica el puerto 8090 (instalar antes la herramienta con `winget install Microsoft.devtunnel`):
+   ```
+   devtunnel user login -g
+   devtunnel host induztek-eq014
+   ```
+   Debe mostrar `https://fjfh1k06-8090.brs.devtunnels.ms`, la URL que ya está en `RetrofitClient.URL_GATEWAY`.
+3. Si se usa otro túnel, cambiar `URL_GATEWAY` en `app/src/main/java/com/example/appprotocolos_eq014/data/remote/RetrofitClient.kt` (terminada en `/`).
 4. Abrir el proyecto en **Android Studio** con el **Android SDK 37** y esperar la sincronización de Gradle.
 5. Ejecutar en un emulador o celular con Android 7.0 (API 24) o superior con **Run ▶**.
 
@@ -103,17 +108,17 @@ Los crea ms-usuarios al iniciar por primera vez. Todos usan la contraseña `Indu
 ./gradlew test
 ```
 
-| Archivo | Qué prueba |
-|---|---|
-| `util/ValidacionesRegistroTest` | RUT, teléfono y correo del registro |
-| `util/ValidacionesProtocoloTest` | Campos faltantes por paso del formulario de protocolo |
-| `util/ValidacionesVisitaTest` | Número de OT y fecha de la visita |
-| `util/ValidacionesCatalogoTest` | TAG de equipos y datos de instalación |
-| `model/InstrumentoTest` | Estado de calibración del instrumento |
-| `viewmodel/LoginViewModelTest` | Validación del login |
-| `viewmodel/RegistroViewModelTest` | Validación del registro |
-| `repository/UsuarioRepositoryTest` | Llamadas del repositorio de usuarios con una API falsa |
-| `repository/RecuperacionCorreoRepositoryTest` | Solicitar, verificar y restablecer con código |
+| Archivo | Qué prueba | Pruebas |
+|---|---|---|
+| `util/ValidacionesRegistroTest` | Formulario de registro completo y vacío, RUT con dígito incorrecto y teléfonos con o sin +56 | 4 |
+| `util/ValidacionesProtocoloTest` | Borrador válido y registro sin temperatura que vuelve al paso Condiciones | 2 |
+| `util/ValidacionesVisitaTest` | Visita completa válida y OT mal escrita sin técnicos | 2 |
+| `util/ValidacionesCatalogoTest` | Equipo completo válido y equipo sin TAG con tensión no numérica | 2 |
+| `model/InstrumentoTest` | Calibración por vencer (10 días) y vencida o sin fecha | 2 |
+| `viewmodel/LoginViewModelTest` | Login con campos vacíos y con datos completos | 2 |
+| `viewmodel/RegistroViewModelTest` | Registro incompleto que no se envía y cambio de pregunta de seguridad | 2 |
+| `repository/UsuarioRepositoryTest` | Cambio de perfil: envía el jefe y su contraseña cifrada | 1 |
+| `repository/RecuperacionCorreoRepositoryTest` | Solicitar, verificar y restablecer con código; recuperación por pregunta | 4 |
 
 ## Entregables
 
